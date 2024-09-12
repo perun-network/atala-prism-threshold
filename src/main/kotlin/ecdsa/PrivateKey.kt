@@ -39,6 +39,10 @@ class PrivateKey (
         return PublicKey(Secp256k1.pubkeyCreate(value))
     }
 
+    fun sign(message: ByteArray): Signature {
+        return Signature.fromSecp256k1Signature(Secp256k1.sign(message, this.value))
+    }
+
     fun toByteArray() : ByteArray {
         return value
     }

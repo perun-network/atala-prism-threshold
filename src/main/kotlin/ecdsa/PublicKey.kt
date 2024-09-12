@@ -7,6 +7,9 @@ class PublicKey(
 ) {
     companion object {
         fun newPublicKey(value: ByteArray): PublicKey {
+            if (value.size != 65) {
+                throw IllegalArgumentException("Invalid public key length" + value.size)
+            }
             return PublicKey(Secp256k1.pubkeyParse(value))
         }
     }

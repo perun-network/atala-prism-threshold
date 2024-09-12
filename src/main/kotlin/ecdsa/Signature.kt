@@ -1,5 +1,7 @@
 package perun_network.ecdsa_threshold.ecdsa
 
+import fr.acinq.secp256k1.Secp256k1
+
 const val SIGLEN = 64
 
 class Signature (
@@ -19,5 +21,9 @@ class Signature (
 
     fun toSecp256k1Signature(): ByteArray {
         return R + S
+    }
+
+    fun verify(message: ByteArray, publicKey: PublicKey): Boolean {
+        return Secp256k1.verify(this.toSecp256k1Signature(), message, publicKey.value)
     }
 }
