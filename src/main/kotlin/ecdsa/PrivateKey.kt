@@ -3,6 +3,7 @@ package perun_network.ecdsa_threshold.ecdsa
 import fr.acinq.secp256k1.Secp256k1
 import perun_network.ecdsa_threshold.secp256k1.Secp256k1Helper
 import perun_network.ecdsa_threshold.secp256k1.Secp256k1Lib
+import java.math.BigInteger
 
 class PrivateKey (
     private val value: ByteArray
@@ -41,6 +42,10 @@ class PrivateKey (
 
     fun sign(message: ByteArray): Signature {
         return Signature.fromSecp256k1Signature(Secp256k1.sign(message, this.value))
+    }
+
+    fun toScalar() : Scalar  {
+        return Scalar(BigInteger(1, value))
     }
 
     fun toByteArray() : ByteArray {
