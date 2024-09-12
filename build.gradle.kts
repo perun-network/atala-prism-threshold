@@ -12,8 +12,6 @@ repositories {
 }
 
 dependencies {
-    // define the BOM and its version
-    implementation(platform("org.kotlincrypto.hash:bom:0.5.3"))
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.7.1")
@@ -21,8 +19,6 @@ dependencies {
     implementation("com.appmattus.crypto:cryptohash:1.0.2")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.0")
     implementation("fr.acinq.secp256k1:secp256k1-kmp:0.15.0")
-    implementation("org.kotlincrypto.hash:sha2")
-    implementation("com.ionspin.kotlin:bignum:0.3.8")
 }
 
 tasks.test {
