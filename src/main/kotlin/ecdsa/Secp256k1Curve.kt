@@ -12,6 +12,10 @@ val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03B
 val GX = BigInteger("0x79BE667EF9DCBBAC55A06295CE870B70A0B5A0AA3A2C7CF24E9FBE6D4C4F9BC", 16)
 val GY = BigInteger("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17D448A68554199C47D08F4CF0CBB", 16)
 
+fun secp256k1Order() : BigInteger {
+    return P
+}
+
 data class Point(
     val x: BigInteger,
     val y: BigInteger
@@ -66,6 +70,11 @@ data class Point(
         return result
     }
 
+    // isIdentity checks if this is the identity element of this group.
+    fun isIdentity() : Boolean {
+        return this.x == BigInteger.ZERO || this.y == BigInteger.ZERO
+    }
+
 }
 
 fun byteArrayToPoint(bytes: ByteArray): Point {
@@ -79,6 +88,10 @@ fun newBasePoint(): Point {
     val g = Hex.decode("0479BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8".lowercase())
     val base = Secp256k1.pubkeyParse(g)
     return byteArrayToPoint(base)
+}
+
+fun newPoint() : Point {
+    return Point(BigInteger.ZERO, BigInteger.ZERO)
 }
 
 // Function to convert BigInteger to a 32-byte array
@@ -177,4 +190,11 @@ data class Scalar (
         return Scalar(product)
     }
 
+    fun actOnBase() : Point {
+        return scalarMultiply(this, newBasePoint())
+    }
+
+    fun act(point : Point) : Point {
+        return scalarMultiply(this, point)
+    }
 }
