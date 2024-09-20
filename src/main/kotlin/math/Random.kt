@@ -22,7 +22,7 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
-fun unitModN(n: BigInteger): BigInteger {
+fun sampleUnitModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8)
     repeat(MAX_ITERATIONS) {
@@ -48,7 +48,7 @@ fun modN(n: BigInteger): BigInteger {
 // pedersen generates the s, t, λ such that s = tˡ.
 fun pedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
     val lambda = modN(phi)
-    val tau  = unitModN(n)
+    val tau  = sampleUnitModN(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)

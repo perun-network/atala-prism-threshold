@@ -38,11 +38,3 @@ fun isInIntervalLPrimeEps(n: BigInteger?): Boolean {
     }
     return n.bitLength() <= LPrimePlusEpsilon
 }
-
-// IsInIntervalLEpsPlus1RootN returns true if n ∈ [-2¹⁺ˡ⁺ᵉ√N,…,2¹⁺ˡ⁺ᵉ√N], for a Paillier modulus N.
-fun isInIntervalLEpsPlus1RootN(n: BigInteger?): Boolean {
-    if (n == null) {
-        return false
-    }
-    return n.bitLength() <= 1 + LPlusEpsilon + (BitsIntModN / 2)
-}

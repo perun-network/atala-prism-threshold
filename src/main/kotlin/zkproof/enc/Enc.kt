@@ -1,6 +1,7 @@
 package perun_network.ecdsa_threshold.zkproof.enc
 
-import perun_network.ecdsa_threshold.hash.Hash
+import kotlinx.serialization.Serializable
+import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
@@ -8,52 +9,52 @@ import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 
 data class EncPublic(
-    val k: PaillierCipherText, // K = Enc₀(k;ρ)
-    val prover: PaillierPublic,
+    val K: PaillierCipherText,
+    val n0: PaillierPublic,
     val aux: PedersenParameters
 )
 
 data class EncPrivate(
-    val k: BigInteger,   // K = k ∈ 2ˡ = Dec₀(K)
-    val rho: BigInteger  // Rho = ρ
+    val k: BigInteger,   // k = k ∈ 2ˡ = Dec₀(K)
+    val rho: BigInteger  // rho = ρ
 )
 
 data class EncCommitment(
-    val s: BigInteger,  // S = sᵏtᵘ
-    val a: PaillierCipherText, // A = Enc₀ (α, r)
-    val c: BigInteger  // C = sᵃtᵍ
+    val S: BigInteger,  // S = sᵏtᵘ
+    val A: PaillierCipherText, // A = Enc₀ (α, r)
+    val C: BigInteger  // C = sᵃtᵍ
 )
 
 data class EncProof(
     val commitment: EncCommitment,
-    val z1: BigInteger,  // Z₁ = α + e⋅k
-    val z2: BigInteger,  // Z₂ = r ⋅ ρᵉ mod N₀
-    val z3: BigInteger   // Z₃ = γ + e⋅μ
+    val z1: BigInteger,  // z₁ = α + e⋅k
+    val z2: BigInteger,  // z₂ = r ⋅ ρᵉ mod N₀
+    val z3: BigInteger   // z₃ = γ + e⋅μ
 ) {
 
     fun isValid(public: EncPublic): Boolean {
-        return public.prover.validateCiphertexts(commitment.a) &&
-                isValidBigModN(public.prover.n, z2)
+        return public.n0.validateCiphertexts(commitment.A) &&
+                isValidBigModN(public.n0.n, z2)
     }
 
     companion object {
-        fun newProof(hash: Hash, public: EncPublic, private: EncPrivate): EncProof {
-            val n = public.prover.n
+        fun newProof(id: Int, public: EncPublic, private: EncPrivate): EncProof {
+            val n = public.n0.n
 
-            val alpha = intervalLEps()
-            val r = unitModN(n)
-            val mu = intervalLN()
-            val gamma = intervalLEpsN()
+            val alpha = sampleLEps()
+            val r = sampleUnitModN(n)
+            val mu = sampleLN()
+            val gamma = sampleLEpsN()
 
-            val a = public.prover.encWithNonce(alpha, r)
+            val a = public.n0.encWithNonce(alpha, r)
 
             val commitment = EncCommitment(
-                s = public.aux.commit(private.k, mu),
-                a = a,
-                c = public.aux.commit(alpha, gamma)
+                S = public.aux.commit(private.k, mu),
+                A = a,
+                C = public.aux.commit(alpha, gamma)
             )
 
-            val e = challenge(hash, public, commitment)
+            val e = challenge(id, public, commitment)
 
             val z1 = e.multiply(private.k).add(alpha)
 
@@ -66,25 +67,33 @@ data class EncProof(
             return EncProof(commitment, z1, z2, z3)
         }
 
-        private fun challenge(hash: Hash, public: EncPublic, commitment: EncCommitment): BigInteger {
-            hash.writeAny(public.aux, public.prover, public.k, commitment.s, commitment.a, commitment.c)
-            return intervalScalar(hash.digest().inputStream())
+        private fun challenge(id: Int, public: EncPublic, commitment: EncCommitment): BigInteger {
+            // Collect relevant parts to form the challenge
+            val inputs = listOf<BigInteger>(
+                public.n0.n,
+                public.K.c,
+                commitment.S,
+                commitment.A.c,
+                commitment.C,
+                BigInteger.valueOf(id.toLong())
+            )
+            return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(secp256k1Order())
         }
     }
 
-    fun verify(hash: Hash, public: EncPublic): Boolean {
+    fun verify(id: Int, public: EncPublic): Boolean {
         if (!isValid(public)) return false
 
-        val prover = public.prover
+        val prover = public.n0
 
         if (!isInIntervalLEps(z1)) return false
 
-        val e = challenge(hash, public, commitment)
+        val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(z1, z3, e, commitment.c, commitment.s)) return false
+        if (!public.aux.verify(z1, z3, e, commitment.C, commitment.S)) return false
 
         val lhs = prover.encWithNonce(z1, z2)
-        val rhs = public.k.clone().mul(prover, e).add(prover, commitment.a)
+        val rhs = public.K.clone().modPowNSquared(prover, e).mul(prover, commitment.A)
 
         return lhs == rhs
     }

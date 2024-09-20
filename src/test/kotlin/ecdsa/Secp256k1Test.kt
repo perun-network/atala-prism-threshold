@@ -7,25 +7,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
 import java.math.BigInteger
-import kotlin.math.sign
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class Secp256k1Test {
-    // Helper function to ensure that the byte array is 32 bytes long
-    private fun to32Bytes(value: BigInteger): ByteArray {
-        val bytes = value.toByteArray()
-        return if (bytes.size == 32) {
-            bytes
-        } else if (bytes.size < 32) {
-            ByteArray(32).apply {
-                System.arraycopy(bytes, 0, this, 32 - bytes.size, bytes.size)
-            }
-        } else {
-            bytes.copyOfRange(bytes.size - 32, bytes.size)
-        }
-    }
-
     @Test
     fun testBasePubKey() {
         val basePoint = newBasePoint().toPublicKey().value
@@ -121,6 +106,6 @@ class Secp256k1Test {
 
         assertArrayEquals(signature.toSecp256k1Signature(), acinqSignature)
 
-        kotlin.test.assertTrue(signature.verify(hash, privateKey.publicKey()))
+        assertTrue(signature.verify(hash, privateKey.publicKey()))
     }
 }

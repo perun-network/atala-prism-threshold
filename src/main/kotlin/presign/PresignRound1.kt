@@ -1,18 +1,12 @@
 package perun_network.ecdsa_threshold.presign
 
-import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.hash.Hash
 import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
 import perun_network.ecdsa_threshold.zkproof.enc.EncPrivate
 import perun_network.ecdsa_threshold.zkproof.enc.EncProof
 import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
-import java.math.BigInteger
 
 class PresignRound1Output (
     val ssid: ByteArray,
@@ -43,7 +37,7 @@ class PresignRound1Input (
         val (K, kNonce) = paillier.enc(kShare.value)
         for (j in otherPartys) {
             // Compute ψ_0_j,i = M(prove, Πenc_j,(ssid, i),(Iε, Ki); (ki, ρi)) for every j 6= i.
-            val proof = EncProof.newProof(Hash.hashWithID(id),
+            val proof = EncProof.newProof(id,
                 EncPublic(K, prover[id]!!, pedersen[j]!!),
                 EncPrivate(kShare.value, kNonce))
 

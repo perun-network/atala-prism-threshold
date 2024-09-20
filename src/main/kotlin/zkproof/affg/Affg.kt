@@ -3,86 +3,86 @@ package perun_network.ecdsa_threshold.zkproof.affg
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
-import perun_network.ecdsa_threshold.hash.Hash
 import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 
+
 data class AffgPublic (
-    val kv: PaillierCipherText, // Kv is a ciphertext encrypted with Nᵥ
-    val dv: PaillierCipherText, //  Dv = (x ⨀ Kv) ⨁ Encᵥ(y;s)
-    val fp: PaillierCipherText, // Fp = Encₚ(y;r)
-    val xp: Point,  // Xp = gˣ
-    val prover: PaillierPublic, // Prover = Nₚ
-    val verifier: PaillierPublic,   // Verifier = Nᵥ
+    val C: PaillierCipherText,
+    val D: PaillierCipherText,
+    val Y: PaillierCipherText,
+    val X: Point,
+    val n0: PaillierPublic,
+    val n1: PaillierPublic,
     val aux: PedersenParameters
 )
 
 data class AffgPrivate(
-    val X: BigInteger, // X = x
-    val Y: BigInteger,   // Y = y
-    val S: BigInteger,   // S = s (Original name: ρ)
-    val R: BigInteger    // R = r (Original name: ρy)
+    val x: BigInteger, // x
+    val y: BigInteger,   // y
+    val rho: BigInteger,   // ρ
+    val rhoY: BigInteger    // ρy
 )
 
 data class AffgCommitment(
     val A: PaillierCipherText, // A = (α ⊙ C) ⊕ Encᵥ(β, ρ)
     val Bx: Point,        // Bₓ = α⋅G
     val By: PaillierCipherText, // By = Encₚ(β, ρy)
-    val E: BigInteger?,         // E = sᵃ tᵍ (mod N)
-    val S: BigInteger?,         // S = sˣ tᵐ (mod N)
-    val F: BigInteger?,         // F = sᵇ tᵈ (mod N)
-    val T: BigInteger?          // T = sʸ tᵘ (mod N)
+    val E: BigInteger,         // E = sᵃ tᵍ (mod N)
+    val S: BigInteger,         // S = sˣ tᵐ (mod N)
+    val F: BigInteger,         // F = sᵇ tᵈ (mod N)
+    val T: BigInteger          // T = sʸ tᵘ (mod N)
 )
 
 class AffgProof(
     val commitment: AffgCommitment,
-    val Z1: BigInteger?,  // Z1 = Z₁ = α + e⋅x
-    val Z2: BigInteger?,  // Z2 = Z₂ = β + e⋅y
-    val Z3: BigInteger?,  // Z3 = Z₃ = γ + e⋅m
-    val Z4: BigInteger?,  // Z4 = Z₄ = δ + e⋅μ
-    val W: BigInteger?,   // W = w = ρ⋅sᵉ (mod N₀)
-    val Wy: BigInteger?   // Wy = wy = ρy⋅rᵉ (mod N₁)
+    val Z1: BigInteger,  // Z1 = Z₁ = α + e⋅x
+    val Z2: BigInteger,  // Z2 = Z₂ = β + e⋅y
+    val Z3: BigInteger,  // Z3 = Z₃ = γ + e⋅m
+    val Z4: BigInteger,  // Z4 = Z₄ = δ + e⋅μ
+    val W: BigInteger,   // W = w = ρ⋅sᵉ (mod N₀)
+    val Wy: BigInteger   // Wy = wy = ρy⋅rᵉ (mod N₁)
 ) {
     fun isValid(public: AffgPublic): Boolean {
-        if (!public.verifier.validateCiphertexts(commitment.A!!) ||
-            !public.prover.validateCiphertexts(commitment.By!!)) return false
-        if (!isValidBigModN(public.prover.n, Wy)) return false
-        if (!isValidBigModN(public.verifier.n, W)) return false
+        if (!public.n1.validateCiphertexts(commitment.A) ||
+            !public.n0.validateCiphertexts(commitment.By)) return false
+        if (!isValidBigModN(public.n0.n, Wy)) return false
+        if (!isValidBigModN(public.n1.n, W)) return false
         if (commitment.Bx.isIdentity()) return false
         return true
     }
 
-    fun verify(hash: Hash, public: AffgPublic): Boolean {
+    fun verify(id: Int, public: AffgPublic): Boolean {
         if (!isValid(public)) return false
 
-        val verifier = public.verifier
-        val prover = public.prover
+        val n1 = public.n1
+        val n0 = public.n0
 
         if (!isInIntervalLEps(Z1)) return false
         if (!isInIntervalLPrimeEps(Z2)) return false
 
-        val e = challenge(hash, public, commitment) ?: return false
+        val e = challenge(id, public, commitment) ?: return false
 
-        if (!public.aux.verify(Z1!!, Z3!!, e, commitment.E!!, commitment.S!!)) return false
-        if (!public.aux.verify(Z2!!, Z4!!, e, commitment.F!!, commitment.T!!)) return false
+        if (!public.aux.verify(Z1, Z3, e, commitment.E, commitment.S)) return false
+        if (!public.aux.verify(Z2, Z4, e, commitment.F, commitment.T)) return false
 
         // Verifying the conditions
-        val tmp = public.kv.clone().mul(verifier, Z1)
-        val lhs = verifier.encWithNonce(Z2!!, W!!).add(verifier, tmp)
-        val rhs = public.dv.clone().mul(verifier, e).add(verifier, commitment.A)
+        val tmp = public.C.clone().modPowNSquared(n1, Z1)
+        val lhs = n1.encWithNonce(Z2, W).mul(n1, tmp)
+        val rhs = public.D.clone().modPowNSquared(n1, e).mul(n1, commitment.A)
 
         if (lhs != rhs) return false
 
-        val lhsPoint = Scalar(Z1.mod(secp256k1Order())).actOnBase()
-        val rhsPoint = Scalar(e.mod(secp256k1Order())).act(public.xp).add(commitment.Bx)
+        val lhsPoint = Scalar(Z1.mod(secp256k1Order())).actOnBase() // g^z1
+        val rhsPoint = Scalar(e.mod(secp256k1Order())).act(public.X).add(commitment.Bx)
 
         if (lhsPoint != rhsPoint) return false
 
-        val lhsEnc = prover.encWithNonce(Z2, Wy!!)
-        val rhsEnc = public.fp.clone().mul(prover, e).add(prover, commitment.By)
+        val lhsEnc = n0.encWithNonce(Z2, Wy)
+        val rhsEnc = public.Y.clone().modPowNSquared(n0, e).mul(n0, commitment.By)
 
         if (lhsEnc != rhsEnc) return false
 
@@ -90,64 +90,72 @@ class AffgProof(
     }
 
     companion object {
-        fun challenge(hash: Hash, public: AffgPublic, commitment: AffgCommitment): BigInteger? {
-            return try {
-                hash.writeAny(public.aux, public.prover, public.verifier, public.kv, public.dv, public.fp, public.xp,
-                    commitment.A!!, commitment.Bx, commitment.By!!, commitment.E!!, commitment.S!!, commitment.F!!, commitment.T!!)
-
-                return intervalScalar(hash.digest().inputStream())
-            } catch (e: Exception) {
-                null
-            }
+        fun challenge(id: Int, public: AffgPublic, commitment: AffgCommitment): BigInteger {
+            // Collect relevant parts to form the challenge
+            val inputs = listOf<BigInteger>(
+                public.aux.n,
+                public.aux.s,
+                public.aux.t,
+                public.n0.n,
+                public.n1.n,
+                public.C.value(),
+                public.D.value(),
+                public.Y.value(),
+                public.X.x,
+                public.X.y,
+                commitment.A.value(),
+                commitment.Bx.x,
+                commitment.Bx.y,
+                commitment.By.value(),
+                commitment.E,
+                commitment.S,
+                commitment.F,
+                commitment.T,
+                BigInteger.valueOf(id.toLong())
+            )
+            return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(secp256k1Order())
         }
 
 
-        fun newProof(hash: Hash, public: AffgPublic, private: AffgPrivate): AffgProof {
-            val N0 = public.verifier.n
-            val N1 = public.prover.n
+        fun newProof(id: Int, public: AffgPublic, private: AffgPrivate): AffgProof {
+            val n0 = public.n0.n
+            val n1 = public.n1.n
 
-            val verifier = public.verifier
-            val prover = public.prover
+            val alpha = sampleLEps() // α ← ±2^(l+ε)
+            val beta = sampleLPrimeEps() // β ← ±2^(l'+ε)
 
+            // r ← Z∗N0 , ry ← Z∗N1
+            val r = sampleUnitModN(n0)
+            val ry = sampleUnitModN(n1)
 
-            val alpha = intervalLEps()
-            val beta = intervalLPrimeEps()
+            // γ ← ±2^l+ε· N, m ˆ ← ±2^l· N
+            val gamma = sampleLEpsN()
+            val m  = sampleLN()
 
-            val rho = unitModN(N0)
-            val rhoY = unitModN(N1)
+            // γ ← ±2^l+ε· N, m ˆ ← ±2^l· N
+            val delta = sampleLEpsN()
+            val mu = sampleLN()
 
-            val gamma = intervalLEpsN()
-            val m = intervalLN()
-            val delta = intervalLEpsN()
-            val mu = intervalLN()
-
-            val cAlpha = public.kv.clone().mul(verifier, alpha) // Cᵃ mod N₀ = α ⊙ Kv
-            val A = verifier.encWithNonce(beta, rho).add(verifier, cAlpha) // Enc₀(β,ρ) ⊕ (α ⊙ Kv)
+            val cAlpha = public.C.clone().modPowNSquared(public.n0, alpha) // Cᵃ mod N₀ = α ⊙ Kv
+            val A = cAlpha.clone().mul(public.n0, public.n0.encWithNonce(beta, r)) // A = C^α· ((1 + N0)β· rN0 ) mod N²
+            val Bx = Scalar(alpha.mod(secp256k1Order())).actOnBase()
+            val By = public.n1.encWithNonce(beta, ry)
 
             val E = public.aux.commit(alpha, gamma)
-            val S = public.aux.commit(private.X, m)
+            val S = public.aux.commit(private.x, m)
             val F = public.aux.commit(beta, delta)
-            val T = public.aux.commit(private.Y, mu)
+            val T = public.aux.commit(private.y, mu)
+            val commitment = AffgCommitment(A, Bx, By, E, S, F, T)
 
-            val commitment = AffgCommitment(
-                A = A,
-                Bx = Scalar(alpha.mod(secp256k1Order())).actOnBase(),
-                By = prover.encWithNonce(beta, rhoY),
-                E = E,
-                S = S,
-                F = F,
-                T = T
-            )
+            val e = challenge(id, public, commitment)
 
-            val e = challenge(hash, public, commitment) ?: BigInteger.ZERO
-
-            val z1 = private.X.multiply(e).negate().add(alpha) // e•x+α
-            val z2 = private.Y.multiply(e).negate().add(beta) // e•y+β
+            val z1 = private.x.multiply(e).negate().add(alpha) // e•x+α
+            val z2 = private.y.multiply(e).negate().add(beta) // e•y+β
             val z3 = m.multiply(e).negate().add(gamma) // e•m+γ
             val z4 = mu.multiply(e).negate().add(delta) // e•μ+δ
 
-            val w = N0.modPow(private.S, e).multiply(rho).mod(N0) // ρ⋅sᵉ mod N₀
-            val wY = N1.modPow(private.R, e).multiply(rhoY).mod(N1) // ρy⋅rᵉ mod N₁
+            val w = n0.modPow(private.rho, e).multiply(r).mod(n0) // ρ⋅sᵉ mod N₀
+            val wY = n1.modPow(private.rhoY, e).multiply(ry).mod(n1) // ρy⋅rᵉ mod N₁
 
             return AffgProof(
                 commitment = commitment,

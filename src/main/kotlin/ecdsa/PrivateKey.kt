@@ -1,8 +1,6 @@
 package perun_network.ecdsa_threshold.ecdsa
 
 import fr.acinq.secp256k1.Secp256k1
-import perun_network.ecdsa_threshold.secp256k1.Secp256k1Helper
-import perun_network.ecdsa_threshold.secp256k1.Secp256k1Lib
 import java.math.BigInteger
 
 class PrivateKey (

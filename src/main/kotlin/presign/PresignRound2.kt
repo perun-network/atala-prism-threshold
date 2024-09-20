@@ -2,7 +2,6 @@ package perun_network.ecdsa_threshold.presign
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.hash.Hash
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
@@ -12,7 +11,8 @@ import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
-import perun_network.ecdsa_threshold.zkproof.proveAffG
+import perun_network.ecdsa_threshold.zkproof.produceAffGProof
+
 import java.math.BigInteger
 
 class PresignRound2Output (
@@ -55,15 +55,15 @@ class PresignRound2Input (
                 // compute DeltaD = Dᵢⱼ
                 // compute DeltaF = Fᵢⱼ
                 // compute deltaProof = ψj,i
-                val (deltaBeta, deltaD, deltaF, deltaProof) = proveAffG(Hash.hashWithID(id), gammaShare.value, bigGammaShare, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
+                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGProof(id, gammaShare.value, bigGammaShare, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
                 // chiBeta = β^i,j
                 // compute chiD = D^ᵢⱼ
                 // compute chiF = F^ᵢⱼ
                 // compute chiProof = ψ^j,i
-                val (chiBeta, chiD, chiF, chiProof) = proveAffG(Hash.hashWithID(id), secretECDSA.value, ecdsas[j]!!, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
+                val (chiBeta, chiD, chiF, chiProof) = produceAffGProof(id, secretECDSA.value, ecdsas[j]!!, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
 
-                val proofLog = LogStarProof.newProof(Hash.hashWithID(id),
-                    LogStarPublic(gShares[id]!!, bigGammaShare, null,  pailliers[id]!!, pedersens[id]!!),
+                val proofLog = LogStarProof.newProof(id,
+                    LogStarPublic(gShares[id]!!, bigGammaShare,  pailliers[id]!!, pedersens[id]!!),
                     LogStarPrivate(gammaShare.value, gNonce))
 
                 val presignOutput2 = PresignRound2Output(
@@ -91,10 +91,10 @@ class PresignRound2Input (
         presignRound1Output : PresignRound1Output,
     ) : Boolean {
         val public = EncPublic(
-            k = presignRound1Output.K,
-            prover = pailliers[presignRound1Output.id]!!,
+            K = presignRound1Output.K,
+            n0 = pailliers[presignRound1Output.id]!!,
             aux = pedersens[id]!!,
         )
-        return presignRound1Output.proof.verify(Hash.hashWithID(presignRound1Output.id), public)
+        return presignRound1Output.proof.verify(presignRound1Output.id, public)
     }
 }

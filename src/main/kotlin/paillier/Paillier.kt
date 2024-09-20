@@ -5,7 +5,7 @@ import perun_network.ecdsa_threshold.math.BitsPaillier
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.math.SafePrimeGenerator.generatePaillierKeyPair
 import perun_network.ecdsa_threshold.math.pedersen
-import perun_network.ecdsa_threshold.math.unitModN
+import perun_network.ecdsa_threshold.math.sampleUnitModN
 import java.math.BigInteger
 import java.security.SecureRandom
 
@@ -15,7 +15,7 @@ class PaillierPublic (
     // nSquared = n²
     val nSquared: BigInteger,
     // nPlusOne = n + 1
-    val nPlusOne: BigInteger
+    private val nPlusOne: BigInteger
 ) {
     companion object {
         fun newPublicKey(n: BigInteger): PaillierPublic {
@@ -29,20 +29,13 @@ class PaillierPublic (
 
     // enc returns the encryption of m under the public key pk.
     // The nonce used to encrypt is returned.
-    //
-    // The message m must be in the range [-(N-1)/2, …, (N-1)/2] and panics otherwise.
-    //
     // ct = (1+N)ᵐρᴺ (mod N²).
     fun enc(m: BigInteger): Pair<PaillierCipherText, BigInteger> {
-        val nonce = unitModN(n)
+        val nonce = sampleUnitModN(n)
         return Pair(encWithNonce(m, nonce), nonce)
     }
 
     // encWithNonce returns the encryption of m under the public key pk.
-    // The nonce is not returned.
-    //
-    // The message m must be in the range [-(N-1)/2, …, (N-1)/2] and panics otherwise
-    //
     // ct = (1+N)ᵐρᴺ (mod N²).
     fun encWithNonce(m: BigInteger, nonce: BigInteger): PaillierCipherText {
         val mAbs = m.abs()
@@ -63,7 +56,7 @@ class PaillierPublic (
     }
 
 
-    // ValidateCiphertexts checks if all ciphertexts are in the correct range and coprime to N²
+    // validateCiphertexts checks if all ciphertexts are in the correct range and coprime to N²
     // ct ∈ [1, …, N²-1] AND GCD(ct,N²) = 1.
     fun validateCiphertexts(vararg cts: PaillierCipherText): Boolean {
         for (ct in cts) {
@@ -92,7 +85,6 @@ fun validateN(n: BigInteger): Exception? {
 val ErrPrimeBadLength = IllegalArgumentException("Prime factor is not the right length")
 val ErrNotBlum = IllegalArgumentException("Prime factor is not equivalent to 3 (mod 4)")
 val ErrNotSafePrime = IllegalArgumentException("Supposed prime factor is not a safe prime")
-val ErrPrimeNull = NullPointerException("Prime is nil")
 
 // SecretKey is the secret key corresponding to a Public Paillier Key.
 data class PaillierSecret(

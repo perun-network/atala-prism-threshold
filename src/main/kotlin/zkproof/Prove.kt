@@ -2,8 +2,7 @@ package perun_network.ecdsa_threshold.zkproof
 
 import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.hash.Hash
-import perun_network.ecdsa_threshold.math.intervalLPrime
+import perun_network.ecdsa_threshold.math.sampleLPrime
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
@@ -15,7 +14,7 @@ import java.math.BigInteger
 
 data class Quintuple<A, B, C, D, E>(val first: A, val second: B, val third: C, val fourth: D, val fifth: E)
 
-fun newMta(
+fun computeZKMaterials(
     senderSecretShare: BigInteger,
     receiverEncryptedShare: PaillierCipherText,
     sender: PaillierSecret,
@@ -27,20 +26,20 @@ fun newMta(
         BigInteger,
         BigInteger
         > {
-    val BetaNeg = intervalLPrime()
+    val y = sampleLPrime()
 
-    val (F, R) = sender.publicKey.enc(BetaNeg) // F = encᵢ(-β, r)
+    val (Y, rhoY) = sender.publicKey.enc(y)
 
-    val (D, S) = receiver.enc(BetaNeg)
-    val tmp = receiverEncryptedShare.clone().mul(receiver, senderSecretShare) // tmp = aᵢ ⊙ Bⱼ
-    D.add(receiver, tmp) // D = encⱼ(-β;s) ⊕ (aᵢ ⊙ Bⱼ) = encⱼ(aᵢ•bⱼ-β)
+    val (D, rho) = receiver.enc(y)
+    val tmp = receiverEncryptedShare.clone().modPowNSquared(receiver, senderSecretShare)
+    D.mul(receiver, tmp)
 
-    return Quintuple(D, F, S, R, BetaNeg)
+    return Quintuple(D, Y, rho, rhoY, y)
 }
 
 
-fun proveAffG(
-    h: Hash,
+fun produceAffGProof(
+    id: Int,
     senderSecretShare: BigInteger, // senderSecretShare = aᵢ
     senderSecretSharePoint: Point, // senderSecretSharePoint = Aᵢ = aᵢ⋅G
     receiverEncryptedShare: PaillierCipherText, // receiverEncryptedShare = Encⱼ(bⱼ)
@@ -48,27 +47,29 @@ fun proveAffG(
     receiver: PaillierPublic,
     verifier: PedersenParameters
 ): Quadruple<
-        BigInteger, // Beta = β
+        BigInteger, // beta = β
         PaillierCipherText, // D = (aⱼ ⊙ Bᵢ) ⊕ encᵢ(- β, s)
-        PaillierCipherText, // F = encⱼ(-β, r)
+        PaillierCipherText, // Y = encⱼ(-β, r)
         AffgProof   // Proof = zkaffg proof of correct encryption.
         > {
-    val (D, F, S, R, BetaNeg) = newMta(senderSecretShare, receiverEncryptedShare, sender, receiver)
-    val proof = AffgProof.newProof(h, AffgPublic(
-        kv = receiverEncryptedShare,
-        dv = D,
-        fp = F,
-        xp = senderSecretSharePoint,
-        prover = sender.publicKey,
-        verifier = receiver,
+    val (D, Y, rho, rhoY, y) = computeZKMaterials(senderSecretShare, receiverEncryptedShare, sender, receiver)
+    val proof = AffgProof.newProof(
+        id,
+        AffgPublic(
+        C = receiverEncryptedShare,
+        D = D,
+        Y = Y,
+        X = senderSecretSharePoint,
+        n0 = sender.publicKey,
+        n1 = receiver,
         aux = verifier
     ), AffgPrivate(
-        X = senderSecretShare,
-        Y = BetaNeg,
-        S = S,
-        R = R
+        x = senderSecretShare,
+        y = y,
+        rho = rho,
+        rhoY= rhoY
     )
     )
-    val Beta = BetaNeg.negate()
-    return Quadruple(Beta, D, F, proof)
+    val beta = y.negate()
+    return Quadruple(beta, D, Y, proof)
 }

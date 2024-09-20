@@ -12,7 +12,6 @@ import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
 class SignParty(
     val message: ByteArray,
     val ssid: ByteArray,
-    val publicKey: PublicKey
 ) {
     fun createPartialSignature(kShare: ByteArray, chiShare: ByteArray, bigR: Point ): PartialSignature {
         val hash = SHA256().digest(message)

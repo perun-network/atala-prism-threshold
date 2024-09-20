@@ -4,12 +4,10 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
-import perun_network.ecdsa_threshold.hash.Hash
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
 import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
@@ -87,10 +85,9 @@ class PresignRound3Input(
         for (j in bigGammaShares.keys) {
             if (j != this.id) {
                 val logstarPublic = LogStarPublic(
-                    c = kI,
-                    x = bigDeltaShare,
-                    g = gamma,
-                    prover = pailliers[id]!!,
+                    C = kI,
+                    X = bigDeltaShare,
+                    n0 = pailliers[id]!!,
                     aux = pedersens[j]!!,
                 )
 
@@ -98,7 +95,7 @@ class PresignRound3Input(
                     x= kShare.value,
                     rho= kNonce
                 )
-                val proofLog = LogStarProof.newProof(Hash.hashWithID(id), logstarPublic, zkPrivate)
+                val proofLog = LogStarProof.newProof(id, logstarPublic, zkPrivate)
                 result[j] = PresignRound3Output(
                     ssid = ssid,
                     id = id,
@@ -122,41 +119,40 @@ class PresignRound3Input(
     ) : Boolean {
         // Verify M(vrfy, Πaff-g_i ,(ssid, j),(Iε,Jε, Di,j , Ki, Fj,i, Γj ), ψi,j ) = 1.
         val deltaPublic = AffgPublic(
-            kv = k,
-            dv = presignRound2Output.deltaD,
-            fp = presignRound2Output.deltaF,
-            xp = presignRound2Output.bigGammaShare,
-            prover = pailliers[presignRound2Output.id]!!,
-            verifier = pailliers[id]!!,
+            C = k,
+            D = presignRound2Output.deltaD,
+            Y = presignRound2Output.deltaF,
+            X = presignRound2Output.bigGammaShare,
+            n0 = pailliers[presignRound2Output.id]!!,
+            n1 = pailliers[id]!!,
             aux = pedersens[id]!!
         )
-        if (!presignRound2Output.deltaProof.verify(Hash.hashWithID(presignRound2Output.id), deltaPublic)) {
+        if (!presignRound2Output.deltaProof.verify(presignRound2Output.id, deltaPublic)) {
             return false
         }
 
         // Verify M(vrfy, Πaff-g_i,(ssid, j),(Iε,Jε, Dˆk,j , Ki, Fˆj,i, Xj ), ψˆi,j ) = 1
         val chiPublic = AffgPublic(
-            kv = k,
-            dv = presignRound2Output.chiD,
-            fp = presignRound2Output.chiF,
-            xp = ecdsa,
-            prover = pailliers[presignRound2Output.id]!!,
-            verifier = pailliers[id]!!,
+            C = k,
+            D = presignRound2Output.chiD,
+            Y = presignRound2Output.chiF,
+            X = ecdsa,
+            n0 = pailliers[presignRound2Output.id]!!,
+            n1= pailliers[id]!!,
             aux = pedersens[id]!!
         )
-        if (!presignRound2Output.chiProof.verify(Hash.hashWithID(presignRound2Output.id), chiPublic)) {
+        if (!presignRound2Output.chiProof.verify(presignRound2Output.id, chiPublic)) {
             return false
         }
 
         // Verify M(vrfy, Πlog∗_i,(ssid, j),(Iε, Gj , Γj , g), ψ0, i,j ) = 1
         val logPublic = LogStarPublic(
-            c = g,
-            x = presignRound2Output.bigGammaShare,
-            g = null,
-            prover = pailliers[presignRound2Output.id]!!,
+            C = g,
+            X = presignRound2Output.bigGammaShare,
+            n0 = pailliers[presignRound2Output.id]!!,
             aux = pedersens[id]!!
         )
-        return presignRound2Output.proofLog.verify(Hash.hashWithID(presignRound2Output.id), logPublic)
+        return presignRound2Output.proofLog.verify(presignRound2Output.id, logPublic)
     }
 
 }
