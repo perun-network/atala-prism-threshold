@@ -1,5 +1,6 @@
 package perun_network.ecdsa_threshold.math
 
+import perun_network.ecdsa_threshold.ecdsa.Scalar
 import java.io.InputStream
 import java.math.BigInteger
 import java.security.SecureRandom
@@ -57,6 +58,12 @@ fun pedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, B
     return Triple(s, t, lambda)
 }
 
+// Scalar returns a new *curve.Scalar by reading bytes from rand.
+fun sampleScalar(): Scalar {
+    val buffer = ByteArray(32)
+    random.read(buffer)
+    return Scalar(BigInteger(1, buffer))
+}
 class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
 
     override fun read(): Int {

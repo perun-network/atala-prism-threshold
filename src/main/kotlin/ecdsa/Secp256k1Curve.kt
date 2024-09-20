@@ -9,8 +9,8 @@ val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 val A: BigInteger = BigInteger.ZERO // Curve parameter A (for secp256k1)
 val B: BigInteger = BigInteger("7") // Curve parameter B
 val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16) // Order of the base point
-val GX = BigInteger("0x79BE667EF9DCBBAC55A06295CE870B70A0B5A0AA3A2C7CF24E9FBE6D4C4F9BC", 16)
-val GY = BigInteger("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17D448A68554199C47D08F4CF0CBB", 16)
+val GX = BigInteger("79BE667EF9DCBBAC55A06295CE870B70A0B5A0AA3A2C7CF24E9FBE6D4C4F9BC", 16)
+val GY = BigInteger("483ADA7726A3C4655DA4FBFC0E1108A8FD17D448A68554199C47D08F4CF0CBB", 16)
 
 fun secp256k1Order() : BigInteger {
     return P
@@ -39,10 +39,26 @@ data class Point(
 
     // Point addition
     fun add(other: Point): Point {
-        val lambda = (other.y.subtract(y).multiply(other.x.subtract(x).modInverse(P))).mod(P)
-        val x3 = (lambda.pow(2).subtract(x).subtract(other.x)).mod(P)
-        val y3 = (lambda.multiply(x.subtract(x3)).subtract(y)).mod(P)
-        return Point(x3, y3)
+            // Handle special cases
+            if (this.isIdentity()) return other // Adding identity element
+            if (other.isIdentity()) return this // Adding identity element
+
+            // Check if the points are inverses
+            if (this.x == other.x && (this.y.add(other.y).mod(P) == BigInteger.ZERO)) {
+                return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element
+            }
+
+            // Check if points are the same (point doubling case)
+            if (this.x == other.x && this.y == other.y) {
+                return this.double() // Use point doubling
+            }
+
+            // Regular point addition
+            val lambda = (other.y.subtract(this.y).multiply(other.x.subtract(this.x).modInverse(P))).mod(P)
+            val x3 = (lambda.pow(2).subtract(this.x).subtract(other.x)).mod(P)
+            val y3 = (lambda.multiply(this.x.subtract(x3)).subtract(this.y)).mod(P)
+
+            return Point(x3, y3)
     }
 
     // Point doubling
@@ -133,16 +149,16 @@ fun pointDouble(p: Point): Point {
 
 // Function to perform scalar multiplication
 fun scalarMultiply(k: Scalar, point: Point): Point {
-    var result = Point(BigInteger.ZERO, BigInteger.ZERO)
+    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Start with the identity element (point at infinity)
     var addend = point
-    var kTemp = k
+    var kValue = k.value // Work with a copy of the scalar's value to avoid modifying the original Scalar object
 
-    while (kTemp.value > BigInteger.ZERO) {
-        if (kTemp.value.and(BigInteger.ONE) == BigInteger.ONE) {
-            result = pointAdd(result, addend)
+    while (kValue != BigInteger.ZERO) {
+        if (kValue.and(BigInteger.ONE) == BigInteger.ONE) {
+            result = result.add(addend) // Add the current addend if the current bit is 1
         }
-        addend = pointDouble(addend)
-        kTemp.value = kTemp.value.shiftRight(1)
+        addend = addend.double() // Double the point
+        kValue = kValue.shiftRight(1) // Shift right to process the next bit of the scalar
     }
 
     return result

@@ -1,6 +1,5 @@
 package perun_network.ecdsa_threshold.sign
 
-import fr.acinq.secp256k1.Secp256k1
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.hash.Hash
@@ -8,9 +7,7 @@ import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.presign.PresignRound3Output
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
-import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Public
 
 class SignParty(
     val message: ByteArray,
@@ -20,10 +17,10 @@ class SignParty(
     fun createPartialSignature(kShare: ByteArray, chiShare: ByteArray, bigR: Point ): PartialSignature {
         val hash = SHA256().digest(message)
         val rX = bigR.x.toByteArray()
-        var sigmaShare = PrivateKey.newPrivateKey(rX).mul(PrivateKey(chiShare)).add(PrivateKey(hash).mul(PrivateKey(kShare)))
+        val sigmaShare = PrivateKey.newPrivateKey(rX).mul(PrivateKey(chiShare)).add(PrivateKey(hash).mul(PrivateKey(kShare)))
         return PartialSignature(
             ssid = ssid,
-            sigmarShare = sigmaShare
+            sigmaShare = sigmaShare
         )
     }
 }
@@ -31,7 +28,7 @@ class SignParty(
 fun partialSining(r : ByteArray, partialSignatures : List<PartialSignature>) : Signature {
     var sigma = PrivateKey.zeroPrivateKey()
     for (partial in partialSignatures) {
-        sigma = sigma.add(partial.sigmarShare)
+        sigma = sigma.add(partial.sigmaShare)
     }
 
     val signature = Signature(r, sigma.toByteArray())
@@ -57,20 +54,18 @@ fun processPresignOutput(deltaShares: List<Scalar>, bigDeltaShares: List<Point>,
         throw Exception("computed Δ is inconsistent with [δ]G")
     }
 
+    // R = Γ^δ−1
     val deltaInv = delta.invert()
     val bigR = scalarMultiply(deltaInv, gamma)
 
     return bigR
 }
 
-fun verifyLogStar(
-    proofLog : LogStarProof,
+fun verifyPresignRound3Output(
     presignRound3Output: PresignRound3Output,
     k : PaillierCipherText,
-    g : PaillierCipherText,
     prover: PaillierPublic,
     pedersen: PedersenParameters,
-
     ) : Boolean {
     val logStarPublic = LogStarPublic(
         c = k,
@@ -79,8 +74,7 @@ fun verifyLogStar(
         prover = prover,
         aux = pedersen
     )
-    return proofLog.verify(Hash.newHash(), logStarPublic)
+    return presignRound3Output.proofLog.verify(Hash.hashWithID(presignRound3Output.id), logStarPublic)
 }
-
 
 

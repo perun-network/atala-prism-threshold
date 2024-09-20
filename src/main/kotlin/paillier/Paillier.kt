@@ -102,15 +102,6 @@ data class PaillierSecret(
     val phiInv: BigInteger,
     val publicKey: PaillierPublic
 ) {
-    // P returns the first of the two factors composing this key.
-    fun getP() = p
-
-    // Q returns the second of the two factors composing this key.
-    fun getQ() = q
-
-    // Phi returns ϕ = (P-1)(Q-1).
-    fun getPhi() = phi
-
     // Decrypts c and returns the plaintext m ∈ ± (N-2)/2.
     @Throws(IllegalArgumentException::class)
     fun decrypt(ct: PaillierCipherText): BigInteger {

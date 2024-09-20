@@ -20,6 +20,12 @@ class Hash(private val initData: List<Any>, private var digest: Digest<*>?) {
             return Hash(initialData.toList(), null)
         }
 
+        fun hashWithID(id: Int): Hash {
+            val hash = Hash.newHash()
+            hash.writeAny(id)
+            return hash
+        }
+
     }
 
     init {

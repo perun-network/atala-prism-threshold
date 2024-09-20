@@ -37,7 +37,7 @@ data class AffgCommitment(
     val T: BigInteger?          // T = sʸ tᵘ (mod N)
 )
 
-class Proof(
+class AffgProof(
     val commitment: AffgCommitment,
     val Z1: BigInteger?,  // Z1 = Z₁ = α + e⋅x
     val Z2: BigInteger?,  // Z2 = Z₂ = β + e⋅y
@@ -102,7 +102,7 @@ class Proof(
         }
 
 
-        fun newProof(hash: Hash, public: AffgPublic, private: AffgPrivate): Proof {
+        fun newProof(hash: Hash, public: AffgPublic, private: AffgPrivate): AffgProof {
             val N0 = public.verifier.n
             val N1 = public.prover.n
 
@@ -149,7 +149,7 @@ class Proof(
             val w = N0.modPow(private.S, e).multiply(rho).mod(N0) // ρ⋅sᵉ mod N₀
             val wY = N1.modPow(private.R, e).multiply(rhoY).mod(N1) // ρy⋅rᵉ mod N₁
 
-            return Proof(
+            return AffgProof(
                 commitment = commitment,
                 Z1 = z1,
                 Z2 = z2,
