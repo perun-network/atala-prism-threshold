@@ -2,7 +2,6 @@ package perun_network.ecdsa_threshold.sign
 
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
-import perun_network.ecdsa_threshold.hash.Hash
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
@@ -67,13 +66,13 @@ fun verifyPresignRound3Output(
     pedersen: PedersenParameters,
     ) : Boolean {
     val logStarPublic = LogStarPublic(
-        c = k,
-        x = presignRound3Output.bigDeltaShare,
+        C = k,
+        X = presignRound3Output.bigDeltaShare,
         g = presignRound3Output.gamma,
-        prover = prover,
+        n0 = prover,
         aux = pedersen
     )
-    return presignRound3Output.proofLog.verify(Hash.hashWithID(presignRound3Output.id), logStarPublic)
+    return presignRound3Output.proofLog.verify(presignRound3Output.id, logStarPublic)
 }
 
 

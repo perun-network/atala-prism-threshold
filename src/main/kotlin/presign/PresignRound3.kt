@@ -1,9 +1,6 @@
 package perun_network.ecdsa_threshold.presign
 
-import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.newPoint
-import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
+import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
@@ -87,6 +84,7 @@ class PresignRound3Input(
                 val logstarPublic = LogStarPublic(
                     C = kI,
                     X = bigDeltaShare,
+                    g = gamma,
                     n0 = pailliers[id]!!,
                     aux = pedersens[j]!!,
                 )
@@ -149,6 +147,7 @@ class PresignRound3Input(
         val logPublic = LogStarPublic(
             C = g,
             X = presignRound2Output.bigGammaShare,
+            g = newBasePoint(),
             n0 = pailliers[presignRound2Output.id]!!,
             aux = pedersens[id]!!
         )

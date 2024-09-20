@@ -2,6 +2,7 @@ package perun_network.ecdsa_threshold.presign
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
+import perun_network.ecdsa_threshold.ecdsa.newBasePoint
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
@@ -63,7 +64,7 @@ class PresignRound2Input (
                 val (chiBeta, chiD, chiF, chiProof) = produceAffGProof(id, secretECDSA.value, ecdsas[j]!!, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
 
                 val proofLog = LogStarProof.newProof(id,
-                    LogStarPublic(gShares[id]!!, bigGammaShare,  pailliers[id]!!, pedersens[id]!!),
+                    LogStarPublic(gShares[id]!!, bigGammaShare, newBasePoint(),  pailliers[id]!!, pedersens[id]!!),
                     LogStarPrivate(gammaShare.value, gNonce))
 
                 val presignOutput2 = PresignRound2Output(

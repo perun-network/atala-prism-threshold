@@ -17,6 +17,8 @@ data class LogStarPublic(
     // X = G^x
     val X : Point,
 
+    val g: Point,
+
     val n0 : PaillierPublic,
     val aux    : PedersenParameters
 )
@@ -88,6 +90,8 @@ class LogStarProof(
                 public.C.value(),
                 public.X.x,
                 public.X.y,
+                public.g.x,
+                public.g.y,
                 commitment.S,
                 commitment.A.value(),
                 commitment.Y.x,
@@ -102,8 +106,6 @@ class LogStarProof(
     fun verify(id: Int, public: LogStarPublic): Boolean {
         if (!isValid(public)) return false
 
-        val g = newBasePoint()
-
         if (!isInIntervalLEps(z1)) return false
 
         val e = challenge(id, public, commitment)
@@ -114,7 +116,7 @@ class LogStarProof(
         val rhs = public.C.clone().modPowNSquared(public.n0, e).mul(public.n0, commitment.A)
         if (lhs != rhs) return false
 
-        val lhsPoint = Scalar(z1.mod(secp256k1Order())).act(g)
+        val lhsPoint = Scalar(z1.mod(secp256k1Order())).act(public.g)
         val rhsPoint = Scalar(e.mod(secp256k1Order())).act(public.X).add(commitment.Y)
         if (lhsPoint != rhsPoint) return false
 
