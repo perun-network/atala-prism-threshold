@@ -24,6 +24,7 @@ fun sampleNeg(inputStream: InputStream, bits: Int): BigInteger {
     return if (neg == 1) -out else out
 }
 
+fun sampleL() : BigInteger = sampleNeg(random, L)
 
 // IntervalLPrime returns an integer in the range ± 2^l'
 fun sampleLPrime(): BigInteger = sampleNeg(random,LPrime)

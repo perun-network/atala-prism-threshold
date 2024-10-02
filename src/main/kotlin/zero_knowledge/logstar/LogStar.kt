@@ -12,7 +12,6 @@ import java.math.BigInteger
 
 data class LogStarPublic(
     // C = Enc₀(x;ρ)
-    // Encryption of x under the prover's key
     val C : PaillierCipherText,
     // X = G^x
     val X : Point,
@@ -24,9 +23,8 @@ data class LogStarPublic(
 )
 
 data class LogStarPrivate(
-    // X is the plaintext of C and the discrete log of X.
     val x: BigInteger,
-    // Rho = ρ is nonce used to encrypt C.
+    // rho = ρ is nonce used to encrypt C.
     val rho : BigInteger
 )
 
@@ -113,7 +111,7 @@ class LogStarProof(
         if (!public.aux.verify(z1, z3, e, commitment.D, commitment.S)) return false
 
         val lhs = public.n0.encWithNonce(z1, z2)
-        val rhs = public.C.clone().modPowNSquared(public.n0, e).mul(public.n0, commitment.A)
+        val rhs = public.C.clone().modPowNSquared(public.n0, e).modMulNSquared(public.n0, commitment.A)
         if (lhs != rhs) return false
 
         val lhsPoint = Scalar(z1.mod(secp256k1Order())).act(public.g)

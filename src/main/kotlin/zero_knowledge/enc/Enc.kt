@@ -1,6 +1,5 @@
 package perun_network.ecdsa_threshold.zkproof.enc
 
-import kotlinx.serialization.Serializable
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
@@ -63,7 +62,6 @@ data class EncProof(
             }
 
             val z3 = e.multiply(mu).add(gamma)
-
             return EncProof(commitment, z1, z2, z3)
         }
 
@@ -93,7 +91,7 @@ data class EncProof(
         if (!public.aux.verify(z1, z3, e, commitment.C, commitment.S)) return false
 
         val lhs = prover.encWithNonce(z1, z2)
-        val rhs = public.K.clone().modPowNSquared(prover, e).mul(prover, commitment.A)
+        val rhs = public.K.modPowNSquared(prover, e).modMulNSquared(prover, commitment.A)
 
         return lhs == rhs
     }

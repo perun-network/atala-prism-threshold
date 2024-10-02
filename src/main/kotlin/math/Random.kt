@@ -58,12 +58,19 @@ fun pedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, B
     return Triple(s, t, lambda)
 }
 
-// Scalar returns a new *curve.Scalar by reading bytes from rand.
+// Scalar returns a new Scalar by reading bytes from rand.
 fun sampleScalar(): Scalar {
-    val buffer = ByteArray(32)
-    random.read(buffer)
-    return Scalar(BigInteger(1, buffer))
+    val buffer = ByteArray(32)  // 32 bytes = 256 bits, common for many elliptic curve orders
+    SecureRandom().nextBytes(buffer)    // Fill the buffer with random bytes
+
+    // Convert the byte array to a BigInteger and make sure it's positive by using (1, buffer)
+    val bigIntValue = BigInteger(1, buffer)
+
+    // Return a new Scalar with the generated value
+    return Scalar(bigIntValue)
 }
+
+
 class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
 
     override fun read(): Int {
@@ -73,8 +80,15 @@ class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStr
     }
 
     override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
-        if (length <= 0) return 0
-        secureRandom.nextBytes(buffer.copyOfRange(offset, offset + length))
+        if (length <= 0 || offset < 0 || offset >= buffer.size || length > buffer.size - offset) {
+            throw IndexOutOfBoundsException("Invalid offset or length")
+        }
+
+        secureRandom.nextBytes(buffer)
         return length
+    }
+
+    override fun read(buffer: ByteArray): Int {
+        return read(buffer, 0, buffer.size)
     }
 }

@@ -3,6 +3,11 @@ package perun_network.ecdsa_threshold.ecdsa
 import fr.acinq.secp256k1.Secp256k1
 import java.math.BigInteger
 
+class PartialSignature (
+    val ssid : ByteArray,
+    val sigmaShare: PrivateKey,
+)
+
 class PrivateKey (
     private val value: ByteArray
 ) {

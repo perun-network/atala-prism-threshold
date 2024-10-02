@@ -1,11 +1,7 @@
 package perun_network.ecdsa_threshold.paillier
 
-import perun_network.ecdsa_threshold.math.BitsBlumPrime
-import perun_network.ecdsa_threshold.math.BitsPaillier
+import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.math.SafePrimeGenerator.generatePaillierKeyPair
-import perun_network.ecdsa_threshold.math.pedersen
-import perun_network.ecdsa_threshold.math.sampleUnitModN
 import java.math.BigInteger
 import java.security.SecureRandom
 
@@ -48,7 +44,7 @@ class PaillierPublic (
         val c = nPlusOne.modPow(m, nSquared)
         val rhoN = nonce.modPow(n, nSquared)
 
-        return PaillierCipherText(c.mod(n).multiply(rhoN.mod(n)).mod(n))
+        return PaillierCipherText(c.mod(nSquared).multiply(rhoN.mod(nSquared)).mod(nSquared))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -138,7 +134,7 @@ data class PaillierSecret(
     }
 
     // GeneratePedersen generates parameters for Pedersen commitment.
-    fun generatePedersen(): Pair<PedersenParameters, BigInteger> {
+    fun  generatePedersen(): Pair<PedersenParameters, BigInteger> {
         val n = publicKey.n
         val (s, t, lambda) = pedersen(phi, publicKey.n)
         val ped = PedersenParameters(n, s, t)
@@ -154,37 +150,37 @@ fun paillierKeyGen(): Pair<PaillierPublic, PaillierSecret> {
 
 // Generates primes p and q suitable for the scheme, and returns the initialized SecretKey.
 fun newPaillierSecret(): PaillierSecret {
-    val (p, q) = generatePaillierKeyPair(SecureRandom())
-    return newPaillierSecretFromPrimes(p!!, q!!)
+    val (p, q) = generatePaillierBlumPrimes()
+    return newPaillierSecretFromPrimes(p, q)
 }
 
-// Generates a new SecretKey from given primes P and Q.
-fun newPaillierSecretFromPrimes(P: BigInteger, Q: BigInteger): PaillierSecret {
+// Generates a new SecretKey from given primes p and q.
+fun newPaillierSecretFromPrimes(p: BigInteger, q: BigInteger): PaillierSecret {
     val one = BigInteger.ONE
 
-    val n = P.multiply(Q)
+    if (!validatePrime(p) || !validatePrime(q)) {
+        throw IllegalArgumentException("Paillier prime not valid")
+    }
+
+    val n = p.multiply(q)
     val nSquared = n.multiply(n)
     val nPlusOne = n.add(one)
 
-    val pMinus1 = P.subtract(one)
-    val qMinus1 = Q.subtract(one)
+    val pMinus1 = p.subtract(one)
+    val qMinus1 = q.subtract(one)
     val phi = pMinus1.multiply(qMinus1)
     val phiInv = phi.modInverse(n)
 
-    val pSquared = pMinus1.multiply(P)
-    val qSquared = qMinus1.multiply(Q)
-    val nSquaredMod = pSquared.multiply(qSquared)
-
     return PaillierSecret(
-        p = P,
-        q = Q,
+        p = p,
+        q = q,
         phi = phi,
         phiInv = phiInv,
         publicKey = PaillierPublic(n, nSquared, nPlusOne)
     )
 }
 
-// ValidatePrime checks whether p is a suitable prime for Paillier.
+// validatePrime checks whether p is a suitable prime for Paillier.
 fun validatePrime(p: BigInteger): Boolean {
     val bitsWant = BitsBlumPrime
 

@@ -24,17 +24,11 @@ fun isValidBigModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
 }
 
 // IsInIntervalLEps returns true if n ∈ [-2ˡ⁺ᵉ,…,2ˡ⁺ᵉ].
-fun isInIntervalLEps(n: BigInteger?): Boolean {
-    if (n == null) {
-        return false
-    }
+fun isInIntervalLEps(n: BigInteger): Boolean {
     return n.bitLength() <= LPlusEpsilon
 }
 
 // IsInIntervalLPrimeEps returns true if n ∈ [-2ˡ'⁺ᵉ,…,2ˡ'⁺ᵉ].
-fun isInIntervalLPrimeEps(n: BigInteger?): Boolean {
-    if (n == null) {
-        return false
-    }
+fun isInIntervalLPrimeEps(n: BigInteger): Boolean {
     return n.bitLength() <= LPrimePlusEpsilon
 }

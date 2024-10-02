@@ -3,18 +3,20 @@ package perun_network.ecdsa_threshold.presign
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newBasePoint
+import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
+import perun_network.ecdsa_threshold.zkproof.affg.produceAffGProof
 import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
-import perun_network.ecdsa_threshold.zkproof.produceAffGProof
 
 import java.math.BigInteger
+import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Public
 
 class PresignRound2Output (
     val ssid: ByteArray,
@@ -38,33 +40,33 @@ class PresignRound2Input (
     val secretECDSA: Scalar,
     val secretPaillier : PaillierSecret,
     val gNonce: BigInteger,
-    val pailliers : Map<Int, PaillierPublic>,
-    val pedersens : Map<Int, PedersenParameters>
+    val publics: Map<Int, PublicPrecomputation>
 ) {
     fun producePresignRound2Output(
-        kShares : Map<Int, PaillierCipherText>,
-        gShares : Map<Int, PaillierCipherText>,
+        signers : List<Int>,
+        ks : Map<Int, PaillierCipherText>,
+        gs : Map<Int, PaillierCipherText>,
         ecdsas : Map<Int, Point>,
-    ): Map<Int, PresignRound2Output> {
+    ): Pair<Map<Int, PresignRound2Output>, Point> {
         val result = mutableMapOf<Int, PresignRound2Output>()
         // Γᵢ = [γᵢ]⋅G
         val bigGammaShare = gammaShare.actOnBase()
 
-        for (j in pailliers.keys) {
+        for (j in signers) {
             if (j != id) {
                 // deltaBeta = βi,j
                 // compute DeltaD = Dᵢⱼ
                 // compute DeltaF = Fᵢⱼ
                 // compute deltaProof = ψj,i
-                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGProof(id, gammaShare.value, bigGammaShare, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
+                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGProof(id, gammaShare.value, bigGammaShare, ks[id]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
                 // chiBeta = β^i,j
                 // compute chiD = D^ᵢⱼ
                 // compute chiF = F^ᵢⱼ
                 // compute chiProof = ψ^j,i
-                val (chiBeta, chiD, chiF, chiProof) = produceAffGProof(id, secretECDSA.value, ecdsas[j]!!, kShares[id]!!, secretPaillier, pailliers[j]!!, pedersens[j]!!)
+                val (chiBeta, chiD, chiF, chiProof) = produceAffGProof(id, secretECDSA.value, ecdsas[j]!!, ks[id]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
 
                 val proofLog = LogStarProof.newProof(id,
-                    LogStarPublic(gShares[id]!!, bigGammaShare, newBasePoint(),  pailliers[id]!!, pedersens[id]!!),
+                    LogStarPublic(gs[id]!!, bigGammaShare, newBasePoint(),  publics[id]!!.paillierPublic, publics[id]!!.aux),
                     LogStarPrivate(gammaShare.value, gNonce))
 
                 val presignOutput2 = PresignRound2Output(
@@ -85,16 +87,17 @@ class PresignRound2Input (
             }
         }
 
-        return result
+        return result to bigGammaShare
     }
 
     fun verifyPresignRound1Output(
+        j: Int,
         presignRound1Output : PresignRound1Output,
     ) : Boolean {
         val public = EncPublic(
             K = presignRound1Output.K,
-            n0 = pailliers[presignRound1Output.id]!!,
-            aux = pedersens[id]!!,
+            n0 = publics[j]!!.paillierPublic,
+            aux = publics[id]!!.aux,
         )
         return presignRound1Output.proof.verify(presignRound1Output.id, public)
     }

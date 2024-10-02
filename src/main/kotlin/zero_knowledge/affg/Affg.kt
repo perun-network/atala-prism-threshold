@@ -1,12 +1,15 @@
 package perun_network.ecdsa_threshold.zkproof.affg
 
+import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
+import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
+import perun_network.ecdsa_threshold.tuple.Quintuple
 import java.math.BigInteger
 
 
@@ -39,18 +42,18 @@ data class AffgCommitment(
 
 class AffgProof(
     val commitment: AffgCommitment,
-    val Z1: BigInteger,  // Z1 = Z₁ = α + e⋅x
-    val Z2: BigInteger,  // Z2 = Z₂ = β + e⋅y
-    val Z3: BigInteger,  // Z3 = Z₃ = γ + e⋅m
-    val Z4: BigInteger,  // Z4 = Z₄ = δ + e⋅μ
-    val W: BigInteger,   // W = w = ρ⋅sᵉ (mod N₀)
-    val Wy: BigInteger   // Wy = wy = ρy⋅rᵉ (mod N₁)
+    val z1: BigInteger,  // z1 = Z₁ = α + e⋅x
+    val z2: BigInteger,  // z2 = Z₂ = β + e⋅y
+    val z3: BigInteger,  // z3 = Z₃ = γ + e⋅m
+    val z4: BigInteger,  // z4 = Z₄ = δ + e⋅μ
+    val w: BigInteger,   // W = w = ρ⋅sᵉ (mod N₀)
+    val wY: BigInteger   // Wy = wy = ρy⋅rᵉ (mod N₁)
 ) {
     fun isValid(public: AffgPublic): Boolean {
         if (!public.n1.validateCiphertexts(commitment.A) ||
             !public.n0.validateCiphertexts(commitment.By)) return false
-        if (!isValidBigModN(public.n0.n, Wy)) return false
-        if (!isValidBigModN(public.n1.n, W)) return false
+        if (!isValidBigModN(public.n0.n, wY)) return false
+        if (!isValidBigModN(public.n1.n, w)) return false
         if (commitment.Bx.isIdentity()) return false
         return true
     }
@@ -61,28 +64,28 @@ class AffgProof(
         val n1 = public.n1
         val n0 = public.n0
 
-        if (!isInIntervalLEps(Z1)) return false
-        if (!isInIntervalLPrimeEps(Z2)) return false
+        if (!isInIntervalLEps(z1)) return false
+        if (!isInIntervalLPrimeEps(z2)) return false
 
-        val e = challenge(id, public, commitment) ?: return false
+        val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(Z1, Z3, e, commitment.E, commitment.S)) return false
-        if (!public.aux.verify(Z2, Z4, e, commitment.F, commitment.T)) return false
+        if (!public.aux.verify(z1, z3, e, commitment.E, commitment.S)) return false
+        if (!public.aux.verify(z2, z4, e, commitment.F, commitment.T)) return false
 
         // Verifying the conditions
-        val tmp = public.C.clone().modPowNSquared(n1, Z1)
-        val lhs = n1.encWithNonce(Z2, W).mul(n1, tmp)
-        val rhs = public.D.clone().modPowNSquared(n1, e).mul(n1, commitment.A)
+        val tmp = public.C.clone().modPowNSquared(n1, z1)
+        val lhs = n1.encWithNonce(z2, w).modMulNSquared(n1, tmp)
+        val rhs = public.D.clone().modPowNSquared(n1, e).modMulNSquared(n1, commitment.A)
 
         if (lhs != rhs) return false
 
-        val lhsPoint = Scalar(Z1.mod(secp256k1Order())).actOnBase() // g^z1
+        val lhsPoint = Scalar(z1.mod(secp256k1Order())).actOnBase() // g^z1
         val rhsPoint = Scalar(e.mod(secp256k1Order())).act(public.X).add(commitment.Bx)
 
         if (lhsPoint != rhsPoint) return false
 
-        val lhsEnc = n0.encWithNonce(Z2, Wy)
-        val rhsEnc = public.Y.clone().modPowNSquared(n0, e).mul(n0, commitment.By)
+        val lhsEnc = n0.encWithNonce(z2, wY)
+        val rhsEnc = public.Y.clone().modPowNSquared(n0, e).modMulNSquared(n0, commitment.By)
 
         if (lhsEnc != rhsEnc) return false
 
@@ -137,7 +140,7 @@ class AffgProof(
             val mu = sampleLN()
 
             val cAlpha = public.C.clone().modPowNSquared(public.n0, alpha) // Cᵃ mod N₀ = α ⊙ Kv
-            val A = cAlpha.clone().mul(public.n0, public.n0.encWithNonce(beta, r)) // A = C^α· ((1 + N0)β· rN0 ) mod N²
+            val A = cAlpha.clone().modMulNSquared(public.n0, public.n0.encWithNonce(beta, r)) // A = C^α· ((1 + N0)β· rN0 ) mod N²
             val Bx = Scalar(alpha.mod(secp256k1Order())).actOnBase()
             val By = public.n1.encWithNonce(beta, ry)
 
@@ -159,13 +162,75 @@ class AffgProof(
 
             return AffgProof(
                 commitment = commitment,
-                Z1 = z1,
-                Z2 = z2,
-                Z3 = z3,
-                Z4 = z4,
-                W = w,
-                Wy = wY
+                z1 = z1,
+                z2 = z2,
+                z3 = z3,
+                z4 = z4,
+                w = w,
+                wY = wY
             )
         }
     }
+}
+
+
+
+fun computeZKMaterials(
+    senderSecretShare: BigInteger,
+    receiverEncryptedShare: PaillierCipherText,
+    sender: PaillierSecret,
+    receiver: PaillierPublic
+): Quintuple<
+        PaillierCipherText,
+        PaillierCipherText,
+        BigInteger,
+        BigInteger,
+        BigInteger
+        > {
+    val y = sampleLPrime()
+
+    val (Y, rhoY) = sender.publicKey.enc(y)
+
+    val (D, rho) = receiver.enc(y)
+    val tmp = receiverEncryptedShare.clone().modPowNSquared(receiver, senderSecretShare)
+    D.modMulNSquared(receiver, tmp)
+
+    return Quintuple(D, Y, rho, rhoY, y)
+}
+
+
+fun produceAffGProof(
+    id: Int,
+    senderSecretShare: BigInteger, // senderSecretShare = aᵢ
+    senderSecretSharePoint: Point, // senderSecretSharePoint = Aᵢ = aᵢ⋅G
+    receiverEncryptedShare: PaillierCipherText, // receiverEncryptedShare = Encⱼ(bⱼ)
+    sender: PaillierSecret,
+    receiver: PaillierPublic,
+    verifier: PedersenParameters
+): Quadruple<
+        BigInteger, // beta = β
+        PaillierCipherText, // D = (aⱼ ⊙ Bᵢ) ⊕ encᵢ(- β, s)
+        PaillierCipherText, // Y = encⱼ(-β, r)
+        AffgProof   // Proof = zkaffg proof of correct encryption.
+        > {
+    val (D, Y, rho, rhoY, y) = computeZKMaterials(senderSecretShare, receiverEncryptedShare, sender, receiver)
+    val proof = AffgProof.newProof(
+        id,
+        AffgPublic(
+            C = receiverEncryptedShare,
+            D = D,
+            Y = Y,
+            X = senderSecretSharePoint,
+            n0 = sender.publicKey,
+            n1 = receiver,
+            aux = verifier
+        ), AffgPrivate(
+            x = senderSecretShare,
+            y = y,
+            rho = rho,
+            rhoY= rhoY
+        )
+    )
+    val beta = y.negate()
+    return Quadruple(beta, D, Y, proof)
 }

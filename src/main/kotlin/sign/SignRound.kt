@@ -2,48 +2,68 @@ package perun_network.ecdsa_threshold.sign
 
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
+import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.presign.PresignRound3Output
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
+import java.math.BigInteger
 
 class SignParty(
-    val message: ByteArray,
+    val hash: ByteArray,
     val ssid: ByteArray,
+    val id : Int,
+    val publics: Map<Int, PublicPrecomputation>
 ) {
-    fun createPartialSignature(kShare: ByteArray, chiShare: ByteArray, bigR: Point ): PartialSignature {
-        val hash = SHA256().digest(message)
-        val rX = bigR.x.toByteArray()
-        val sigmaShare = PrivateKey.newPrivateKey(rX).mul(PrivateKey(chiShare)).add(PrivateKey(hash).mul(PrivateKey(kShare)))
+    fun createPartialSignature(kShare: Scalar, chiShare: Scalar, bigR: Point ): PartialSignature {
+        val rX = bigR.x
+        val sigmaShare = Scalar(rX).multiply(chiShare).add(Scalar.scalarFromHash(hash).multiply(kShare))
         return PartialSignature(
             ssid = ssid,
-            sigmaShare = sigmaShare
+            sigmaShare = sigmaShare.toPrivateKey()
         )
+    }
+
+    fun verifyPresignRound3Output(
+        j : Int,
+        presignRound3Output: PresignRound3Output,
+        k_j : PaillierCipherText
+    ) : Boolean {
+        val logStarPublic = LogStarPublic(
+            C = k_j,
+            X = presignRound3Output.bigDeltaShare,
+            g = presignRound3Output.gamma,
+            n0 = publics[j]!!.paillierPublic,
+            aux = publics[id]!!.aux
+        )
+        return presignRound3Output.proofLog.verify(presignRound3Output.id, logStarPublic)
     }
 }
 
-fun partialSining(r : ByteArray, partialSignatures : List<PartialSignature>) : Signature {
+fun partialSining(bigR: Point, partialSignatures : List<PartialSignature>) : Signature {
+    val r = bigR.x
     var sigma = PrivateKey.zeroPrivateKey()
     for (partial in partialSignatures) {
         sigma = sigma.add(partial.sigmaShare)
     }
 
-    val signature = Signature(r, sigma.toByteArray())
+    val signature = Signature(r.toByteArray(), sigma.toByteArray())
     return signature
 }
 
-fun processPresignOutput(deltaShares: List<Scalar>, bigDeltaShares: List<Point>, gamma: Point) : Point {
+fun processPresignOutput(
+    signers : List<Int>,
+    deltaShares: Map<Int, BigInteger>,
+    bigDeltaShares: Map<Int, Point>,
+    gamma: Point) : Point {
     // δ = ∑ⱼ δⱼ
     // Δ = ∑ⱼ Δⱼ
     var delta = Scalar.zero()
-    for (deltaShare in deltaShares) {
-        delta = delta.add(deltaShare)
-    }
-
     var bigDelta = newBasePoint()
-    for (bigDeltaShare in bigDeltaShares) {
-        bigDelta = bigDelta.add(bigDeltaShare)
+    for (i in signers) {
+        delta = delta.add(Scalar(deltaShares[i]!!))
+        bigDelta = bigDelta.add(bigDeltaShares[i]!!)
     }
 
     // Δ == [δ]G
@@ -59,20 +79,8 @@ fun processPresignOutput(deltaShares: List<Scalar>, bigDeltaShares: List<Point>,
     return bigR
 }
 
-fun verifyPresignRound3Output(
-    presignRound3Output: PresignRound3Output,
-    k : PaillierCipherText,
-    prover: PaillierPublic,
-    pedersen: PedersenParameters,
-    ) : Boolean {
-    val logStarPublic = LogStarPublic(
-        C = k,
-        X = presignRound3Output.bigDeltaShare,
-        g = presignRound3Output.gamma,
-        n0 = prover,
-        aux = pedersen
-    )
-    return presignRound3Output.proofLog.verify(presignRound3Output.id, logStarPublic)
-}
+
+
+
 
 

@@ -13,7 +13,7 @@ val GX = BigInteger("79BE667EF9DCBBAC55A06295CE870B70A0B5A0AA3A2C7CF24E9FBE6D4C4
 val GY = BigInteger("483ADA7726A3C4655DA4FBFC0E1108A8FD17D448A68554199C47D08F4CF0CBB", 16)
 
 fun secp256k1Order() : BigInteger {
-    return P
+    return N
 }
 
 data class Point(
@@ -171,6 +171,34 @@ data class Scalar (
         fun zero() : Scalar {
             return Scalar(BigInteger.ZERO)
         }
+
+        fun scalarFromInt(value : Int) : Scalar {
+            return Scalar(value.toBigInteger().mod(N))
+        }
+
+        fun scalarFromHash(h: ByteArray) : Scalar {
+            val orderBits = secp256k1Order().bitLength()
+            val orderBytes = (orderBits + 7) / 8
+
+            // Truncate the hash if it's larger than the number of bytes in the curve order
+            val hash = if (h.size > orderBytes) h.sliceArray(0 until orderBytes) else h
+
+            // Convert the hash bytes to a BigInteger
+            var s = BigInteger(1, hash)  // BigInteger(1, ...) ensures it's positive
+
+            // Check if the hash is longer than the curve's bit-length, and shift it
+            val excess = hash.size * 8 - orderBits
+            if (excess > 0) {
+                s = s.shiftRight(excess)
+            }
+
+            // Create a new Scalar from the adjusted value
+            return Scalar(s)
+        }
+    }
+
+    fun isZero() : Boolean {
+        return value == BigInteger.ZERO
     }
 
     fun toPrivateKey(): PrivateKey {
