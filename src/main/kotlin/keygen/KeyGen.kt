@@ -44,8 +44,9 @@ fun generateSessionId(byteSize: Int = 16): ByteArray {
 }
 
 
-fun generatePrecomputations(n: Int, t: Int) : Pair<List<Int>, Map<Int, SecretPrecomputation>> {
-    val ids = generatePartyIds(n)
+fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Pair<List<Int>, Map<Int, SecretPrecomputation>> {
+    if (idRange < n ) throw IllegalArgumentException("id must be higher than n")
+    val ids = generatePartyIds(n, idRange)
     println(ids)
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
@@ -128,7 +129,7 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
     return scaledPrecomps
 }
 
-fun generatePartyIds(n: Int): List<Int> {
-    if (n > 100)  throw IllegalArgumentException("Cannot generate $n distinct numbers in the range [1, 100]")
-    return (1..100).shuffled().take(n)
+fun generatePartyIds(n: Int, idRange: Int): List<Int> {
+    if (n > idRange)  throw IllegalArgumentException("Cannot generate $n distinct numbers in the range [1, 100]")
+    return (1.. idRange).shuffled().take(n)
 }

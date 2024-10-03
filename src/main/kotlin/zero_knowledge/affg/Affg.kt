@@ -73,23 +73,22 @@ class AffgProof(
         if (!public.aux.verify(z2, z4, e, commitment.F, commitment.T)) return false
 
         // Verifying the conditions
-        val tmp = public.C.clone().modPowNSquared(n1, z1)
-        val lhs = n1.encWithNonce(z2, w).modMulNSquared(n1, tmp)
-        val rhs = public.D.clone().modPowNSquared(n1, e).modMulNSquared(n1, commitment.A)
+        // 1st condition
+        val tmp = public.C.clone().modPowNSquared(n0, z1)
+        val lhs = (n0.encryptWithNonce(z2, w)).modMulNSquared(n0, tmp)
+        val rhs = (public.D.clone().modPowNSquared(n0, e)).modMulNSquared(n0, commitment.A)
 
         if (lhs != rhs) return false
 
-        val lhsPoint = Scalar(z1.mod(secp256k1Order())).actOnBase() // g^z1
-        val rhsPoint = Scalar(e.mod(secp256k1Order())).act(public.X).add(commitment.Bx)
+        val lhsPoint = Scalar(z1).actOnBase() // g^z1
+        val rhsPoint = Scalar(e).act(public.X).add(commitment.Bx)
 
         if (lhsPoint != rhsPoint) return false
 
-        val lhsEnc = n0.encWithNonce(z2, wY)
-        val rhsEnc = public.Y.clone().modPowNSquared(n0, e).modMulNSquared(n0, commitment.By)
+        val lhsEnc = n1.encryptWithNonce(z2, wY)
+        val rhsEnc = public.Y.clone().modPowNSquared(n1, e).modMulNSquared(n1, commitment.By)
 
-        if (lhsEnc != rhsEnc) return false
-
-        return true
+        return lhsEnc == rhsEnc
     }
 
     companion object {
@@ -140,9 +139,9 @@ class AffgProof(
             val mu = sampleLN()
 
             val cAlpha = public.C.clone().modPowNSquared(public.n0, alpha) // Cᵃ mod N₀ = α ⊙ Kv
-            val A = cAlpha.clone().modMulNSquared(public.n0, public.n0.encWithNonce(beta, r)) // A = C^α· ((1 + N0)β· rN0 ) mod N²
-            val Bx = Scalar(alpha.mod(secp256k1Order())).actOnBase()
-            val By = public.n1.encWithNonce(beta, ry)
+            val A = cAlpha.clone().modMulNSquared(public.n0, public.n0.encryptWithNonce(beta, r)) // A = C^α· ((1 + N0)β· rN0 ) mod N²
+            val Bx = Scalar(alpha).actOnBase()
+            val By = public.n1.encryptWithNonce(beta, ry)
 
             val E = public.aux.commit(alpha, gamma)
             val S = public.aux.commit(private.x, m)
@@ -152,13 +151,13 @@ class AffgProof(
 
             val e = challenge(id, public, commitment)
 
-            val z1 = private.x.multiply(e).negate().add(alpha) // e•x+α
-            val z2 = private.y.multiply(e).negate().add(beta) // e•y+β
-            val z3 = m.multiply(e).negate().add(gamma) // e•m+γ
-            val z4 = mu.multiply(e).negate().add(delta) // e•μ+δ
+            val z1 = private.x.multiply(e).add(alpha) // e•x+α
+            val z2 = private.y.multiply(e).add(beta) // e•y+β
+            val z3 = m.multiply(e).add(gamma) // e•m+γ
+            val z4 = mu.multiply(e).add(delta) // e•μ+δ
 
-            val w = n0.modPow(private.rho, e).multiply(r).mod(n0) // ρ⋅sᵉ mod N₀
-            val wY = n1.modPow(private.rhoY, e).multiply(ry).mod(n1) // ρy⋅rᵉ mod N₁
+            val w = private.rho.modPow(e, n0).multiply(r).mod(n0) // ρ⋅sᵉ mod N₀
+            val wY = private.rhoY.modPow(e, n1).multiply(ry).mod(n1) // ρy⋅rᵉ mod N₁
 
             return AffgProof(
                 commitment = commitment,
@@ -189,17 +188,17 @@ fun computeZKMaterials(
         > {
     val y = sampleLPrime()
 
-    val (Y, rhoY) = sender.publicKey.enc(y)
+    val (Y, rhoY) = sender.publicKey.encryptRandom(y)
 
-    val (D, rho) = receiver.enc(y)
+    var (D, rho) = receiver.encryptRandom(y)
     val tmp = receiverEncryptedShare.clone().modPowNSquared(receiver, senderSecretShare)
-    D.modMulNSquared(receiver, tmp)
+    D = D.modMulNSquared(receiver, tmp)
 
     return Quintuple(D, Y, rho, rhoY, y)
 }
 
 
-fun produceAffGProof(
+fun produceAffGMaterials(
     id: Int,
     senderSecretShare: BigInteger, // senderSecretShare = aᵢ
     senderSecretSharePoint: Point, // senderSecretSharePoint = Aᵢ = aᵢ⋅G
@@ -221,8 +220,8 @@ fun produceAffGProof(
             D = D,
             Y = Y,
             X = senderSecretSharePoint,
-            n0 = sender.publicKey,
-            n1 = receiver,
+            n0 = receiver,
+            n1 = sender.publicKey,
             aux = verifier
         ), AffgPrivate(
             x = senderSecretShare,

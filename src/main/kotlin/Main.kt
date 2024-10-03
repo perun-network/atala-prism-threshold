@@ -21,9 +21,10 @@ import java.util.Random
 fun main() {
     val n = 3
     val t = 2
+    val range = 3
 
     // Generate Precomputations
-    val (ids, precomps ) = generatePrecomputations(n, t)
+    val (ids, precomps ) = generatePrecomputations(n, t, range)
     println("Precomputation finished for $n signers with threshold $t")
 
     // Message
@@ -92,6 +93,7 @@ fun main() {
                 if (!presignRound2Inputs[i]!!.verifyPresignRound1Output(j, presign1output[i]!!)) {
                     throw ZeroKnowledgeException("failed to validate enc proof for K from $j to $i")
                 }
+                println("Validated presign round 1 output from $j to $i ")
             }
         }
 
@@ -141,6 +143,7 @@ fun main() {
                 ) {
                     throw ZeroKnowledgeException("failed to validate presign round 2 output from $j to $i")
                 }
+                println("Validated presign round 2 output from $j to $i ")
             }
         }
 

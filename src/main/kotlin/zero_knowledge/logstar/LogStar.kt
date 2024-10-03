@@ -1,9 +1,6 @@
 package perun_network.ecdsa_threshold.zkproof.logstar
 
-import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.newBasePoint
-import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
+import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
@@ -53,16 +50,14 @@ class LogStarProof(
         fun newProof(id: Int, public: LogStarPublic, private: LogStarPrivate): LogStarProof {
             val n = public.n0.n
 
-            val g = newBasePoint()
-
             val alpha = sampleLEps()
             val r = sampleUnitModN(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 
             val commitment = LogStarCommitment(
-                A = public.n0.encWithNonce(alpha, r),
-                Y = Scalar(alpha.mod(secp256k1Order())).act(g),
+                A = public.n0.encryptWithNonce(alpha, r),
+                Y = Scalar(alpha).act(public.g),
                 S = public.aux.commit(private.x, mu),
                 D = public.aux.commit(alpha, gamma)
             )
@@ -110,12 +105,12 @@ class LogStarProof(
 
         if (!public.aux.verify(z1, z3, e, commitment.D, commitment.S)) return false
 
-        val lhs = public.n0.encWithNonce(z1, z2)
+        val lhs = public.n0.encryptWithNonce(z1, z2)
         val rhs = public.C.clone().modPowNSquared(public.n0, e).modMulNSquared(public.n0, commitment.A)
         if (lhs != rhs) return false
 
-        val lhsPoint = Scalar(z1.mod(secp256k1Order())).act(public.g)
-        val rhsPoint = Scalar(e.mod(secp256k1Order())).act(public.X).add(commitment.Y)
+        val lhsPoint = Scalar(z1).act(public.g)
+        val rhsPoint = commitment.Y.add(public.X.multiply(Scalar(e)))
         if (lhsPoint != rhsPoint) return false
 
         return true

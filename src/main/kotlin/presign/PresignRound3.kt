@@ -129,8 +129,8 @@ class PresignRound3Input(
             D = presignRound2Output.deltaD,
             Y = presignRound2Output.deltaF,
             X = presignRound2Output.bigGammaShare,
-            n0 = publics[j]!!.paillierPublic,
-            n1 = publics[id]!!.paillierPublic,
+            n1 = publics[j]!!.paillierPublic,
+            n0 = publics[id]!!.paillierPublic,
             aux = publics[id]!!.aux
         )
         if (!presignRound2Output.deltaProof.verify(presignRound2Output.id, deltaPublic)) {
@@ -143,8 +143,8 @@ class PresignRound3Input(
             D = presignRound2Output.chiD,
             Y = presignRound2Output.chiF,
             X = ecdsa_j,
-            n0 = publics[j]!!.paillierPublic,
-            n1= publics[id]!!.paillierPublic,
+            n1 = publics[j]!!.paillierPublic,
+            n0= publics[id]!!.paillierPublic,
             aux = publics[id]!!.aux
         )
         if (!presignRound2Output.chiProof.verify(presignRound2Output.id, chiPublic)) {

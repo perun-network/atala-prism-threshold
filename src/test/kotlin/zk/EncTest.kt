@@ -18,8 +18,8 @@ class EncTest {
         // sample k
         val k = sampleL()
 
-        val (K, rho) = prover.enc(k)
-        assertTrue(K == prover.encWithNonce(k, rho))
+        val (K, rho) = prover.encryptRandom(k)
+        assertTrue(K == prover.encryptWithNonce(k, rho))
 
         val encPublic = EncPublic(
             K,

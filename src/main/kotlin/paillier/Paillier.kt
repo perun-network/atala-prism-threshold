@@ -23,17 +23,17 @@ class PaillierPublic (
         return this.n
     }
 
-    // enc returns the encryption of m under the public key pk.
+    // encryptRandom returns the encryption of m under the public key pk.
     // The nonce used to encrypt is returned.
     // ct = (1+N)ᵐρᴺ (mod N²).
-    fun enc(m: BigInteger): Pair<PaillierCipherText, BigInteger> {
+    fun encryptRandom(m: BigInteger): Pair<PaillierCipherText, BigInteger> {
         val nonce = sampleUnitModN(n)
-        return Pair(encWithNonce(m, nonce), nonce)
+        return Pair(encryptWithNonce(m, nonce), nonce)
     }
 
-    // encWithNonce returns the encryption of m under the public key pk.
+    // encryptWithNonce returns the encryption of m under the public key pk.
     // ct = (1+N)ᵐρᴺ (mod N²).
-    fun encWithNonce(m: BigInteger, nonce: BigInteger): PaillierCipherText {
+    fun encryptWithNonce(m: BigInteger, nonce: BigInteger): PaillierCipherText {
         val mAbs = m.abs()
         val nHalf = n.shiftRight(1)
 
@@ -41,8 +41,8 @@ class PaillierPublic (
             throw IllegalArgumentException("Encrypt: tried to encrypt message outside of range [-(N-1)/2, …, (N-1)/2]")
         }
 
-        val c = nPlusOne.modPow(m, nSquared)
-        val rhoN = nonce.modPow(n, nSquared)
+        val c = nPlusOne.mod(nSquared).modPow(m, nSquared)
+        val rhoN = nonce.mod(nSquared).modPow(n, nSquared)
 
         return PaillierCipherText(c.mod(nSquared).multiply(rhoN.mod(nSquared)).mod(nSquared))
     }

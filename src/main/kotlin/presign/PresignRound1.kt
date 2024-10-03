@@ -33,11 +33,11 @@ class PresignRound1Input (
         val gammaShare = sampleScalar()
         // Gᵢ = Encᵢ(γᵢ;νᵢ)
         val paillier = publics[id]!!.paillierPublic
-        val (G, gNonce) = paillier.enc(gammaShare.value)
+        val (G, gNonce) = paillier.encryptRandom(gammaShare.value)
 
         // kᵢ <- 𝔽,
         val kShare = sampleScalar()
-        val (K, kNonce) = paillier.enc(kShare.value)
+        val (K, kNonce) = paillier.encryptRandom(kShare.value)
         for (j in signers) {
             if (id != j) {
                 // Compute ψ_0_j,i = M(prove, Πenc_j,(ssid, i),(Iε, Ki); (ki, ρi)) for every j 6= i.

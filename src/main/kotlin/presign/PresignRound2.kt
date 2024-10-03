@@ -5,11 +5,9 @@ import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newBasePoint
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
-import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
-import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
-import perun_network.ecdsa_threshold.zkproof.affg.produceAffGProof
+import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
 import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
@@ -58,12 +56,12 @@ class PresignRound2Input (
                 // compute DeltaD = Dᵢⱼ
                 // compute DeltaF = Fᵢⱼ
                 // compute deltaProof = ψj,i
-                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGProof(id, gammaShare.value, bigGammaShare, ks[id]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
+                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGMaterials(id, gammaShare.value, bigGammaShare, ks[j]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
                 // chiBeta = β^i,j
                 // compute chiD = D^ᵢⱼ
                 // compute chiF = F^ᵢⱼ
                 // compute chiProof = ψ^j,i
-                val (chiBeta, chiD, chiF, chiProof) = produceAffGProof(id, secretECDSA.value, ecdsas[j]!!, ks[id]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
+                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(id, secretECDSA.value, ecdsas[j]!!, ks[j]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
 
                 val proofLog = LogStarProof.newProof(id,
                     LogStarPublic(gs[id]!!, bigGammaShare, newBasePoint(),  publics[id]!!.paillierPublic, publics[id]!!.aux),

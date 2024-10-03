@@ -45,23 +45,20 @@ data class EncProof(
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 
-            val a = public.n0.encWithNonce(alpha, r)
+            val A = public.n0.encryptWithNonce(alpha, r)
 
             val commitment = EncCommitment(
                 S = public.aux.commit(private.k, mu),
-                A = a,
+                A = A,
                 C = public.aux.commit(alpha, gamma)
             )
 
             val e = challenge(id, public, commitment)
 
-            val z1 = e.multiply(private.k).add(alpha)
+            val z1 = (private.k.multiply(e)).add(alpha)
 
-            val z2 = private.rho.modPow(e, n).apply {
-                multiply(r).mod(n)
-            }
-
-            val z3 = e.multiply(mu).add(gamma)
+            val z2 = (private.rho.modPow(e, n)).multiply(r).mod(n)
+            val z3 = (e.multiply(mu)).add(gamma)
             return EncProof(commitment, z1, z2, z3)
         }
 
@@ -90,8 +87,8 @@ data class EncProof(
 
         if (!public.aux.verify(z1, z3, e, commitment.C, commitment.S)) return false
 
-        val lhs = prover.encWithNonce(z1, z2)
-        val rhs = public.K.modPowNSquared(prover, e).modMulNSquared(prover, commitment.A)
+        val lhs = prover.encryptWithNonce(z1, z2)
+        val rhs = (public.K.modPowNSquared(prover, e)).modMulNSquared(prover, commitment.A)
 
         return lhs == rhs
     }

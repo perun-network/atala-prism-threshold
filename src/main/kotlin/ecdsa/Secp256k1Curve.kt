@@ -3,14 +3,15 @@ package perun_network.ecdsa_threshold.ecdsa
 import fr.acinq.secp256k1.Hex
 import fr.acinq.secp256k1.Secp256k1
 import java.math.BigInteger
+import kotlin.math.max
 
 // Define the secp256k1 curve parameters
-val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16) // Prime modulus
+val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F".lowercase(), 16) // Prime modulus
 val A: BigInteger = BigInteger.ZERO // Curve parameter A (for secp256k1)
 val B: BigInteger = BigInteger("7") // Curve parameter B
-val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16) // Order of the base point
-val GX = BigInteger("79BE667EF9DCBBAC55A06295CE870B70A0B5A0AA3A2C7CF24E9FBE6D4C4F9BC", 16)
-val GY = BigInteger("483ADA7726A3C4655DA4FBFC0E1108A8FD17D448A68554199C47D08F4CF0CBB", 16)
+val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase(), 16) // Order of the base point
+val GX = BigInteger("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
+val GY = BigInteger("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
 
 fun secp256k1Order() : BigInteger {
     return N
@@ -23,6 +24,12 @@ data class Point(
     init {
         require(x >= BigInteger.ZERO && x < P) { "x-coordinate must be in range" }
         require(y >= BigInteger.ZERO && y < P) { "y-coordinate must be in range" }
+    }
+
+    fun inverse(): Point {
+        // Inverse of the point is (x, -y mod P)
+        val yInverse = P.subtract(y).mod(P)
+        return Point(x, yInverse)
     }
 
     fun toPublicKey(): PublicKey {
@@ -101,9 +108,10 @@ fun byteArrayToPoint(bytes: ByteArray): Point {
 }
 
 fun newBasePoint(): Point {
-    val g = Hex.decode("0479BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8".lowercase())
-    val base = Secp256k1.pubkeyParse(g)
-    return byteArrayToPoint(base)
+    return Point(
+        x = GX,
+        y = GY
+    )
 }
 
 fun newPoint() : Point {
@@ -121,38 +129,20 @@ fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
         bytes.copyOfRange(bytes.size - 32, bytes.size)
     }
 }
-// Function to add two points on the elliptic curve
-fun pointAdd(p1: Point, p2: Point): Point {
-    val (x1, y1) = p1
-    val (x2, y2) = p2
 
-    if (x1 == x2 && y1 == y2) {
-        return pointDouble(p1)
-    }
-
-    val lambda = (y2 - y1).multiply((x2 - x1).modInverse(P)).mod(P)
-    val x3 = (lambda.multiply(lambda).subtract(x1).subtract(x2)).mod(P)
-    val y3 = (lambda.multiply(x1.subtract(x3)).subtract(y1)).mod(P)
-
-    return Point(x3, y3)
-}
-
-// Function to double a point on the elliptic curve
-fun pointDouble(p: Point): Point {
-    val (x1, y1) = p
-    val lambda = (BigInteger.valueOf(3).multiply(x1.multiply(x1)).add(A)).multiply((BigInteger.valueOf(2).multiply(y1)).modInverse(P)).mod(P)
-    val x3 = (lambda.multiply(lambda).subtract(BigInteger.valueOf(2).multiply(x1))).mod(P)
-    val y3 = (lambda.multiply(x1.subtract(x3)).subtract(y1)).mod(P)
-
-    return Point(x3, y3)
-}
 
 // Function to perform scalar multiplication
 fun scalarMultiply(k: Scalar, point: Point): Point {
-    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Start with the identity element (point at infinity)
-    var addend = point
-    var kValue = k.value // Work with a copy of the scalar's value to avoid modifying the original Scalar object
+    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Start with the point at infinity (identity element)
 
+    var kValue = k.value // Copy of the scalar
+    var effectivePoint = point
+    if (kValue < BigInteger.ZERO) {
+        // If scalar is negative, use the inverse point
+        effectivePoint = point.inverse() // Assuming point.inverse() computes (x, -y)
+        kValue = kValue.abs() // Use the absolute value of the scalar
+    }
+    var addend = effectivePoint
     while (kValue != BigInteger.ZERO) {
         if (kValue.and(BigInteger.ONE) == BigInteger.ONE) {
             result = result.add(addend) // Add the current addend if the current bit is 1
