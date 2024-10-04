@@ -41,7 +41,7 @@ class SignTest {
         val m = Scalar.scalarFromHash(hash)
         val kInv = k.invert()
         val R = kInv.actOnBase()
-        val r = Scalar(R.x.mod(secp256k1Order()))
+        val r = R.xScalar()
         val s = r.multiply(x).add(m).multiply(k)
 
         assertFalse(r.isZero() || s.isZero())
@@ -60,7 +60,7 @@ class SignTest {
     @Test
     fun testPresignatures() {
         val n = 3
-        val message = "Hello World".toByteArray()
+        val message = "Hello".toByteArray()
         val hash = SHA256().digest(message)
         val (public, presigs, R) = newPreSignatures(n)
         val sigmaShares = mutableMapOf<Int, PartialSignature>()
@@ -70,7 +70,7 @@ class SignTest {
         for ((_, preSignature) in presigs) {
             val m = Scalar.scalarFromHash(hash)
             val signature = preSignature.signature(sigmaShares)
-            val r = Scalar(BigInteger(signature.R))
+            val r = R.xScalar()
             val s = Scalar(BigInteger(signature.S))
             assertFalse(r.isZero() || s.isZero())
 
@@ -78,7 +78,7 @@ class SignTest {
             val mG = m.actOnBase()
             val rX = r.act(public)
             val R2 = sInv.act(mG.add(rX))
-            assertEquals(R2.x.mod(secp256k1Order()), R.x.mod(secp256k1Order()))
+            assertEquals(R2, R)
             assertTrue(signature.verify(hash, public.toPublicKey()))
         }
     }
@@ -90,19 +90,14 @@ class SignTest {
         val kInv = k.invert()
         val R = kInv.actOnBase()
         val chi = sk.multiply(k)
-        val rBar = mutableMapOf<Int, Point>()
-        val s = mutableMapOf<Int, Point>()
 
         val kShares = generateShares(k, N)
         val chiShares = generateShares(chi, N)
+
         val result = mutableMapOf<Int, Presignature>()
         for (i in 0 until N) {
-            rBar[i] = kShares[i]!!.multiply(kInv).actOnBase()
-            s[i] = chiShares[i]!!.act(R)
             result[i] = Presignature(
                 R = R,
-                rBar = rBar,
-                S = s,
                 kShare = kShares[i]!!,
                 chiShare = chiShares[i]!!
             )
@@ -111,33 +106,33 @@ class SignTest {
     }
 
     fun generateShares(secret: Scalar, N: Int): Map<Int, Scalar> {
-        val sum = Scalar.zero()
+        var sum = Scalar.zero()
         val shares = mutableMapOf<Int, Scalar>()
 
         for (i in 0 until N) {
             if (i == 0) continue // Skip the first ID for later
             val share = sampleScalar()
-            sum.add(share)
+            sum = sum.add(share)
             shares[i] = share
         }
 
         // Compute the share for the first party
         shares[0] = secret.subtract(sum)
-
+        if (secret != sum.add(shares[0]!!)) {
+            throw Exception("Secret mismatch")
+        }
         return shares
     }
 }
 
 data class Presignature(
     val R : Point,
-    val rBar : Map<Int, Point>,
-    val S : Map<Int, Point>,
     val kShare: Scalar,
     val chiShare: Scalar
 ) {
     fun sign(message : ByteArray): PartialSignature {
         val m = Scalar.scalarFromHash(message)
-        val r = Scalar(R.x.mod(secp256k1Order()))
+        val r = R.xScalar()
         val mk = m.multiply(kShare)
         val rx = r.multiply(chiShare)
         return PartialSignature(
@@ -152,6 +147,6 @@ data class Presignature(
         for ((_,sigmaShare) in sigmaShares) {
            sigma = sigma.add(sigmaShare.sigmaShare)
         }
-        return Signature(Scalar(R.x.mod(secp256k1Order())).toByteArray(), sigma.toByteArray())
+        return Signature(R.xScalar().toByteArray(), sigma.toByteArray())
     }
 }

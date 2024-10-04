@@ -9,7 +9,7 @@ import kotlin.math.max
 val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F".lowercase(), 16) // Prime modulus
 val A: BigInteger = BigInteger.ZERO // Curve parameter A (for secp256k1)
 val B: BigInteger = BigInteger("7") // Curve parameter B
-val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase(), 16) // Order of the base point
+val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16) // Order of the base point
 val GX = BigInteger("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
 val GY = BigInteger("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
 
@@ -24,6 +24,10 @@ data class Point(
     init {
         require(x >= BigInteger.ZERO && x < P) { "x-coordinate must be in range" }
         require(y >= BigInteger.ZERO && y < P) { "y-coordinate must be in range" }
+    }
+
+    fun xScalar() : Scalar {
+        return Scalar(x.mod(N))
     }
 
     fun inverse(): Point {
