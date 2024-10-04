@@ -18,10 +18,11 @@ class SignParty(
 ) {
     fun createPartialSignature(kShare: Scalar, chiShare: Scalar, bigR: Point ): PartialSignature {
         val rX = bigR.x
-        val sigmaShare = Scalar(rX).multiply(chiShare).add(Scalar.scalarFromHash(hash).multiply(kShare))
+        val sigmaShare = Scalar(rX.mod(secp256k1Order())).multiply(chiShare).add(Scalar.scalarFromHash(hash).multiply(kShare))
         return PartialSignature(
             ssid = ssid,
-            sigmaShare = sigmaShare.toPrivateKey()
+            id = id,
+            sigmaShare = sigmaShare
         )
     }
 
@@ -41,16 +42,28 @@ class SignParty(
     }
 }
 
-fun partialSining(bigR: Point, partialSignatures : List<PartialSignature>) : Signature {
-    val r = bigR.x
-    var sigma = PrivateKey.zeroPrivateKey()
+fun partialSigning(bigR: Point, partialSignatures : List<PartialSignature>, publicPoint: Point, hash : ByteArray) : Signature {
+    val r = bigR.x.mod(secp256k1Order())
+    var sigma = Scalar.zero()
     for (partial in partialSignatures) {
         sigma = sigma.add(partial.sigmaShare)
     }
 
-    val signature = Signature(r.toByteArray(), sigma.toByteArray())
+    val signature = Signature(r.toByteArray(), sigma.toPrivateKey().toByteArray())
+
+    val sInv = sigma.invert()
+    val mG = Scalar.scalarFromHash(hash).actOnBase()
+    val rX = Scalar(r).act(publicPoint)
+
+    val R2 =  mG.add(rX)
+    val bigR2 = sInv.act(R2)
+    if  (bigR2 != bigR) {
+        throw Exception("invalid signature")
+    }
+
     return signature
 }
+
 
 fun processPresignOutput(
     signers : List<Int>,
@@ -60,21 +73,21 @@ fun processPresignOutput(
     // δ = ∑ⱼ δⱼ
     // Δ = ∑ⱼ Δⱼ
     var delta = Scalar.zero()
-    var bigDelta = newBasePoint()
+    var bigDelta = newPoint()
     for (i in signers) {
-        delta = delta.add(Scalar(deltaShares[i]!!))
+        delta = delta.add(Scalar(deltaShares[i]!!.mod(secp256k1Order())))
         bigDelta = bigDelta.add(bigDeltaShares[i]!!)
     }
 
     // Δ == [δ]G
-    val deltaComputed = delta.actOnBase().toPublicKey()
-    if (deltaComputed.equals(bigDelta)) {
+    val deltaComputed = delta.actOnBase()
+    if (deltaComputed != bigDelta) {
         throw Exception("computed Δ is inconsistent with [δ]G")
     }
 
     // R = Γ^δ−1
     val deltaInv = delta.invert()
-    val bigR = scalarMultiply(deltaInv, gamma)
+    val bigR = deltaInv.act(gamma)
 
     return bigR
 }

@@ -1,6 +1,7 @@
 package perun_network.ecdsa_threshold.math
 
 import perun_network.ecdsa_threshold.ecdsa.Scalar
+import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import java.io.InputStream
 import java.math.BigInteger
 import java.security.SecureRandom
@@ -67,7 +68,7 @@ fun sampleScalar(): Scalar {
     val bigIntValue = BigInteger(1, buffer)
 
     // Return a new Scalar with the generated value
-    return Scalar(bigIntValue)
+    return Scalar(bigIntValue.mod(secp256k1Order()))
 }
 
 

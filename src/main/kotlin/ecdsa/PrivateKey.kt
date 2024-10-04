@@ -5,7 +5,8 @@ import java.math.BigInteger
 
 class PartialSignature (
     val ssid : ByteArray,
-    val sigmaShare: PrivateKey,
+    val id : Int,
+    val sigmaShare: Scalar,
 )
 
 class PrivateKey (
@@ -23,7 +24,7 @@ class PrivateKey (
         }
 
         fun zeroPrivateKey(): PrivateKey {
-            return newPrivateKey(ByteArray(32))
+            return Scalar.zero().toPrivateKey()
         }
     }
 

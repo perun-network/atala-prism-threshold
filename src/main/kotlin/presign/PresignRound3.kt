@@ -31,36 +31,34 @@ class PresignRound3Input(
     val gammaShare : BigInteger,
     val secretPaillier: PaillierSecret,
     val kShare: Scalar,
-    val kI : PaillierCipherText,
+    val K : PaillierCipherText,
     val kNonce: BigInteger,
     val secretECDSA: BigInteger,
     val publics: Map<Int, PublicPrecomputation>
 ) {
     fun producePresignRound3Output(
         signers : List<Int>,
-        selfBigGammaShare : Point,
-        presignRound2Output: Map<Int, PresignRound2Output>
+        bigGammaShares : Map<Int,Point>,
+        presignRound2Outputs: Map<Int, Map<Int, PresignRound2Output>>
     ) : Quintuple<Map<Int, PresignRound3Output>, BigInteger, BigInteger, Point, Point>{
         val  result = mutableMapOf<Int, PresignRound3Output>()
-        val bigGammaShares=  mutableMapOf<Int, Point>()
         val deltaShareAlphas= mutableMapOf<Int, BigInteger>() // DeltaShareAlpha[j] = αᵢⱼ
         val deltaShareBetas= mutableMapOf<Int, BigInteger>()  // DeltaShareBeta[j] = βᵢⱼ
         val chiShareAlphas= mutableMapOf<Int, BigInteger>()   // ChiShareAlpha[j] = α̂ᵢⱼ
         val chiShareBetas= mutableMapOf<Int, BigInteger>()   // ChiShareBeta[j] = β̂^ᵢⱼ
-        for ((i, output) in presignRound2Output) {
-            bigGammaShares[i] = output.bigGammaShare
-            deltaShareBetas[i] =  output.deltaBeta
-            chiShareBetas[i] = output.chiBeta
-            deltaShareAlphas[i] = secretPaillier.decrypt(output.deltaD)
-            chiShareAlphas[i] = secretPaillier.decrypt(output.chiD)
+        for (j in signers) {
+            if (j != id) {
+                deltaShareBetas[j] = presignRound2Outputs[j]!![id]!!.deltaBeta
+                chiShareBetas[j] = presignRound2Outputs[j]!![id]!!.chiBeta
+                deltaShareAlphas[j] = secretPaillier.decrypt(presignRound2Outputs[j]!![id]!!.deltaD)
+                chiShareAlphas[j] = secretPaillier.decrypt(presignRound2Outputs[j]!![id]!!.chiD)
+            }
         }
 
-        // Add self-values
-        bigGammaShares[id] = selfBigGammaShare
 
         // Γ = ∑ⱼ Γⱼ
         var bigGamma = newPoint()
-        for (bigGammaShare in bigGammaShares.values) {
+        for ((i, bigGammaShare) in bigGammaShares) {
             bigGamma = bigGamma.add(bigGammaShare)
         }
 
@@ -73,34 +71,34 @@ class PresignRound3Input(
         // χᵢ = xᵢ kᵢ
         var chiShare = secretECDSA.multiply(kShare.value)
 
-        for (i in signers) {
-            if (i != this.id) {
+        for (j in signers) {
+            if (j != this.id) {
                 //δᵢ += αᵢⱼ + βᵢⱼ
-                deltaShare = deltaShare.add(deltaShareAlphas[i])
-                deltaShare = deltaShare.add(deltaShareBetas[i])
+                deltaShare = deltaShare.add(deltaShareAlphas[j])
+                deltaShare = deltaShare.add(deltaShareBetas[j])
 
                 // χᵢ += α̂ᵢⱼ +  ̂βᵢⱼ
-                chiShare = chiShare.add(chiShareAlphas[i])
-                chiShare = chiShare.add(chiShareBetas[i])
+                chiShare = chiShare.add(chiShareAlphas[j])
+                chiShare = chiShare.add(chiShareBetas[j])
             }
         }
         deltaShare = deltaShare.mod(secp256k1Order())
         chiShare = chiShare.mod(secp256k1Order())
-        for (j in bigGammaShares.keys) {
-            if (j != this.id) {
+        for (j in signers) {
+            if (j != id) {
                 val logstarPublic = LogStarPublic(
-                    C = kI,
+                    C = K.clone(),
                     X = bigDeltaShare,
                     g = bigGamma,
                     n0 = publics[id]!!.paillierPublic,
                     aux = publics[j]!!.aux,
                 )
 
-                val zkPrivate = LogStarPrivate(
+                val logStarPrivate = LogStarPrivate(
                     x= kShare.value,
                     rho= kNonce
                 )
-                val proofLog = LogStarProof.newProof(id, logstarPublic, zkPrivate)
+                val proofLog = LogStarProof.newProof(id, logstarPublic, logStarPrivate)
                 result[j] = PresignRound3Output(
                     ssid = ssid,
                     id = id,
@@ -125,7 +123,7 @@ class PresignRound3Input(
     ) : Boolean {
         // Verify M(vrfy, Πaff-g_i ,(ssid, j),(Iε,Jε, Di,j , Ki, Fj,i, Γj ), ψi,j ) = 1.
         val deltaPublic = AffgPublic(
-            C = k_i,
+            C = k_i.clone(),
             D = presignRound2Output.deltaD,
             Y = presignRound2Output.deltaF,
             X = presignRound2Output.bigGammaShare,
@@ -139,7 +137,7 @@ class PresignRound3Input(
 
         // Verify M(vrfy, Πaff-g_i,(ssid, j),(Iε,Jε, Dˆk,j , Ki, Fˆj,i, Xj ), ψˆi,j ) = 1
         val chiPublic = AffgPublic(
-            C = k_i,
+            C = k_i.clone(),
             D = presignRound2Output.chiD,
             Y = presignRound2Output.chiF,
             X = ecdsa_j,
@@ -153,7 +151,7 @@ class PresignRound3Input(
 
         // Verify M(vrfy, Πlog∗_i,(ssid, j),(Iε, Gj , Γj , g), ψ0, i,j ) = 1
         val logPublic = LogStarPublic(
-            C = g_j,
+            C = g_j.clone(),
             X = presignRound2Output.bigGammaShare,
             g = newBasePoint(),
             n0 = publics[j]!!.paillierPublic,

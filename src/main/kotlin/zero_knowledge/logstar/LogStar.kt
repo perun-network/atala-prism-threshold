@@ -57,7 +57,7 @@ class LogStarProof(
 
             val commitment = LogStarCommitment(
                 A = public.n0.encryptWithNonce(alpha, r),
-                Y = Scalar(alpha).act(public.g),
+                Y = Scalar(alpha.mod(secp256k1Order())).act(public.g),
                 S = public.aux.commit(private.x, mu),
                 D = public.aux.commit(alpha, gamma)
             )
@@ -92,27 +92,37 @@ class LogStarProof(
                 commitment.D,
                 BigInteger.valueOf(id.toLong())
             )
-            return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(secp256k1Order())
+            val e = inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(secp256k1Order())
+            return e
         }
     }
 
     fun verify(id: Int, public: LogStarPublic): Boolean {
-        if (!isValid(public)) return false
+        if (!isValid(public)) {
+            return false
+        }
 
-        if (!isInIntervalLEps(z1)) return false
+        if (!isInIntervalLEps(z1)) {
+            return false
+        }
 
         val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(z1, z3, e, commitment.D, commitment.S)) return false
+        if (!public.aux.verify(z1, z3, e, commitment.D, commitment.S)) {
+            return false
+        }
 
         val lhs = public.n0.encryptWithNonce(z1, z2)
-        val rhs = public.C.clone().modPowNSquared(public.n0, e).modMulNSquared(public.n0, commitment.A)
-        if (lhs != rhs) return false
+        val rhs = (public.C.clone().modPowNSquared(public.n0, e)).modMulNSquared(public.n0, commitment.A)
+        if (lhs != rhs)  {
+            return false
+        }
 
         val lhsPoint = Scalar(z1).act(public.g)
-        val rhsPoint = commitment.Y.add(public.X.multiply(Scalar(e)))
-        if (lhsPoint != rhsPoint) return false
-
+        val rhsPoint = commitment.Y.add(Scalar(e).act(public.X))
+        if (lhsPoint != rhsPoint) {
+            return false
+        }
         return true
     }
 }

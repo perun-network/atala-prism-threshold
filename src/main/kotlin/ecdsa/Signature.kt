@@ -17,6 +17,13 @@ class Signature (
                 S = signature.sliceArray(32 until 64)
             )
         }
+
+        fun newSignature(r: Scalar, s: Scalar): Signature {
+            return Signature(
+                r.toByteArray(),
+                s.toByteArray()
+            )
+        }
     }
 
     fun toSecp256k1Signature(): ByteArray {

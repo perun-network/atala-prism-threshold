@@ -18,8 +18,8 @@ data class AffgPublic (
     val D: PaillierCipherText,
     val Y: PaillierCipherText,
     val X: Point,
-    val n0: PaillierPublic,
-    val n1: PaillierPublic,
+    val n0: PaillierPublic, // verifier
+    val n1: PaillierPublic, // prover
     val aux: PedersenParameters
 )
 
@@ -42,35 +42,45 @@ data class AffgCommitment(
 
 class AffgProof(
     val commitment: AffgCommitment,
-    val z1: BigInteger,  // z1 = Z₁ = α + e⋅x
-    val z2: BigInteger,  // z2 = Z₂ = β + e⋅y
-    val z3: BigInteger,  // z3 = Z₃ = γ + e⋅m
-    val z4: BigInteger,  // z4 = Z₄ = δ + e⋅μ
-    val w: BigInteger,   // W = w = ρ⋅sᵉ (mod N₀)
-    val wY: BigInteger   // Wy = wy = ρy⋅rᵉ (mod N₁)
+    val z1: BigInteger,  // z1 = α + e⋅x
+    val z2: BigInteger,  // z2 = β + e⋅y
+    val z3: BigInteger,  // z3 = γ + e⋅m
+    val z4: BigInteger,  // z4 = δ + e⋅μ
+    val w: BigInteger,   // w = ρ⋅sᵉ (mod N₀)
+    val wY: BigInteger   // wY = ρy⋅rᵉ (mod N₁)
 ) {
     fun isValid(public: AffgPublic): Boolean {
-        if (!public.n1.validateCiphertexts(commitment.A) ||
-            !public.n0.validateCiphertexts(commitment.By)) return false
-        if (!isValidBigModN(public.n0.n, wY)) return false
-        if (!isValidBigModN(public.n1.n, w)) return false
+        if (!public.n1.validateCiphertexts(commitment.A)) return false
+        if (!public.n0.validateCiphertexts(commitment.By)) return false
+        if (!isValidBigModN(public.n1.n, wY)) return false
+        if (!isValidBigModN(public.n0.n, w)) return false
         if (commitment.Bx.isIdentity()) return false
         return true
     }
 
     fun verify(id: Int, public: AffgPublic): Boolean {
-        if (!isValid(public)) return false
+        if (!isValid(public)) {
+            return false
+        }
 
         val n1 = public.n1
         val n0 = public.n0
 
-        if (!isInIntervalLEps(z1)) return false
-        if (!isInIntervalLPrimeEps(z2)) return false
+        if (!isInIntervalLEps(z1)) {
+            return false
+        }
+        if (!isInIntervalLPrimeEps(z2)) {
+            return false
+        }
 
         val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(z1, z3, e, commitment.E, commitment.S)) return false
-        if (!public.aux.verify(z2, z4, e, commitment.F, commitment.T)) return false
+        if (!public.aux.verify(z1, z3, e, commitment.E, commitment.S)) {
+            return false
+        }
+        if (!public.aux.verify(z2, z4, e, commitment.F, commitment.T)) {
+            return false
+        }
 
         // Verifying the conditions
         // 1st condition
@@ -78,17 +88,26 @@ class AffgProof(
         val lhs = (n0.encryptWithNonce(z2, w)).modMulNSquared(n0, tmp)
         val rhs = (public.D.clone().modPowNSquared(n0, e)).modMulNSquared(n0, commitment.A)
 
-        if (lhs != rhs) return false
+        if (lhs != rhs) {
+            return false
+        }
 
         val lhsPoint = Scalar(z1).actOnBase() // g^z1
         val rhsPoint = Scalar(e).act(public.X).add(commitment.Bx)
 
-        if (lhsPoint != rhsPoint) return false
+        if (lhsPoint != rhsPoint) {
+            return false
+        }
+
 
         val lhsEnc = n1.encryptWithNonce(z2, wY)
-        val rhsEnc = public.Y.clone().modPowNSquared(n1, e).modMulNSquared(n1, commitment.By)
+        val rhsEnc = (public.Y.modPowNSquared(n1, e)).modMulNSquared(n1, commitment.By)
 
-        return lhsEnc == rhsEnc
+        if (lhsEnc != rhsEnc) {
+            return false
+        }
+
+        return true
     }
 
     companion object {
@@ -115,7 +134,8 @@ class AffgProof(
                 commitment.T,
                 BigInteger.valueOf(id.toLong())
             )
-            return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(secp256k1Order())
+            val e =  inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(secp256k1Order())
+            return e
         }
 
 
@@ -190,11 +210,11 @@ fun computeZKMaterials(
 
     val (Y, rhoY) = sender.publicKey.encryptRandom(y)
 
-    var (D, rho) = receiver.encryptRandom(y)
+    val (D, rho) = receiver.encryptRandom(y)
     val tmp = receiverEncryptedShare.clone().modPowNSquared(receiver, senderSecretShare)
-    D = D.modMulNSquared(receiver, tmp)
+    val delta  = D.modMulNSquared(receiver, tmp)
 
-    return Quintuple(D, Y, rho, rhoY, y)
+    return Quintuple(delta, Y, rho, rhoY, y)
 }
 
 

@@ -1,10 +1,13 @@
 package zk
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.paillier.newPaillierSecretFromPrimes
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
+import kotlin.test.Test
 
 object ZK {
     lateinit var proverPaillierPublic: PaillierPublic
@@ -43,5 +46,20 @@ object ZK {
         ZK.pedersenParams = PedersenParameters(ZK.verifierPaillierPublic.n, s, t)
     }
 
+
+    @Test
+    fun encDecTest() {
+        ZK.initialize()
+        val paillierPublic = proverPaillierPublic
+        val paillierSecret = proverPaillierSecret
+
+        val a = sampleScalar().value
+        val (cA, _) = paillierPublic.encryptRandom(a)
+        val b = sampleScalar().value
+        val (cB, _) = paillierPublic.encryptRandom(b)
+        val expected = a.add(b)
+        val actual = paillierSecret.decrypt(cA.modMulNSquared(paillierPublic, cB))
+        assertEquals(expected, actual)
+    }
 }
 

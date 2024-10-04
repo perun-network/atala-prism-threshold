@@ -113,7 +113,13 @@ data class PaillierSecret(
         result = result.multiply(phiInv).mod(n)
 
         // Set symmetric if needed
-        return result
+        return result.toModSymmetric(n)
+    }
+
+    // Extension function to handle result modulo ±(N-2)/2 range
+    private fun BigInteger.toModSymmetric(n: BigInteger): BigInteger {
+        val halfN = n.subtract(BigInteger.TWO).divide(BigInteger.TWO)
+        return if (this > halfN) this.subtract(n) else this
     }
 
     // decryptWithRandomness returns the underlying plaintext, as well as the randomness used.

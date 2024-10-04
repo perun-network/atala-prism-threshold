@@ -12,6 +12,7 @@ import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
 import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
 import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
 import java.math.BigInteger
+import kotlin.test.assertEquals
 
 class AffgTest {
     @Test
@@ -81,11 +82,22 @@ class AffgTest {
         val AI = aI.actOnBase()
         val AJ = aJ.actOnBase()
 
-        val (betaI, DI, FI, proofI) = produceAffGMaterials(0, aI.value, AI, BJ,skI, paillierJ, ZK.pedersenParams)
-        val (betaJ, DJ, FJ, proofJ) = produceAffGMaterials(0, aJ.value, AJ, BI, skJ, paillierI, ZK.pedersenParams)
+        val (betaI, DI, FI, proofI) = produceAffGMaterials(0, aI.value, AI, BJ, skI, paillierJ, ZK.pedersenParams)
+        val (betaJ, DJ, FJ, proofJ) = produceAffGMaterials(1, aJ.value, AJ, BI, skJ, paillierI, ZK.pedersenParams)
 
         assertTrue(proofI.verify(0, AffgPublic(BJ, DI, FI, AI, paillierJ, paillierI, ZK.pedersenParams)))
-        assertTrue(proofJ.verify(0, AffgPublic(BI, DJ, FJ, AJ, paillierI, paillierJ, ZK.pedersenParams)))
+        assertTrue(proofJ.verify(1, AffgPublic(BI, DJ, FJ, AJ, paillierI, paillierJ, ZK.pedersenParams)))
+
+        val alphaI = skI.decrypt(DJ)
+        val alphaJ = skJ.decrypt(DI)
+        val gammaI = alphaI.add(betaI).mod(secp256k1Order())
+        val gammaJ = alphaJ.add(betaJ).mod(secp256k1Order())
+
+        val gamma = gammaI.add(gammaJ).mod(secp256k1Order())
+        val gammaS = Scalar(gamma.mod(secp256k1Order()))
+
+        assertEquals(c, gammaS, "a•b should be equal to α + β")
 
     }
+
 }

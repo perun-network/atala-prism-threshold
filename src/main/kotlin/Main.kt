@@ -12,7 +12,7 @@ import perun_network.ecdsa_threshold.math.random
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.presign.*
 import perun_network.ecdsa_threshold.sign.SignParty
-import perun_network.ecdsa_threshold.sign.partialSining
+import perun_network.ecdsa_threshold.sign.partialSigning
 import perun_network.ecdsa_threshold.sign.processPresignOutput
 import perun_network.ecdsa_threshold.zero_knowledge.ZeroKnowledgeException
 import java.math.BigInteger
@@ -21,10 +21,9 @@ import java.util.Random
 fun main() {
     val n = 3
     val t = 2
-    val range = 3
 
     // Generate Precomputations
-    val (ids, precomps ) = generatePrecomputations(n, t, range)
+    val (ids, secretPrecomps, publicPrecomps) = generatePrecomputations(n, t, n)
     println("Precomputation finished for $n signers with threshold $t")
 
     // Message
@@ -34,8 +33,8 @@ fun main() {
     // Determine signers
     val signers = randomSigners(ids, t)
     println("Signers: $signers")
-    val publicKey = publicKeyFromShares(signers, precomps[ids[0]]!!.publics)
-    val scaledPrecomps = scalePrecomputations(signers, precomps)
+    val publicKey = publicKeyFromShares(signers, publicPrecomps)
+    val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signers, secretPrecomps, publicPrecomps)
     println("Scaled precomputations finished")
 
     // **PRESIGN**
@@ -55,7 +54,7 @@ fun main() {
         presignRound1Inputs[i] = PresignRound1Input(
             ssid = scaledPrecomps[i]!!.ssid,
             id = scaledPrecomps[i]!!.id,
-            publics = scaledPrecomps[i]!!.publics
+            publics = scaledPublics
         )
 
         // Produce Presign Round1 output
@@ -67,7 +66,7 @@ fun main() {
         kNonces[i] = kNonce
         ks[i] = K
         gs[i] = G
-        ecdsaPublics[i] = scaledPrecomps[i]!!.publics[i]!!.publicEcdsa
+        ecdsaPublics[i] = scaledPublics[i]!!.publicEcdsa
     }
     println("Finish Presign Round 1")
 
@@ -84,7 +83,7 @@ fun main() {
             secretECDSA = scaledPrecomps[i]!!.ecdsaShare,
             secretPaillier = scaledPrecomps[i]!!.paillierSecret ,
             gNonce = gNonces[i]!!,
-            publics = scaledPrecomps[i]!!.publics
+            publics = scaledPublics
         )
 
         // Verify Presign Round 1 Outputs
@@ -124,14 +123,14 @@ fun main() {
             gammaShare = gammaShares[i]!!.value,
             secretPaillier = scaledPrecomps[i]!!.paillierSecret,
             kShare = kShares[i]!!,
-            kI = ks[i]!!,
+            K = ks[i]!!,
             kNonce = kNonces[i]!!,
             secretECDSA = scaledPrecomps[i]!!.ecdsaShare.value,
-            publics = scaledPrecomps[i]!!.publics
+            publics = scaledPublics
         )
 
         // Verify Presign Round 2 Outputs
-        for ((j, presign2output)  in presignRound2Outputs) {
+        for ((j, presign2output) in presignRound2Outputs) {
             if (j != i) {
                 if (!presignRound3Inputs[i]!!.verifyPresignRound2Output(
                         j,
@@ -150,8 +149,8 @@ fun main() {
         // Produce Presign Round 3 output
         val (presign3output, chiShare, deltaShare, bigDeltaShare, bigGamma) = presignRound3Inputs[i]!!.producePresignRound3Output(
             signers,
-            bigGammaShares[i]!!,
-            presignRound2Outputs[i]!!)
+            bigGammaShares,
+            presignRound2Outputs)
 
         presignRound3Outputs[i] = presign3output
         chiShares[i] = chiShare
@@ -160,7 +159,7 @@ fun main() {
         bigGammas[i] = bigGamma
     }
 
-    System.out.println("Finish Presign Round 3")
+    println("Finish Presign Round 3")
 
     // ** PARTIAL SIGNING **
 
@@ -172,7 +171,6 @@ fun main() {
         gamma= bigGammas[signers[0]]!!
     )
 
-
     val partialSigners = mutableMapOf<Int, SignParty>()
     val partialSignatures = mutableListOf<PartialSignature>()
 
@@ -180,16 +178,17 @@ fun main() {
         partialSigners[i] = SignParty(
             ssid = scaledPrecomps[i]!!.ssid,
             id = scaledPrecomps[i]!!.id,
-            publics = scaledPrecomps[i]!!.publics,
+            publics = scaledPublics,
             hash = hash,
         )
 
         // Verify Presign outputs
         for (j in signers) {
             if (j != i) {
-                if (partialSigners[i]!!.verifyPresignRound3Output(j, presignRound3Outputs[j]!![i]!!, ks[j]!!)) {
+                if (!partialSigners[i]!!.verifyPresignRound3Output(j, presignRound3Outputs[j]!![i]!!, ks[j]!!)) {
                     throw ZeroKnowledgeException("failed to validate presign round 3 output from $j to $i")
                 }
+                println("Validated presign round 3 output from $j to $i ")
             }
         }
 
@@ -200,17 +199,18 @@ fun main() {
             bigR= bigR
         ))
     }
-    System.out.println("Finish ECDSA Partial Signing")
+    println("Finish ECDSA Partial Signing")
+
 
     // ** ECDSA SIGNING **
-    val ecdsaSignature = partialSining(bigR, partialSignatures)
-    System.out.println("Finish ECDSA Signing")
+    val ecdsaSignature= partialSigning(bigR, partialSignatures, publicPoint, hash)
+    println("Finish ECDSA Signing")
 
-    // Verify ECDSA Signature
+
     if (ecdsaSignature.verify(hash, publicKey)) {
-        System.out.println("ECDSA signature verified")
+        println("ECDSA signature convert successfully")
     } else {
-        System.out.println("ECDSA signature not verified")
+        println("failed to convert and verified ecdsa signature")
     }
 }
 

@@ -56,15 +56,15 @@ class PresignRound2Input (
                 // compute DeltaD = Dᵢⱼ
                 // compute DeltaF = Fᵢⱼ
                 // compute deltaProof = ψj,i
-                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGMaterials(id, gammaShare.value, bigGammaShare, ks[j]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
+                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGMaterials(id, gammaShare.value, bigGammaShare, ks[j]!!.clone(), secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
                 // chiBeta = β^i,j
                 // compute chiD = D^ᵢⱼ
                 // compute chiF = F^ᵢⱼ
                 // compute chiProof = ψ^j,i
-                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(id, secretECDSA.value, ecdsas[j]!!, ks[j]!!, secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
+                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(id, secretECDSA.value, ecdsas[id]!!, ks[j]!!.clone(), secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
 
                 val proofLog = LogStarProof.newProof(id,
-                    LogStarPublic(gs[id]!!, bigGammaShare, newBasePoint(),  publics[id]!!.paillierPublic, publics[id]!!.aux),
+                    LogStarPublic(gs[id]!!, bigGammaShare, newBasePoint(),  publics[id]!!.paillierPublic, publics[j]!!.aux),
                     LogStarPrivate(gammaShare.value, gNonce))
 
                 val presignOutput2 = PresignRound2Output(

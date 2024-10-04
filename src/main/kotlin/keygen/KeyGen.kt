@@ -14,6 +14,7 @@ import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.security.MessageDigest
 import java.security.SecureRandom
 import kotlin.random.Random
+import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Public
 
 class SecretPrecomputation(
     val id : Int,
@@ -21,7 +22,6 @@ class SecretPrecomputation(
     val threshold: Int,
     val ecdsaShare: Scalar,
     val paillierSecret: PaillierSecret,
-    val publics : Map<Int, PublicPrecomputation>
 )
 
 class PublicPrecomputation (
@@ -44,7 +44,7 @@ fun generateSessionId(byteSize: Int = 16): ByteArray {
 }
 
 
-fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Pair<List<Int>, Map<Int, SecretPrecomputation>> {
+fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
     if (idRange < n ) throw IllegalArgumentException("id must be higher than n")
     val ids = generatePartyIds(n, idRange)
     println(ids)
@@ -63,8 +63,7 @@ fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Pair<List<Int>, Map<
                 ssid = ssid,
                 threshold = t,
                 ecdsaShare = secretShares[i]!!,
-                paillierSecret = paillierSecret,
-                publics = publics,
+                paillierSecret = paillierSecret
             )
 
             val publicPrecomp = PublicPrecomputation (
@@ -76,9 +75,10 @@ fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Pair<List<Int>, Map<
             )
             publics[i] = publicPrecomp
             precomps[i] = secretPrecomputation
-        println("finished $i")
-        }
-    return ids to  precomps
+        println("finished precomputation for $i")
+    }
+
+    return Triple(ids ,  precomps , publics)
 }
 
 fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPrecomputation>) : PublicKey {
@@ -90,7 +90,8 @@ fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPreco
     return sum.toPublicKey()
 }
 
-fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>) : MutableMap<Int, SecretPrecomputation> {
+fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>, publics : Map<Int, PublicPrecomputation>)
+: Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int,PublicPrecomputation>, Point> {
     val lagrangeCoefficients = lagrange(signers)
 
 
@@ -101,18 +102,15 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
     // Scale secret and public ECDSA Shares
     for (id in signers) {
         val scaledEcdsaShare = lagrangeCoefficients[id]!!.multiply(precomps[id]!!.ecdsaShare)
-        var publicKey = newPoint()
-        for (j in signers) {
-            val scaledPublicShare = lagrangeCoefficients[j]!!.act(precomps[id]!!.publics[j]!!.publicEcdsa)
-            publicKey = publicKey.add(scaledPublicShare)
-        }
+
+        val scaledPublicShare = lagrangeCoefficients[id]!!.act(publics[id]!!.publicEcdsa)
 
         scaledPublics[id] = PublicPrecomputation(
             id = id,
             ssid = precomps[id]!!.ssid,
-            publicEcdsa = publicKey,
-            paillierPublic = precomps[id]!!.publics[id]!!.paillierPublic,
-            aux = precomps[id]!!.publics[id]!!.aux
+            publicEcdsa = scaledPublicShare,
+            paillierPublic = publics[id]!!.paillierPublic,
+            aux = publics[id]!!.aux
         )
 
         // Create a new SecretPrecomputation with the scaled private and public shares
@@ -122,11 +120,15 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
             threshold = precomps[id]!!.threshold,
             ecdsaShare = scaledEcdsaShare,
             paillierSecret = precomps[id]!!.paillierSecret,
-            publics = scaledPublics
         )
     }
 
-    return scaledPrecomps
+    var publicKey = newPoint()
+    for (j in signers) {
+        publicKey = publicKey.add(publics[j]!!.publicEcdsa)
+    }
+
+    return Triple(scaledPrecomps, scaledPublics, publicKey)
 }
 
 fun generatePartyIds(n: Int, idRange: Int): List<Int> {

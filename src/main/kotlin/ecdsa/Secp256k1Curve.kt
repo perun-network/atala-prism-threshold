@@ -46,26 +46,30 @@ data class Point(
 
     // Point addition
     fun add(other: Point): Point {
-            // Handle special cases
-            if (this.isIdentity()) return other // Adding identity element
-            if (other.isIdentity()) return this // Adding identity element
+        if (this.isIdentity()) return other // Adding identity element
+        if (other.isIdentity()) return this // Adding identity element
 
-            // Check if the points are inverses
-            if (this.x == other.x && (this.y.add(other.y).mod(P) == BigInteger.ZERO)) {
-                return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element
-            }
+        // Check if the points are inverses
+        if (this.x == other.x && (this.y.add(other.y).mod(P) == BigInteger.ZERO)) {
+            return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element (point at infinity)
+        }
 
-            // Check if points are the same (point doubling case)
-            if (this.x == other.x && this.y == other.y) {
-                return this.double() // Use point doubling
-            }
+        val lambda: BigInteger
+        // Check if points are the same (point doubling case)
+        if (this == other) {
+            // Point doubling formula for lambda
+            lambda = (this.x.pow(2).multiply(BigInteger.valueOf(3)).add(A))
+                .multiply(this.y.multiply(BigInteger.valueOf(2)).modInverse(P)).mod(P)
+        } else {
+            // Regular point addition formula for lambda
+            lambda = (other.y.subtract(this.y).multiply(other.x.subtract(this.x).modInverse(P))).mod(P)
+        }
 
-            // Regular point addition
-            val lambda = (other.y.subtract(this.y).multiply(other.x.subtract(this.x).modInverse(P))).mod(P)
-            val x3 = (lambda.pow(2).subtract(this.x).subtract(other.x)).mod(P)
-            val y3 = (lambda.multiply(this.x.subtract(x3)).subtract(this.y)).mod(P)
+        // Calculate new x and y coordinates
+        val x3 = (lambda.pow(2).subtract(this.x).subtract(other.x)).mod(P)
+        val y3 = (lambda.multiply(this.x.subtract(x3)).subtract(this.y)).mod(P)
 
-            return Point(x3, y3)
+        return Point(x3, y3)
     }
 
     // Point doubling
@@ -76,26 +80,13 @@ data class Point(
         return Point(x3, y3)
     }
 
-    // Scalar multiplication
-    fun multiply(scalar: Scalar): Point {
-        var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Point at infinity
-        var point = this
-        var k = scalar.value
-
-        while (k > BigInteger.ZERO) {
-            if (k.and(BigInteger.ONE) == BigInteger.ONE) {
-                result = result.add(point)
-            }
-            point = point.double()
-            k = k.shiftRight(1)
-        }
-
-        return result
-    }
-
     // isIdentity checks if this is the identity element of this group.
     fun isIdentity() : Boolean {
         return this.x == BigInteger.ZERO || this.y == BigInteger.ZERO
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return (other is Point) && (x == other.x && y == other.y)
     }
 
 }
@@ -133,16 +124,17 @@ fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
 
 // Function to perform scalar multiplication
 fun scalarMultiply(k: Scalar, point: Point): Point {
-    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Start with the point at infinity (identity element)
-
-    var kValue = k.value // Copy of the scalar
+    var kValue = k.value
     var effectivePoint = point
+
+    // Handle negative scalar: if k is negative, multiply by the inverse of the point
     if (kValue < BigInteger.ZERO) {
-        // If scalar is negative, use the inverse point
-        effectivePoint = point.inverse() // Assuming point.inverse() computes (x, -y)
-        kValue = kValue.abs() // Use the absolute value of the scalar
+        kValue = kValue.mod(secp256k1Order()) // Use the absolute value of the scalar
     }
+
+    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Start with the identity element (point at infinity)
     var addend = effectivePoint
+
     while (kValue != BigInteger.ZERO) {
         if (kValue.and(BigInteger.ONE) == BigInteger.ONE) {
             result = result.add(addend) // Add the current addend if the current bit is 1
@@ -183,7 +175,7 @@ data class Scalar (
             }
 
             // Create a new Scalar from the adjusted value
-            return Scalar(s)
+            return Scalar(s.mod(secp256k1Order()))
         }
     }
 
@@ -194,6 +186,10 @@ data class Scalar (
     fun toPrivateKey(): PrivateKey {
         val scalarBytes = bigIntegerToByteArray(value)
         return PrivateKey.newPrivateKey(scalarBytes)
+    }
+
+    fun toByteArray() : ByteArray {
+        return bigIntegerToByteArray(value)
     }
 
     fun invert() : Scalar {

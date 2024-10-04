@@ -52,7 +52,7 @@ class Secp256k1Test {
 
         val point = byteArrayToPoint(pub)
         val scalar = Scalar( BigInteger(tweak))
-        val tweakedPoint = point.multiply(scalar)
+        val tweakedPoint = scalar.act(point)
 
         assertArrayEquals(tweakedPub, tweakedPoint.toPublicKey().value)
     }
