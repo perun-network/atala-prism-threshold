@@ -207,7 +207,7 @@ fun main() {
     println("Finish ECDSA Signing")
 
 
-    if (ecdsaSignature.verify(hash, publicKey)) {
+    if (ecdsaSignature.verifySecp256k1(hash, publicKey)) {
         println("ECDSA signature convert successfully")
     } else {
         println("failed to convert and verified ecdsa signature")

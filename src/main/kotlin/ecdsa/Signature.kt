@@ -1,6 +1,7 @@
 package perun_network.ecdsa_threshold.ecdsa
 
 import fr.acinq.secp256k1.Secp256k1
+import java.math.BigInteger
 
 const val SIGLEN = 64
 
@@ -27,10 +28,40 @@ class Signature (
     }
 
     fun toSecp256k1Signature(): ByteArray {
-        return R + S
+        val (sig, _) =  Secp256k1.signatureNormalize(R + S)
+        return sig
     }
 
-    fun verify(message: ByteArray, publicKey: PublicKey): Boolean {
-        return Secp256k1.verify(this.toSecp256k1Signature(), message, publicKey.value)
+    fun normalize(): Signature {
+        var s = Scalar.scalarFromByteArray(S)
+        if (s.isHigh()) {
+            s = s.normalize()
+        }
+        return Signature(R, s.toByteArray())
+    }
+
+    fun verifySecp256k1(hash: ByteArray, publicKey: PublicKey): Boolean {
+        val secpPublic = Secp256k1.pubkeyParse(publicKey.value)
+        val secpSignature = this.toSecp256k1Signature()
+        return Secp256k1.verify(secpSignature, hash, secpPublic)
+    }
+
+    fun verifyWithPoint(hash: ByteArray, publicPoint: Point): Boolean {
+        val s = Scalar.scalarFromByteArray(S)
+        val r = Scalar.scalarFromByteArray(R)
+
+        if (r.isZero() || s.isZero()) {
+            return false
+        }
+
+        val m = Scalar.scalarFromByteArray(hash)
+        val sInv = s.invert()
+        val u1 = sInv.multiply(m)
+        val u2 = sInv.multiply(r)
+        val u1G = u1.actOnBase()
+        val u2X = u2.act(publicPoint)
+        val RPrime = u1G.add(u2X)
+        val xRPrime = RPrime.xScalar()
+        return xRPrime == r
     }
 }

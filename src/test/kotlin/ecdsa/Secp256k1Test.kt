@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
+import perun_network.ecdsa_threshold.math.sampleScalar
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -75,6 +76,32 @@ class Secp256k1Test {
     }
 
     @Test
+    fun testScalarMultiplication() {
+        val tweak = Hex.decode("3982F19BEF1615BCCFBB05E321C10E1D4CBA3DF0E841C2E41EEB6016347653C3".lowercase())
+        val scalar = Scalar( BigInteger(tweak))
+
+        // divide into n-shares
+        val shares = mutableMapOf<Int, Scalar>()
+        var sum = Scalar.zero()
+        val N = 5
+        for (i in 1 until N) {
+            val share = sampleScalar()
+            shares[i] = share
+            sum = sum.add(share)
+        }
+        shares[0] = scalar.subtract(sum)
+
+        // Attempts to recreate
+        val R1 = scalar.actOnBase()
+        var R2 = newPoint()
+        for ( i in 0 until N ) {
+            R2 = R2.add(shares[i]!!.actOnBase())
+        }
+        assertEquals(R1.xScalar(), R2.xScalar())
+
+    }
+
+    @Test
     fun testScalarInversion() {
         val tweak = Hex.decode("3982F19BEF1615BCCFBB05E321C10E1D4CBA3DF0E841C2E41EEB6016347653C3".lowercase())
         val scalar = Scalar( BigInteger(tweak))
@@ -90,6 +117,7 @@ class Secp256k1Test {
         assertArrayEquals(privateKey, resultCustom, "Scalar inversion did not match the secp256k1 library")
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun testSecp256k1ECDSASignature() {
         val privateKeyHex = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
@@ -99,6 +127,7 @@ class Secp256k1Test {
         // Message to sign
         val message = "Hello, Bitcoin!".toByteArray()
         val hash = SHA256().digest(message)
+        println(hash.toHexString())
         val signature = privateKey.sign(hash)
 
         // acinqSignature
@@ -106,6 +135,6 @@ class Secp256k1Test {
 
         assertArrayEquals(signature.toSecp256k1Signature(), acinqSignature)
 
-        assertTrue(signature.verify(hash, privateKey.publicKey()))
+        assertTrue(signature.verifySecp256k1(hash, privateKey.publicKey()))
     }
 }

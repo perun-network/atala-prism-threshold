@@ -49,7 +49,7 @@ class PrivateKey (
     }
 
     fun toScalar() : Scalar  {
-        return Scalar(BigInteger(1, value))
+        return Scalar(BigInteger(value))
     }
 
     fun toByteArray() : ByteArray {

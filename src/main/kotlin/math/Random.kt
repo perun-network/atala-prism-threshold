@@ -28,7 +28,7 @@ fun sampleUnitModN(n: BigInteger): BigInteger {
     val buf = ByteArray((bitLength + 7) / 8)
     repeat(MAX_ITERATIONS) {
         random.read(buf)
-        val candidate = BigInteger(1, buf)
+        val candidate = BigInteger(buf)
         if (candidate.gcd(n) == BigInteger.ONE) return candidate
     }
     throw ERR_MAX_ITERATIONS
@@ -40,7 +40,7 @@ fun modN(n: BigInteger): BigInteger {
     val buf = ByteArray((bitLength + 7) / 8)
     repeat(MAX_ITERATIONS) {
         random.read(buf)
-        val candidate = BigInteger(1, buf)
+        val candidate = BigInteger(buf)
         if (candidate < n) return candidate
     }
     throw ERR_MAX_ITERATIONS
@@ -61,14 +61,20 @@ fun pedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, B
 
 // Scalar returns a new Scalar by reading bytes from rand.
 fun sampleScalar(): Scalar {
-    val buffer = ByteArray(32)  // 32 bytes = 256 bits, common for many elliptic curve orders
-    SecureRandom().nextBytes(buffer)    // Fill the buffer with random bytes
+    while (true) {
+        val buffer = ByteArray(32)  // 32 bytes = 256 bits
+        SecureRandom().nextBytes(buffer)  // Fill the buffer with random bytes
 
-    // Convert the byte array to a BigInteger and make sure it's positive by using (1, buffer)
-    val bigIntValue = BigInteger(1, buffer)
+        val bigIntValue = BigInteger(1, buffer)  // Use (1, buffer) to avoid negative values
 
-    // Return a new Scalar with the generated value
-    return Scalar(bigIntValue.mod(secp256k1Order()))
+        // Mod the scalar with the curve order to ensure it's within the range [0, secp256k1Order)
+        val scalarValue = bigIntValue.mod(secp256k1Order())
+
+        // Ensure the scalar is not zero
+        if (scalarValue != BigInteger.ZERO) {
+            return Scalar(scalarValue)
+        }
+    }
 }
 
 

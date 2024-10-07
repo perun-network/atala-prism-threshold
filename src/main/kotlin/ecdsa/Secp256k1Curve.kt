@@ -9,7 +9,7 @@ import kotlin.math.max
 val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F".lowercase(), 16) // Prime modulus
 val A: BigInteger = BigInteger.ZERO // Curve parameter A (for secp256k1)
 val B: BigInteger = BigInteger("7") // Curve parameter B
-val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16) // Order of the base point
+val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase(), 16) // Order of the base point
 val GX = BigInteger("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
 val GY = BigInteger("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
 
@@ -53,14 +53,17 @@ data class Point(
         if (this.isIdentity()) return other // Adding identity element
         if (other.isIdentity()) return this // Adding identity element
 
-        // Check if the points are inverses
+        // Check if the points are inverses (P1 + (-P1) = identity element)
         if (this.x == other.x && (this.y.add(other.y).mod(P) == BigInteger.ZERO)) {
             return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element (point at infinity)
         }
 
         val lambda: BigInteger
-        // Check if points are the same (point doubling case)
+        // Point doubling (this == other)
         if (this == other) {
+            // Ensure y != 0 to avoid division by zero
+            if (this.y == BigInteger.ZERO) return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element
+
             // Point doubling formula for lambda
             lambda = (this.x.pow(2).multiply(BigInteger.valueOf(3)).add(A))
                 .multiply(this.y.multiply(BigInteger.valueOf(2)).modInverse(P)).mod(P)
@@ -78,9 +81,17 @@ data class Point(
 
     // Point doubling
     fun double(): Point {
-        val lambda = (x.pow(2).multiply(BigInteger.valueOf(3)).add(A)).multiply(y.multiply(BigInteger.valueOf(2)).modInverse(P)).mod(P)
+        // Handle the edge case: if y == 0, doubling returns the identity element
+        if (this.y == BigInteger.ZERO) return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element
+
+        // Compute lambda for point doubling
+        val lambda = (x.pow(2).multiply(BigInteger.valueOf(3)).add(A))
+            .multiply(y.multiply(BigInteger.valueOf(2)).modInverse(P)).mod(P)
+
+        // Calculate new x and y coordinates
         val x3 = (lambda.pow(2).subtract(x.multiply(BigInteger.valueOf(2)))).mod(P)
         val y3 = (lambda.multiply(x.subtract(x3)).subtract(y)).mod(P)
+
         return Point(x3, y3)
     }
 
@@ -93,12 +104,25 @@ data class Point(
         return (other is Point) && (x == other.x && y == other.y)
     }
 
+    fun isOnCurve(): Boolean {
+        if (this.isIdentity()) return true // Identity point is considered on the curve
+
+        // Calculate y^2 mod P
+        val leftSide = this.y.pow(2).mod(P)
+
+        // Calculate x^3 + b mod P (since a = 0, we can skip the ax term)
+        val rightSide = (this.x.pow(3).add(BigInteger.valueOf(7))).mod(P)
+
+        // Check if both sides are equal
+        return leftSide == rightSide
+    }
+
 }
 
 fun byteArrayToPoint(bytes: ByteArray): Point {
     require(bytes.size == 65)
-    val x = BigInteger(1, bytes.copyOfRange(1, 33))
-    val y = BigInteger(1, bytes.copyOfRange(33, bytes.size))
+    val x = BigInteger(bytes.copyOfRange(1, 33))
+    val y = BigInteger(bytes.copyOfRange(33, bytes.size))
     return Point(x, y)
 }
 
@@ -113,30 +137,32 @@ fun newPoint() : Point {
     return Point(BigInteger.ZERO, BigInteger.ZERO)
 }
 
-// Function to convert BigInteger to a 32-byte array
 fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     val bytes = bi.toByteArray()
-    return if (bytes.size == 32) {
-        bytes
-    } else if (bytes.size < 32) {
-        ByteArray(32) { i -> if (i < 32 - bytes.size) 0 else bytes[i - (32 - bytes.size)] }
-    } else {
-        bytes.copyOfRange(bytes.size - 32, bytes.size)
+
+    return when {
+        // If it's already 32 bytes, return it
+        bytes.size == 32 -> bytes
+        // If it's smaller, pad with leading zeros
+        bytes.size < 32 -> ByteArray(32) { i -> if (i < 32 - bytes.size) 0 else bytes[i - (32 - bytes.size)] }
+        // If it's larger, truncate it to the first 32 bytes
+        bytes.size > 32 -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
+        else -> bytes
     }
 }
-
 
 // Function to perform scalar multiplication
 fun scalarMultiply(k: Scalar, point: Point): Point {
     var kValue = k.value
     var effectivePoint = point
 
-    // Handle negative scalar: if k is negative, multiply by the inverse of the point
+    // Handle negative scalar: reflect the point across the x-axis if k is negative
     if (kValue < BigInteger.ZERO) {
-        kValue = kValue.mod(secp256k1Order()) // Use the absolute value of the scalar
+        kValue = kValue.abs().mod(secp256k1Order()) // Convert to positive scalar
+        effectivePoint = Point(effectivePoint.x, effectivePoint.y.negate().mod(P)) // Reflect over the x-axis
     }
 
-    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Start with the identity element (point at infinity)
+    var result = Point(BigInteger.ZERO, BigInteger.ZERO) // Use proper representation of point at infinity here
     var addend = effectivePoint
 
     while (kValue != BigInteger.ZERO) {
@@ -147,7 +173,7 @@ fun scalarMultiply(k: Scalar, point: Point): Point {
         kValue = kValue.shiftRight(1) // Shift right to process the next bit of the scalar
     }
 
-    return result
+    return Point(result.x.mod(P), result.y.mod(P)) // Return result mod P
 }
 
 data class Scalar (
@@ -162,29 +188,30 @@ data class Scalar (
             return Scalar(value.toBigInteger().mod(N))
         }
 
-        fun scalarFromHash(h: ByteArray) : Scalar {
-            val orderBits = secp256k1Order().bitLength()
-            val orderBytes = (orderBits + 7) / 8
+        fun scalarFromByteArray(h: ByteArray) : Scalar {
+            // Convert the full hash directly to a BigInteger, treating it as positive
+            val hashBigInt = BigInteger(1, h)
 
-            // Truncate the hash if it's larger than the number of bytes in the curve order
-            val hash = if (h.size > orderBytes) h.sliceArray(0 until orderBytes) else h
-
-            // Convert the hash bytes to a BigInteger
-            var s = BigInteger(1, hash)  // BigInteger(1, ...) ensures it's positive
-
-            // Check if the hash is longer than the curve's bit-length, and shift it
-            val excess = hash.size * 8 - orderBits
-            if (excess > 0) {
-                s = s.shiftRight(excess)
-            }
-
-            // Create a new Scalar from the adjusted value
-            return Scalar(s.mod(secp256k1Order()))
+            // Take the modulo N to ensure the scalar is within the curve's order
+            return Scalar(hashBigInt.mod(secp256k1Order()))
         }
+
     }
 
     fun isZero() : Boolean {
         return value == BigInteger.ZERO
+    }
+
+    // Check if the scalar is higher than the group order divided by 2
+    fun isHigh(): Boolean {
+        return value > N.divide(BigInteger.valueOf(2))
+    }
+
+    fun normalize() : Scalar {
+        if (isHigh()) {
+            return Scalar(N-value)
+        }
+        return this
     }
 
     fun toPrivateKey(): PrivateKey {
@@ -202,26 +229,20 @@ data class Scalar (
 
     // Multiply this scalar with another scalar
     fun multiply(other: Scalar): Scalar {
-        val product = value.multiply(other.value).mod(N)
+        val product = value.multiply(other.value.mod(N)).mod(N)
         return Scalar(product)
     }
 
     // Add this scalar with another scalar
     fun add(other: Scalar): Scalar {
-        val sum = value.add(other.value).mod(N)
+        val sum = value.add(other.value.mod(N)).mod(N)
         return Scalar(sum)
     }
 
     // Subtract this scalar by another scalar
     fun subtract(other: Scalar): Scalar {
-        val difference = value.subtract(other.value).mod(N)
-        return Scalar(difference)
-    }
-
-    // Multiply this scalar by an integer
-    fun multiplyByInteger(k: BigInteger): Scalar {
-        val product = value.multiply(k).mod(N)
-        return Scalar(product)
+        val difference = value.subtract(other.value) // Directly subtract
+        return Scalar(difference.add(N).mod(N)) // Normalize to ensure non-negative result
     }
 
     fun actOnBase() : Point {

@@ -25,8 +25,8 @@ class SignTest {
         val signature = privateKey.sign(hash)
         val parsedSignature = Signature.fromSecp256k1Signature(signature.toSecp256k1Signature())
 
-        assertTrue(signature.verify(hash, privateKey.publicKey()))
-        assertTrue(parsedSignature.verify(hash, privateKey.publicKey()))
+        assertTrue(signature.verifySecp256k1(hash, privateKey.publicKey()))
+        assertTrue(parsedSignature.verifySecp256k1(hash, privateKey.publicKey()))
     }
 
 
@@ -38,7 +38,7 @@ class SignTest {
         val X = x.actOnBase()
 
         val k = sampleScalar()
-        val m = Scalar.scalarFromHash(hash)
+        val m = Scalar.scalarFromByteArray(hash)
         val kInv = k.invert()
         val R = kInv.actOnBase()
         val r = R.xScalar()
@@ -52,60 +52,63 @@ class SignTest {
         val R2 = sInv.act(mG.add(rX))
         assertEquals(R2, R)
 
-        val privateKey = x.toPrivateKey()
-        val secpSig = Signature(r.toByteArray(), s.toByteArray())
-        assertTrue(secpSig.verify(hash, privateKey.publicKey()))
+        val secpSig = Signature.newSignature(r, s)
+        assertTrue(secpSig.verifyWithPoint(hash, X))
+        assertTrue(secpSig.verifySecp256k1(hash, X.toPublicKey()))
     }
 
     @Test
     fun testPresignatures() {
-        val n = 3
+        val n = 5
         val message = "Hello".toByteArray()
         val hash = SHA256().digest(message)
-        val (public, presigs, R) = newPreSignatures(n)
+        val (public, presigs) = newPreSignatures(n)
         val sigmaShares = mutableMapOf<Int, PartialSignature>()
         for ((id, preSignature) in presigs) {
-            sigmaShares[id] = preSignature.sign(message)
+            sigmaShares[id] = preSignature.signPartial(message)
         }
         for ((_, preSignature) in presigs) {
-            val m = Scalar.scalarFromHash(hash)
             val signature = preSignature.signature(sigmaShares)
-            val r = R.xScalar()
-            val s = Scalar(BigInteger(signature.S))
-            assertFalse(r.isZero() || s.isZero())
-
-            val sInv = s.invert()
-            val mG = m.actOnBase()
-            val rX = r.act(public)
-            val R2 = sInv.act(mG.add(rX))
-            assertEquals(R2, R)
-            assertTrue(signature.verify(hash, public.toPublicKey()))
+            assertTrue(signature.verifyWithPoint(hash, public))
+            assertTrue(signature.verifySecp256k1(hash, public.toPublicKey()))
         }
     }
 
-    fun newPreSignatures(N: Int) : Triple<Point, Map<Int, Presignature>, Point> {
-        val sk = sampleScalar()
-        val public = sk.actOnBase()
+    private fun newPreSignatures(N: Int) : Pair<Point, Map<Int, Presignature>> {
+        val x = sampleScalar()
+        val xShares = generateShares(x, N)
+        val X = x.actOnBase()
+        var X2 = newPoint()
+        for (i in 0 until N) {
+            X2 = X2.add(xShares[i]!!.actOnBase())
+        }
+        if (X != X2) {
+            throw IllegalStateException("Public key not corresponding to Secret")
+        }
+
         val k = sampleScalar()
-        val kInv = k.invert()
-        val R = kInv.actOnBase()
-        val chi = sk.multiply(k)
+        // Ensure k is not zero
+        require(k != Scalar.zero()) { "k must not be zero" }
+
+        val R = k.actOnBase()
+
+        // Ensure R is not the identity point
+        require(!R.isIdentity()) { "R must not be the identity point" }
 
         val kShares = generateShares(k, N)
-        val chiShares = generateShares(chi, N)
 
         val result = mutableMapOf<Int, Presignature>()
         for (i in 0 until N) {
             result[i] = Presignature(
                 R = R,
                 kShare = kShares[i]!!,
-                chiShare = chiShares[i]!!
+                xShare = xShares[i]!!
             )
         }
-        return Triple(public, result, R)
+        return X to result
     }
 
-    fun generateShares(secret: Scalar, N: Int): Map<Int, Scalar> {
+    private fun generateShares(secret: Scalar, N: Int): Map<Int, Scalar> {
         var sum = Scalar.zero()
         val shares = mutableMapOf<Int, Scalar>()
 
@@ -128,17 +131,16 @@ class SignTest {
 data class Presignature(
     val R : Point,
     val kShare: Scalar,
-    val chiShare: Scalar
+    val xShare: Scalar
 ) {
-    fun sign(message : ByteArray): PartialSignature {
-        val m = Scalar.scalarFromHash(message)
+    fun signPartial(message : ByteArray): PartialSignature {
+        val m = Scalar.scalarFromByteArray(message)
+        val kShareInv = kShare.invert()
         val r = R.xScalar()
-        val mk = m.multiply(kShare)
-        val rx = r.multiply(chiShare)
         return PartialSignature(
             ssid = message,
             id = 0,
-            sigmaShare = mk.add(rx)
+            sigmaShare = kShareInv.multiply(m.add(r.multiply(xShare)))
         )
     }
 
@@ -147,6 +149,6 @@ data class Presignature(
         for ((_,sigmaShare) in sigmaShares) {
            sigma = sigma.add(sigmaShare.sigmaShare)
         }
-        return Signature(R.xScalar().toByteArray(), sigma.toByteArray())
+        return Signature.newSignature(R.xScalar(), sigma)
     }
 }
