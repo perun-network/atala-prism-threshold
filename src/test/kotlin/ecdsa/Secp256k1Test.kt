@@ -117,7 +117,6 @@ class Secp256k1Test {
         assertArrayEquals(privateKey, resultCustom, "Scalar inversion did not match the secp256k1 library")
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun testSecp256k1ECDSASignature() {
         val privateKeyHex = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
@@ -127,7 +126,6 @@ class Secp256k1Test {
         // Message to sign
         val message = "Hello, Bitcoin!".toByteArray()
         val hash = SHA256().digest(message)
-        println(hash.toHexString())
         val signature = privateKey.sign(hash)
 
         // acinqSignature

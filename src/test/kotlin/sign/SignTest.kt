@@ -1,11 +1,14 @@
 package sign
 
+import com.ionspin.kotlin.bignum.integer.Quadruple
 import fr.acinq.secp256k1.Hex
 import fr.acinq.secp256k1.Secp256k1
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.sampleScalar
+import perun_network.ecdsa_threshold.tuple.Sextuple
 import java.math.BigInteger
 import java.security.SecureRandom
 import kotlin.test.Test
@@ -39,11 +42,10 @@ class SignTest {
 
         val k = sampleScalar()
         val m = Scalar.scalarFromByteArray(hash)
-        val kInv = k.invert()
-        val R = kInv.actOnBase()
-        val r = R.xScalar()
-        val s = r.multiply(x).add(m).multiply(k)
+        val (sig, R) = ecdsaSign(x, k, m)
 
+        val r = Scalar.scalarFromByteArray(sig.R)
+        val s = Scalar.scalarFromByteArray(sig.S)
         assertFalse(r.isZero() || s.isZero())
 
         val sInv = s.invert()
@@ -62,50 +64,76 @@ class SignTest {
         val n = 5
         val message = "Hello".toByteArray()
         val hash = SHA256().digest(message)
-        val (public, presigs) = newPreSignatures(n)
+        val m = Scalar.scalarFromByteArray(hash)
+        val (x, X, presigs, k, kShares, chiShares) = newPreSignatures(n)
+
+        val (sig, R) = ecdsaSign(x, k, m)
+        assertTrue(sig.verifyWithPoint(hash, X))
+
+        val sig2 = ecdsaPartialsSign(m, n, kShares, chiShares, R)
+        assertEquals(Scalar.scalarFromByteArray(sig2.S), Scalar.scalarFromByteArray(sig.S))
+
         val sigmaShares = mutableMapOf<Int, PartialSignature>()
         for ((id, preSignature) in presigs) {
-            sigmaShares[id] = preSignature.signPartial(message)
+            assertEquals(R, preSignature.R)
+            sigmaShares[id] = preSignature.signPartial(hash)
         }
         for ((_, preSignature) in presigs) {
             val signature = preSignature.signature(sigmaShares)
-            assertTrue(signature.verifyWithPoint(hash, public))
-            assertTrue(signature.verifySecp256k1(hash, public.toPublicKey()))
+            assertEquals(Scalar.scalarFromByteArray(signature.R), R.xScalar())
+            assertEquals(Scalar.scalarFromByteArray(signature.S), Scalar.scalarFromByteArray(sig.S))
+            assertTrue(signature.verifyWithPoint(hash, X))
+            assertTrue(signature.verifySecp256k1(hash, X.toPublicKey()))
         }
     }
 
-    private fun newPreSignatures(N: Int) : Pair<Point, Map<Int, Presignature>> {
-        val x = sampleScalar()
-        val xShares = generateShares(x, N)
-        val X = x.actOnBase()
-        var X2 = newPoint()
-        for (i in 0 until N) {
-            X2 = X2.add(xShares[i]!!.actOnBase())
-        }
-        if (X != X2) {
-            throw IllegalStateException("Public key not corresponding to Secret")
-        }
+    private fun ecdsaSign(x: Scalar, k: Scalar, m: Scalar): Pair<Signature, Point> {
+        val kInv = k.invert()
+        val R = kInv.actOnBase()
+        val r = R.xScalar()
+        val s = (r.multiply(x).add(m)).multiply(k)
+        val chi = x.multiply(k)
+        val s2 = r.multiply(chi).add(m.multiply(k))
+        require(s == s2)
+        return Signature.newSignature(r, s) to R
+    }
 
+    private fun ecdsaPartialsSign(m:Scalar, N: Int, kShares: Map<Int, Scalar>, chiShares: Map<Int, Scalar>, R: Point): Signature {
+        var sigma = Scalar.zero()
+        val r = R.xScalar()
+        for (i in 0 until N) {
+            sigma = sigma.add((m.multiply(kShares[i]!!)).add(r.multiply(chiShares[i]!!)))
+        }
+        return Signature.newSignature(r, sigma)
+    }
+
+    private fun newPreSignatures(N: Int) : Sextuple<Scalar, Point, Map<Int, Presignature>, Scalar, Map<Int, Scalar>, Map<Int,Scalar>> {
+        val x = sampleScalar()
+        val X = x.actOnBase()
         val k = sampleScalar()
         // Ensure k is not zero
         require(k != Scalar.zero()) { "k must not be zero" }
 
-        val R = k.actOnBase()
+        val kInv = k.invert()
+        val R = kInv.actOnBase()
 
         // Ensure R is not the identity point
         require(!R.isIdentity()) { "R must not be the identity point" }
+        val chi = x.multiply(k)
 
         val kShares = generateShares(k, N)
+        val chiShares = generateShares(chi, N)
 
         val result = mutableMapOf<Int, Presignature>()
         for (i in 0 until N) {
             result[i] = Presignature(
                 R = R,
                 kShare = kShares[i]!!,
-                xShare = xShares[i]!!
+                chiShare = chiShares[i]!!
             )
         }
-        return X to result
+
+        return Sextuple(x, X, result, k, kShares, chiShares)
     }
 
     private fun generateShares(secret: Scalar, N: Int): Map<Int, Scalar> {
@@ -121,9 +149,12 @@ class SignTest {
 
         // Compute the share for the first party
         shares[0] = secret.subtract(sum)
-        if (secret != sum.add(shares[0]!!)) {
-            throw Exception("Secret mismatch")
+
+        var total = Scalar.zero()
+        for (i in 0 until N) {
+            total = total.add(shares[i]!!)
         }
+        require(total == secret, { "invalid shares" })
         return shares
     }
 }
@@ -131,16 +162,15 @@ class SignTest {
 data class Presignature(
     val R : Point,
     val kShare: Scalar,
-    val xShare: Scalar
+    val chiShare: Scalar
 ) {
     fun signPartial(message : ByteArray): PartialSignature {
         val m = Scalar.scalarFromByteArray(message)
-        val kShareInv = kShare.invert()
         val r = R.xScalar()
         return PartialSignature(
             ssid = message,
             id = 0,
-            sigmaShare = kShareInv.multiply(m.add(r.multiply(xShare)))
+            sigmaShare = (m.multiply(kShare)).add(r.multiply(chiShare))
         )
     }
 
