@@ -17,8 +17,8 @@ class SignParty(
     val publics: Map<Int, PublicPrecomputation>
 ) {
     fun createPartialSignature(kShare: Scalar, chiShare: Scalar, bigR: Point ): PartialSignature {
-        val rX = bigR.x
-        val sigmaShare = Scalar(rX.mod(secp256k1Order())).multiply(chiShare).add(Scalar.scalarFromByteArray(hash).multiply(kShare))
+        val rX = bigR.xScalar()
+        val sigmaShare = rX.multiply(chiShare).add(Scalar.scalarFromByteArray(hash).multiply(kShare))
         return PartialSignature(
             ssid = ssid,
             id = id,
@@ -49,7 +49,7 @@ fun partialSigning(bigR: Point, partialSignatures : List<PartialSignature>, publ
         sigma = sigma.add(partial.sigmaShare)
     }
 
-    val signature = Signature(r.toByteArray(), sigma.toPrivateKey().toByteArray())
+    val signature = Signature.newSignature(r, sigma)
 
     if (!signature.verifyWithPoint(hash, publicPoint)) {
         throw IllegalStateException("invalid signature")

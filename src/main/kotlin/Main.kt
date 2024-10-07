@@ -35,6 +35,9 @@ fun main() {
     println("Signers: $signers")
     val publicKey = publicKeyFromShares(signers, publicPrecomps)
     val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signers, secretPrecomps, publicPrecomps)
+    if (publicKey != publicPoint.toPublicKey()) {
+        throw IllegalStateException("Inconsistent Public Key")
+    }
     println("Scaled precomputations finished")
 
     // **PRESIGN**
@@ -113,7 +116,7 @@ fun main() {
     val presignRound3Outputs = mutableMapOf<Int, Map<Int, PresignRound3Output>>()
     val deltaShares = mutableMapOf<Int,BigInteger>()
     val bigDeltaShares = mutableMapOf<Int,Point>()
-    val chiShares = mutableMapOf<Int, BigInteger>()
+    val chiShares = mutableMapOf<Int, Scalar>()
     val bigGammas = mutableMapOf<Int, Point>()
     for (i in signers) {
         // Prepare Presign Round 3 Inputs
@@ -153,7 +156,7 @@ fun main() {
             presignRound2Outputs)
 
         presignRound3Outputs[i] = presign3output
-        chiShares[i] = chiShare
+        chiShares[i] = Scalar(chiShare)
         deltaShares[i] = deltaShare
         bigDeltaShares[i] = bigDeltaShare
         bigGammas[i] = bigGamma
@@ -195,7 +198,7 @@ fun main() {
         // Produce partial signature
         partialSignatures.add(partialSigners[i]!!.createPartialSignature(
             kShare = kShares[i]!!,
-            chiShare = gammaShares[i]!!,
+            chiShare = chiShares[i]!!,
             bigR= bigR
         ))
     }
@@ -204,7 +207,7 @@ fun main() {
 
     // ** ECDSA SIGNING **
     val ecdsaSignature= partialSigning(bigR, partialSignatures, publicPoint, hash)
-    println("Finish ECDSA Signing")
+    println("Finish Combining ECDSA Partial Signatures")
 
 
     if (ecdsaSignature.verifySecp256k1(hash, publicKey)) {

@@ -47,7 +47,7 @@ fun generateSessionId(byteSize: Int = 16): ByteArray {
 fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
     if (idRange < n ) throw IllegalArgumentException("id must be higher than n")
     val ids = generatePartyIds(n, idRange)
-    println(ids)
+    println("Parties: $ids")
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
     val publics = mutableMapOf<Int, PublicPrecomputation>()
@@ -75,7 +75,7 @@ fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Ma
             )
             publics[i] = publicPrecomp
             precomps[i] = secretPrecomputation
-        println("finished precomputation for $i")
+        println("Finished precomputation for $i")
     }
 
     return Triple(ids ,  precomps , publics)
@@ -90,6 +90,7 @@ fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPreco
     return sum.toPublicKey()
 }
 
+// ScalePrecomputation will scale the publc and private Shares of signers with Lagrange's coefficients.
 fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>, publics : Map<Int, PublicPrecomputation>)
 : Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int,PublicPrecomputation>, Point> {
     val lagrangeCoefficients = lagrange(signers)
@@ -123,12 +124,12 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
         )
     }
 
-    var publicKey = newPoint()
+    var public = newPoint()
     for (j in signers) {
-        publicKey = publicKey.add(publics[j]!!.publicEcdsa)
+        public = public.add(scaledPublics[j]!!.publicEcdsa)
     }
 
-    return Triple(scaledPrecomps, scaledPublics, publicKey)
+    return Triple(scaledPrecomps, scaledPublics, public)
 }
 
 fun generatePartyIds(n: Int, idRange: Int): List<Int> {

@@ -1,28 +1,36 @@
 package perun_network.ecdsa_threshold.keygen.shamir
 
 import perun_network.ecdsa_threshold.ecdsa.Scalar
-import java.math.BigInteger
 
 fun lagrange(signers : List<Int>) : Map<Int, Scalar> {
     val coefficients = mutableMapOf<Int, Scalar>()
+    var numerator = 1
+    // numerator = (x_i - 0) for (i in signers)
     for (signer in signers) {
-        coefficients[signer] = lagrangeOf(signer, signers)
+        numerator *= signer
+    }
+
+    for (signer in signers) {
+        coefficients[signer] = lagrangeOf(signer, signers, numerator)
     }
     return coefficients
 }
 
-// Calculate Lagrange coefficients for a list of shares.
-fun lagrangeOf(j : Int, signers: List<Int>) : Scalar {
-    var result = Scalar(BigInteger.ONE)
+// Calculate Lagrange coefficients for a list of shares at point 0.
+fun lagrangeOf(j : Int, signers: List<Int>, numerator: Int) : Scalar {
     val x_j = Scalar.scalarFromInt(j)
-
-    // denominator
+    var denominator = Scalar.scalarFromInt(1)
     for (i  in signers) {
-        if (i != j) {
-            val x_i = Scalar.scalarFromInt(i)
-            val denominator = x_i.subtract(x_j) // x_m - x_j
-            result = result.multiply(x_i).multiply(denominator.invert())
+        val x_i = Scalar.scalarFromInt(i)
+        if (i == j) {
+            denominator = denominator.multiply(x_j)
+            continue
         }
+        val diff = x_i.subtract(x_j)
+        denominator = denominator.multiply(diff)
     }
+
+    // lⱼ = numerator/denominator
+    val result = (denominator.invert()).multiply(Scalar.scalarFromInt(numerator))
     return result
 }
