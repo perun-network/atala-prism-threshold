@@ -52,8 +52,8 @@ class AffgProof(
     fun isValid(public: AffgPublic): Boolean {
         if (!public.n1.validateCiphertexts(commitment.A)) return false
         if (!public.n0.validateCiphertexts(commitment.By)) return false
-        if (!isValidBigModN(public.n1.n, wY)) return false
-        if (!isValidBigModN(public.n0.n, w)) return false
+        if (!isValidModN(public.n1.n, wY)) return false
+        if (!isValidModN(public.n0.n, w)) return false
         if (commitment.Bx.isIdentity()) return false
         return true
     }
@@ -75,10 +75,10 @@ class AffgProof(
 
         val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(z1, z3, e, commitment.E, commitment.S)) {
+        if (!public.aux.verifyCommit(z1, z3, e, commitment.E, commitment.S)) {
             return false
         }
-        if (!public.aux.verify(z2, z4, e, commitment.F, commitment.T)) {
+        if (!public.aux.verifyCommit(z2, z4, e, commitment.F, commitment.T)) {
             return false
         }
 
@@ -163,10 +163,10 @@ class AffgProof(
             val Bx = Scalar(alpha).actOnBase()
             val By = public.n1.encryptWithNonce(beta, ry)
 
-            val E = public.aux.commit(alpha, gamma)
-            val S = public.aux.commit(private.x, m)
-            val F = public.aux.commit(beta, delta)
-            val T = public.aux.commit(private.y, mu)
+            val E = public.aux.calculateCommit(alpha, gamma)
+            val S = public.aux.calculateCommit(private.x, m)
+            val F = public.aux.calculateCommit(beta, delta)
+            val T = public.aux.calculateCommit(private.y, mu)
             val commitment = AffgCommitment(A, Bx, By, E, S, F, T)
 
             val e = challenge(id, public, commitment)

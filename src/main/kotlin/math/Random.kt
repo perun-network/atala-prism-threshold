@@ -47,7 +47,7 @@ fun modN(n: BigInteger): BigInteger {
 }
 
 // pedersen generates the s, t, λ such that s = tˡ.
-fun pedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
+fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
     val lambda = modN(phi)
     val tau  = sampleUnitModN(n)
 

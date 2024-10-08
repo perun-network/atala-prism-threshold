@@ -33,7 +33,7 @@ data class EncProof(
 
     fun isValid(public: EncPublic): Boolean {
         return public.n0.validateCiphertexts(commitment.A) &&
-                isValidBigModN(public.n0.n, z2)
+                isValidModN(public.n0.n, z2)
     }
 
     companion object {
@@ -48,9 +48,9 @@ data class EncProof(
             val A = public.n0.encryptWithNonce(alpha, r)
 
             val commitment = EncCommitment(
-                S = public.aux.commit(private.k, mu),
+                S = public.aux.calculateCommit(private.k, mu),
                 A = A,
-                C = public.aux.commit(alpha, gamma)
+                C = public.aux.calculateCommit(alpha, gamma)
             )
 
             val e = challenge(id, public, commitment)
@@ -85,7 +85,7 @@ data class EncProof(
 
         val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(z1, z3, e, commitment.C, commitment.S)) return false
+        if (!public.aux.verifyCommit(z1, z3, e, commitment.C, commitment.S)) return false
 
         val lhs = prover.encryptWithNonce(z1, z2)
         val rhs = (public.K.modPowNSquared(prover, e)).modMulNSquared(prover, commitment.A)

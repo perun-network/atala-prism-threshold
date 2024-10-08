@@ -1,6 +1,5 @@
 package perun_network.ecdsa_threshold.paillier
 
-import perun_network.ecdsa_threshold.math.sampleUnitModN
 import java.math.BigInteger
 
 class PaillierCipherText (

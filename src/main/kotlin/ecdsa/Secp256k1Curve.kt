@@ -1,9 +1,6 @@
 package perun_network.ecdsa_threshold.ecdsa
 
-import fr.acinq.secp256k1.Hex
-import fr.acinq.secp256k1.Secp256k1
 import java.math.BigInteger
-import kotlin.math.max
 
 // Define the secp256k1 curve parameters
 val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F".lowercase(), 16) // Prime modulus

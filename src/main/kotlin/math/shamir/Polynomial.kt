@@ -1,8 +1,8 @@
-package perun_network.ecdsa_threshold.keygen.shamir
+package perun_network.ecdsa_threshold.math.shamir
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.keygen.shamir.Polynomial.Companion.newPolynomial
+import perun_network.ecdsa_threshold.math.shamir.Polynomial.Companion.newPolynomial
 import perun_network.ecdsa_threshold.math.sampleScalar
 import java.math.BigInteger
 
@@ -39,7 +39,7 @@ class Polynomial (
 }
 
 
-
+// 
 fun sampleEcdsaShare(threshold: Int, ids: List<Int>) : Pair<Map<Int, Scalar>, Map<Int, Point>> {
     val secretShares = mutableMapOf<Int, Scalar>() // x_i
     val publicShares = mutableMapOf<Int, Point>() // X_i

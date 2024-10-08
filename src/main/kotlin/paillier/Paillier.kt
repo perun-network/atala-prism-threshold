@@ -91,7 +91,6 @@ data class PaillierSecret(
     val publicKey: PaillierPublic
 ) {
     // Decrypts c and returns the plaintext m ∈ ± (N-2)/2.
-    @Throws(IllegalArgumentException::class)
     fun decrypt(ct: PaillierCipherText): BigInteger {
         val n = publicKey.n
         val one = BigInteger.ONE
@@ -123,8 +122,7 @@ data class PaillierSecret(
     }
 
     // decryptWithRandomness returns the underlying plaintext, as well as the randomness used.
-    @Throws(IllegalArgumentException::class)
-    fun decryptWithRandomness(ct: PaillierCipherText): Pair<BigInteger, BigInteger> {
+    fun decryptRandom(ct: PaillierCipherText): Pair<BigInteger, BigInteger> {
         val m = decrypt(ct)
         val mNeg = m.negate()
 
@@ -140,9 +138,9 @@ data class PaillierSecret(
     }
 
     // GeneratePedersen generates parameters for Pedersen commitment.
-    fun  generatePedersen(): Pair<PedersenParameters, BigInteger> {
+    fun generatePedersen(): Pair<PedersenParameters, BigInteger> {
         val n = publicKey.n
-        val (s, t, lambda) = pedersen(phi, publicKey.n)
+        val (s, t, lambda) = samplePedersen(phi, publicKey.n)
         val ped = PedersenParameters(n, s, t)
         return ped to lambda
     }

@@ -2,8 +2,8 @@ package perun_network.ecdsa_threshold.math
 
 import java.math.BigInteger
 
-// IsValidBigModN checks that ints are all in the range [1,…,N-1] and are co-prime to N.
-fun isValidBigModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
+// IsValidModN checks that ints are all in the range [1,…,N-1] and are co-prime to N.
+fun isValidModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
     val one = BigInteger.ONE
     for (i in ints) {
         if (i == null) {

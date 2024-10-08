@@ -4,17 +4,14 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.PublicKey
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newPoint
-import perun_network.ecdsa_threshold.keygen.shamir.lagrange
-import perun_network.ecdsa_threshold.keygen.shamir.lagrangeOf
-import perun_network.ecdsa_threshold.keygen.shamir.sampleEcdsaShare
+import perun_network.ecdsa_threshold.math.shamir.lagrange
+import perun_network.ecdsa_threshold.math.shamir.sampleEcdsaShare
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.paillier.paillierKeyGen
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.security.MessageDigest
 import java.security.SecureRandom
-import kotlin.random.Random
-import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Public
 
 class SecretPrecomputation(
     val id : Int,

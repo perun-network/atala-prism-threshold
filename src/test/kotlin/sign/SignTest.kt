@@ -1,16 +1,12 @@
 package sign
 
-import com.ionspin.kotlin.bignum.integer.Quadruple
 import fr.acinq.secp256k1.Hex
 import fr.acinq.secp256k1.Secp256k1
-import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.tuple.Sextuple
-import java.math.BigInteger
-import java.security.SecureRandom
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -107,7 +103,7 @@ class SignTest {
         return Signature.newSignature(r, sigma)
     }
 
-    private fun newPreSignatures(N: Int) : Sextuple<Scalar, Point, Map<Int, Presignature>, Scalar, Map<Int, Scalar>, Map<Int,Scalar>> {
+    private fun newPreSignatures(N: Int) : Sextuple<Scalar, Point, Map<Int, SimpleShare>, Scalar, Map<Int, Scalar>, Map<Int,Scalar>> {
         val x = sampleScalar()
         val X = x.actOnBase()
         val k = sampleScalar()
@@ -124,9 +120,9 @@ class SignTest {
         val kShares = generateShares(k, N)
         val chiShares = generateShares(chi, N)
 
-        val result = mutableMapOf<Int, Presignature>()
+        val result = mutableMapOf<Int, SimpleShare>()
         for (i in 0 until N) {
-            result[i] = Presignature(
+            result[i] = SimpleShare(
                 R = R,
                 kShare = kShares[i]!!,
                 chiShare = chiShares[i]!!
@@ -159,7 +155,7 @@ class SignTest {
     }
 }
 
-data class Presignature(
+private data class SimpleShare(
     val R : Point,
     val kShare: Scalar,
     val chiShare: Scalar

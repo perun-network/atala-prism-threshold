@@ -1,6 +1,6 @@
 package perun_network.ecdsa_threshold.pedersen
 
-import perun_network.ecdsa_threshold.math.isValidBigModN
+import perun_network.ecdsa_threshold.math.isValidModN
 import java.math.BigInteger
 
 data class PedersenParameters(
@@ -9,7 +9,7 @@ data class PedersenParameters(
     val t: BigInteger,
 ) {
     // Commit computes sˣ tʸ (mod N)
-    fun commit(x: BigInteger, y: BigInteger): BigInteger {
+    fun calculateCommit(x: BigInteger, y: BigInteger): BigInteger {
         val sx = s.modPow(x, n)
         val ty = t.modPow(y, n)
 
@@ -17,8 +17,8 @@ data class PedersenParameters(
     }
 
     // Verify returns true if sᵃ tᵇ ≡ S Tᵉ (mod N).
-    fun verify(a: BigInteger, b: BigInteger, e: BigInteger, S: BigInteger, T: BigInteger): Boolean {
-        if (!isValidBigModN(n, S, T)) {
+    fun verifyCommit(a: BigInteger, b: BigInteger, e: BigInteger, S: BigInteger, T: BigInteger): Boolean {
+        if (!isValidModN(n, S, T)) {
             return false
         }
 

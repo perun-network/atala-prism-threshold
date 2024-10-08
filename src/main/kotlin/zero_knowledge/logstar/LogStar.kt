@@ -42,7 +42,7 @@ class LogStarProof(
     fun isValid(public: LogStarPublic): Boolean {
         if (!public.n0.validateCiphertexts(commitment.A)) return false
         if (commitment.Y.isIdentity()) return false
-        if (!isValidBigModN(public.n0.n, z2)) return false
+        if (!isValidModN(public.n0.n, z2)) return false
         return true
     }
 
@@ -58,8 +58,8 @@ class LogStarProof(
             val commitment = LogStarCommitment(
                 A = public.n0.encryptWithNonce(alpha, r),
                 Y = Scalar(alpha.mod(secp256k1Order())).act(public.g),
-                S = public.aux.commit(private.x, mu),
-                D = public.aux.commit(alpha, gamma)
+                S = public.aux.calculateCommit(private.x, mu),
+                D = public.aux.calculateCommit(alpha, gamma)
             )
 
             val e = challenge(id, public, commitment)
@@ -108,7 +108,7 @@ class LogStarProof(
 
         val e = challenge(id, public, commitment)
 
-        if (!public.aux.verify(z1, z3, e, commitment.D, commitment.S)) {
+        if (!public.aux.verifyCommit(z1, z3, e, commitment.D, commitment.S)) {
             return false
         }
 
