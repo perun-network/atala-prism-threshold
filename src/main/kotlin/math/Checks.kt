@@ -2,7 +2,14 @@ package perun_network.ecdsa_threshold.math
 
 import java.math.BigInteger
 
-// IsValidModN checks that ints are all in the range [1,…,N-1] and are co-prime to N.
+/**
+ * Checks if the provided integers are all in the range [1, ..., N-1] and are co-prime to N.
+ *
+ * @param N The modulus to which the integers should be co-prime.
+ * @param ints The integers to check.
+ * @return `true` if all integers are in the valid range and co-prime to N; `false` otherwise.
+ */
+
 fun isValidModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
     val one = BigInteger.ONE
     for (i in ints) {
@@ -23,12 +30,22 @@ fun isValidModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
     return true
 }
 
-// IsInIntervalLEps returns true if n ∈ [-2ˡ⁺ᵉ,…,2ˡ⁺ᵉ].
+/**
+ * Returns `true` if n ∈ [-2ˡ⁺ᵉ, ..., 2ˡ⁺ᵉ].
+ *
+ * @param n The number to check.
+ * @return `true` if n is within the specified interval; `false` otherwise.
+ */
 fun isInIntervalLEps(n: BigInteger): Boolean {
     return n.bitLength() <= LPlusEpsilon
 }
 
-// IsInIntervalLPrimeEps returns true if n ∈ [-2ˡ'⁺ᵉ,…,2ˡ'⁺ᵉ].
+/**
+ * Returns `true` if n ∈ [-2ˡ'⁺ᵉ, ..., 2ˡ'⁺ᵉ].
+ *
+ * @param n The number to check.
+ * @return `true` if n is within the specified interval; `false` otherwise.
+ */
 fun isInIntervalLPrimeEps(n: BigInteger): Boolean {
     return n.bitLength() <= LPrimePlusEpsilon
 }

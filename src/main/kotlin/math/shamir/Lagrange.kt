@@ -3,6 +3,12 @@ package perun_network.ecdsa_threshold.math.shamir
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import java.math.BigInteger
 
+/**
+ * Computes Lagrange interpolation coefficients for a list of signers.
+ *
+ * @param signers A list of signer IDs.
+ * @return A map where the keys are the signer IDs and the values are their corresponding Lagrange coefficients.
+ */
 fun lagrange(signers : List<Int>) : Map<Int, Scalar> {
     val coefficients = mutableMapOf<Int, Scalar>()
     for (signer in signers) {
@@ -11,7 +17,13 @@ fun lagrange(signers : List<Int>) : Map<Int, Scalar> {
     return coefficients
 }
 
-// Calculate Lagrange coefficients for a list of shares.
+/**
+ * Calculates the Lagrange coefficient for a specific signer.
+ *
+ * @param j The ID of the signer whose coefficient is being calculated.
+ * @param signers A list of signer IDs.
+ * @return The Lagrange coefficient for signer `j`.
+ */
 fun lagrangeOf(j : Int, signers: List<Int>) : Scalar {
     var result = Scalar(BigInteger.ONE)
     val x_j = Scalar.scalarFromInt(j)

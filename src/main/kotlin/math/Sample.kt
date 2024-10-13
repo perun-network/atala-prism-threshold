@@ -3,6 +3,7 @@ package perun_network.ecdsa_threshold.math
 import java.io.InputStream
 import java.math.BigInteger
 
+// Security parameter definition
 const val SecParam = 256
 const val L = 1 * SecParam     // = 256
 const val LPrime = 5 * SecParam     // = 1280
@@ -15,7 +16,13 @@ const val BitsIntModN = 8 * SecParam    // = 2048
 const val BitsBlumPrime = 4 * SecParam      // = 1024
 const val BitsPaillier = 2 * BitsBlumPrime // = 2048
 
-// sampleNeg generates a random integer with the given number of bits, potentially negated
+/**
+ * Generates a random integer with the given number of bits, potentially negated.
+ *
+ * @param inputStream The input stream to read random bytes from.
+ * @param bits The number of bits for the random integer.
+ * @return A randomly generated BigInteger, which may be negative.
+ */
 fun sampleNeg(inputStream: InputStream, bits: Int): BigInteger {
     val buf = ByteArray(bits / 8 + 1)
     mustReadBits(inputStream, buf)
@@ -24,20 +31,45 @@ fun sampleNeg(inputStream: InputStream, bits: Int): BigInteger {
     return if (neg == 1) -out else out
 }
 
+/**
+ * Samples a random integer L in the range ±2^l.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
 fun sampleL() : BigInteger = sampleNeg(random, L)
 
-// IntervalLPrime returns an integer in the range ± 2^l'
+/**
+ * Samples a random integer in the range ±2^l'.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
 fun sampleLPrime(): BigInteger = sampleNeg(random,LPrime)
 
-// sampleLEps returns an integer in the range ± 2^(l+ε)
+/**
+ * Samples a random integer in the range ±2^(l+ε).
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
 fun sampleLEps(): BigInteger = sampleNeg(random, LPlusEpsilon)
 
-// sampleLPrimeEps returns an integer in the range ± 2^(l'+ε)
+/**
+ * Samples a random integer in the range ±2^(l'+ε).
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
 fun sampleLPrimeEps(): BigInteger = sampleNeg(random, LPrimePlusEpsilon)
 
-// sampleLN returns an integer in the range ± 2^l•N, where N is the size of a Paillier modulus
+/**
+ * Samples a random integer in the range ±2^l•N, where N is the size of a Paillier modulus.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
 fun sampleLN(): BigInteger = sampleNeg(random, L + BitsIntModN)
 
-// sampleLEpsN returns an integer in the range ± 2^(l+ε)•N
+/**
+ * Samples a random integer in the range ±2^(l+ε)•N.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
 fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BitsIntModN)
 

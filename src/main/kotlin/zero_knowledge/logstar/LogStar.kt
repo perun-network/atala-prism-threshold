@@ -7,38 +7,69 @@ import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 
+/**
+ * Represents the public parameters for the Log* zero-knowledge proof.
+ *
+ * @property C The ciphertext representing the encrypted value Enc₀(x; ρ).
+ * @property X The point G raised to the power of x (X = G^x).
+ * @property g The base point used for the proof.
+ * @property n0 The Paillier public key used for encryption.
+ * @property aux The Pedersen parameters used for commitment.
+ */
 data class LogStarPublic(
-    // C = Enc₀(x;ρ)
     val C : PaillierCipherText,
-    // X = G^x
     val X : Point,
-
     val g: Point,
-
     val n0 : PaillierPublic,
     val aux    : PedersenParameters
 )
 
+/**
+ * Represents the private parameters for the Log* zero-knowledge proof.
+ *
+ * @property x The private key component.
+ * @property rho The nonce used to encrypt C.
+ */
 data class LogStarPrivate(
     val x: BigInteger,
-    // rho = ρ is nonce used to encrypt C.
     val rho : BigInteger
 )
 
+/**
+ * Represents the commitment values used in the Log* zero-knowledge proof.
+ *
+ * @property S The value calculated as S = sˣ tᵘ (mod N).
+ * @property A The ciphertext calculated from the first private parameter.
+ * @property Y The point calculated as Y = G^a.
+ * @property D The value calculated as D = sᵃ tᵍ (mod N).
+ */
 data class LogStarCommitment(
-    val S: BigInteger,                  // S = sˣ tᵘ (mod N)
-    val A: PaillierCipherText,          // A = Enc₀(alpha; r)
-    val Y: Point,                       // Y = G^a
-    val D: BigInteger                  // D = sᵃ tᵍ (mod N)
+    val S: BigInteger,
+    val A: PaillierCipherText,
+    val Y: Point,
+    val D: BigInteger
 )
 
+/**
+ * Represents the proof in the Log* zero-knowledge protocol.
+ *
+ * @property commitment The commitment associated with this proof.
+ * @property z1 The value calculated as z₁ = α + e⋅x.
+ * @property z2 The value calculated as z₂ = r⋅ρᵉ (mod N).
+ * @property z3 The value calculated as z₃ = γ + e⋅μ.
+ */
 class LogStarProof(
     private val commitment: LogStarCommitment,
-    private val z1: BigInteger,        // z1 = α + e x
-    private val z2: BigInteger,        // z2 = r ρᵉ mod N
-    private val z3: BigInteger         // z3 = γ + e μ
+    private val z1: BigInteger,
+    private val z2: BigInteger,
+    private val z3: BigInteger
 ) {
-
+    /**
+     * Validates the proof against the provided public parameters.
+     *
+     * @param public The public parameters against which to validate the proof.
+     * @return True if the proof is valid, false otherwise.
+     */
     fun isValid(public: LogStarPublic): Boolean {
         if (!public.n0.validateCiphertexts(commitment.A)) return false
         if (commitment.Y.isIdentity()) return false
@@ -47,6 +78,14 @@ class LogStarProof(
     }
 
     companion object {
+        /**
+         * Creates a new proof based on public and private parameters.
+         *
+         * @param id The identifier for the session or proof.
+         * @param public The public parameters for the proof.
+         * @param private The private parameters for the proof.
+         * @return The newly created proof.
+         */
         fun newProof(id: Int, public: LogStarPublic, private: LogStarPrivate): LogStarProof {
             val n = public.n0.n
 
@@ -73,6 +112,14 @@ class LogStarProof(
             return LogStarProof(commitment, z1, z2, z3)
         }
 
+        /**
+         * Generates a challenge based on public parameters and the commitment.
+         *
+         * @param id The identifier for the session or proof.
+         * @param public The public parameters.
+         * @param commitment The commitment associated with the proof.
+         * @return The generated challenge value.
+         */
         fun challenge(id: Int, public: LogStarPublic, commitment: LogStarCommitment): BigInteger {
             // Collect relevant parts to form the challenge
             val inputs = listOf<BigInteger>(
@@ -97,6 +144,13 @@ class LogStarProof(
         }
     }
 
+    /**
+     * Verifies the proof's integrity and correctness against public parameters.
+     *
+     * @param id The identifier for the session or proof.
+     * @param public The public parameters used for verification.
+     * @return True if the proof is verified, false otherwise.
+     */
     fun verify(id: Int, public: LogStarPublic): Boolean {
         if (!isValid(public)) {
             return false

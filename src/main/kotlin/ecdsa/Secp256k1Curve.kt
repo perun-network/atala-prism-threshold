@@ -2,18 +2,51 @@ package perun_network.ecdsa_threshold.ecdsa
 
 import java.math.BigInteger
 
-// Define the secp256k1 curve parameters
-val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F".lowercase(), 16) // Prime modulus
-val A: BigInteger = BigInteger.ZERO // Curve parameter A (for secp256k1)
+/**
+ * The prime modulus (P) of the secp256k1 curve.
+ */
+val P: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F".lowercase(), 16)
+
+/**
+ * The curve parameter A of the secp256k1 curve.
+ */
+val A: BigInteger = BigInteger.ZERO
+
+/**
+ * The curve parameter B of the secp256k1 curve.
+ */
 val B: BigInteger = BigInteger("7") // Curve parameter B
+
+/**
+ * The order (N) of the base point of the secp256k1 curve.
+ */
 val N: BigInteger = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase(), 16) // Order of the base point
+
+/**
+ * The x-coordinate of the base point (G) of the secp256k1 curve.
+ */
 val GX = BigInteger("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
+
+/**
+ * The y-coordinate of the base point (G) of the secp256k1 curve.
+ */
 val GY = BigInteger("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
 
+/**
+ * Returns the order of the secp256k1 curve.
+ *
+ * @return The order of the secp256k1 curve as a BigInteger.
+ */
 fun secp256k1Order() : BigInteger {
     return N
 }
 
+/**
+ * Represents a point on the secp256k1 elliptic curve.
+ *
+ * @property x The x-coordinate of the point.
+ * @property y The y-coordinate of the point.
+ */
 data class Point(
     val x: BigInteger,
     val y: BigInteger
@@ -23,16 +56,33 @@ data class Point(
         require(y >= BigInteger.ZERO && y < P) { "y-coordinate must be in range" }
     }
 
+
+    /**
+     * Returns the x-coordinate of this point as a Scalar.
+     *
+     * @return The x-coordinate as a Scalar.
+     */
     fun xScalar() : Scalar {
         return Scalar(x.mod(N))
     }
 
+    /**
+     * Returns the inverse of this point.
+     * The inverse is defined as (x, -y mod P).
+     *
+     * @return The inverse of this point.
+     */
     fun inverse(): Point {
         // Inverse of the point is (x, -y mod P)
         val yInverse = P.subtract(y).mod(P)
         return Point(x, yInverse)
     }
 
+    /**
+     * Converts this point into a PublicKey.
+     *
+     * @return The corresponding PublicKey.
+     */
     fun toPublicKey(): PublicKey {
         val xBytes = bigIntegerToByteArray(x)
         val yBytes = bigIntegerToByteArray(y)
@@ -45,7 +95,12 @@ data class Point(
         return PublicKey.newPublicKey(data)
     }
 
-    // Point addition
+    /**
+     * Adds this point to another point on the curve.
+     *
+     * @param other The other point to add.
+     * @return The resulting point from the addition.
+     */
     fun add(other: Point): Point {
         if (this.isIdentity()) return other // Adding identity element
         if (other.isIdentity()) return this // Adding identity element
@@ -76,7 +131,11 @@ data class Point(
         return Point(x3, y3)
     }
 
-    // Point doubling
+    /**
+     * Doubles this point on the curve.
+     *
+     * @return The resulting point from the doubling operation.
+     */
     fun double(): Point {
         // Handle the edge case: if y == 0, doubling returns the identity element
         if (this.y == BigInteger.ZERO) return Point(BigInteger.ZERO, BigInteger.ZERO) // Return identity element
@@ -92,7 +151,11 @@ data class Point(
         return Point(x3, y3)
     }
 
-    // isIdentity checks if this is the identity element of this group.
+    /**
+     * Checks if this point is the identity element (point at infinity).
+     *
+     * @return True if this point is the identity element, otherwise false.
+     */
     fun isIdentity() : Boolean {
         return this.x == BigInteger.ZERO || this.y == BigInteger.ZERO
     }
@@ -101,6 +164,11 @@ data class Point(
         return (other is Point) && (x == other.x && y == other.y)
     }
 
+    /**
+     * Checks if this point lies on the secp256k1 curve.
+     *
+     * @return True if the point lies on the curve, otherwise false.
+     */
     fun isOnCurve(): Boolean {
         if (this.isIdentity()) return true // Identity point is considered on the curve
 
@@ -116,6 +184,12 @@ data class Point(
 
 }
 
+/**
+ * Converts a byte array into a Point on the secp256k1 curve.
+ *
+ * @param bytes The byte array to convert.
+ * @return The resulting Point.
+ */
 fun byteArrayToPoint(bytes: ByteArray): Point {
     require(bytes.size == 65)
     val x = BigInteger(bytes.copyOfRange(1, 33))
@@ -123,6 +197,11 @@ fun byteArrayToPoint(bytes: ByteArray): Point {
     return Point(x, y)
 }
 
+/**
+ * Creates a new base point (G) on the secp256k1 curve.
+ *
+ * @return The base point (G).
+ */
 fun newBasePoint(): Point {
     return Point(
         x = GX,
@@ -130,10 +209,21 @@ fun newBasePoint(): Point {
     )
 }
 
+/**
+ * Creates a new identity point (0,0) on the secp256k1 curve.
+ *
+ * @return The identity point.
+ */
 fun newPoint() : Point {
     return Point(BigInteger.ZERO, BigInteger.ZERO)
 }
 
+/**
+ * Converts a BigInteger into a 32-byte array.
+ *
+ * @param bi The BigInteger to convert.
+ * @return The resulting byte array.
+ */
 fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     val bytes = bi.toByteArray()
 
@@ -148,7 +238,13 @@ fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     }
 }
 
-// Function to perform scalar multiplication
+/**
+ * Performs scalar multiplication on a point with a scalar.
+ *
+ * @param k The scalar value.
+ * @param point The point to multiply.
+ * @return The resulting point.
+ */
 fun scalarMultiply(k: Scalar, point: Point): Point {
     var kValue = k.value
     var effectivePoint = point
@@ -173,18 +269,41 @@ fun scalarMultiply(k: Scalar, point: Point): Point {
     return Point(result.x.mod(P), result.y.mod(P)) // Return result mod P
 }
 
+/**
+ * Represents a scalar value for secp256k1 operations.
+ *
+ * @property value The scalar value as a BigInteger.
+ */
 data class Scalar (
     var value: BigInteger,
 ) {
     companion object {
+        /**
+         * Returns a zero scalar.
+         *
+         * @return A scalar with value zero.
+         */
         fun zero() : Scalar {
             return Scalar(BigInteger.ZERO)
         }
 
+        /**
+         * Creates a scalar from an integer value.
+         *
+         * @param value The integer value.
+         * @return The corresponding scalar.
+         */
         fun scalarFromInt(value : Int) : Scalar {
             return Scalar(value.toBigInteger().mod(N))
         }
 
+
+        /**
+         * Creates a scalar from a byte array.
+         *
+         * @param h The byte array.
+         * @return The corresponding scalar.
+         */
         fun scalarFromByteArray(h: ByteArray) : Scalar {
             // Convert the full hash directly to a BigInteger, treating it as positive
             val hashBigInt = BigInteger(1, h)
@@ -195,15 +314,29 @@ data class Scalar (
 
     }
 
+    /**
+     * Checks if the scalar is zero.
+     *
+     * @return True if the scalar is zero, otherwise false.
+     */
     fun isZero() : Boolean {
         return value == BigInteger.ZERO
     }
 
-    // Check if the scalar is higher than the group order divided by 2
+    /**
+     * Checks if the scalar is high (greater than the curve order divided by 2).
+     *
+     * @return True if the scalar is high, otherwise false.
+     */
     fun isHigh(): Boolean {
         return value > N.divide(BigInteger.valueOf(2))
     }
 
+    /**
+     * Normalizes the scalar to ensure it's below the midpoint of the curve order.
+     *
+     * @return The normalized scalar.
+     */
     fun normalize() : Scalar {
         if (isHigh()) {
             return Scalar(N-value)
@@ -211,41 +344,83 @@ data class Scalar (
         return this
     }
 
+    /**
+     * Converts the scalar to a private key.
+     *
+     * @return The corresponding private key.
+     */
     fun toPrivateKey(): PrivateKey {
         val scalarBytes = bigIntegerToByteArray(value)
         return PrivateKey.newPrivateKey(scalarBytes)
     }
 
+
+    /**
+     * Converts the scalar to a byte array.
+     *
+     * @return The scalar as a 32-byte array.
+     */
     fun toByteArray() : ByteArray {
         return bigIntegerToByteArray(value)
     }
 
+    /**
+     * Inverts the scalar (modular inverse relative to the curve order).
+     *
+     * @return The inverse of the scalar.
+     */
     fun invert() : Scalar {
         return Scalar(value.modInverse(N))
     }
 
-    // Multiply this scalar with another scalar
+    /**
+     * Multiplies this scalar by another scalar.
+     *
+     * @param other The other scalar to multiply with.
+     * @return The resulting scalar.
+     */
     fun multiply(other: Scalar): Scalar {
         val product = value.multiply(other.value.mod(N)).mod(N)
         return Scalar(product)
     }
 
-    // Add this scalar with another scalar
+    /**
+     * Adds this scalar to another scalar.
+     *
+     * @param other The other scalar to add.
+     * @return The resulting scalar.
+     */
     fun add(other: Scalar): Scalar {
         val sum = value.add(other.value.mod(N)).mod(N)
         return Scalar(sum)
     }
 
-    // Subtract this scalar by another scalar
+    /**
+     * Subtracts another scalar from this scalar.
+     *
+     * @param other The other scalar to subtract.
+     * @return The resulting scalar.
+     */
     fun subtract(other: Scalar): Scalar {
         val difference = value.subtract(other.value) // Directly subtract
         return Scalar(difference.add(N).mod(N)) // Normalize to ensure non-negative result
     }
 
+    /**
+     * Performs scalar multiplication of this scalar on the base point of the curve.
+     *
+     * @return The resulting point from scalar multiplication.
+     */
     fun actOnBase() : Point {
         return scalarMultiply(this, newBasePoint())
     }
 
+    /**
+     * Performs scalar multiplication of this scalar on the given point.
+     *
+     * @param point The point to multiply with.
+     * @return The resulting point from scalar multiplication.
+     */
     fun act(point : Point) : Point {
         return scalarMultiply(this, point)
     }

@@ -1,21 +1,34 @@
 package perun_network.ecdsa_threshold.sign
 
-import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
-import perun_network.ecdsa_threshold.paillier.PaillierPublic
-import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.presign.PresignRound3Output
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
 import java.math.BigInteger
 
+/**
+ * Represents a signing party in the threshold ECDSA scheme.
+ *
+ * @property hash The hash of the message to be signed.
+ * @property ssid A unique session identifier for the signing process.
+ * @property id The unique identifier for the signing party.
+ * @property publics A map of public precomputed values indexed by signer identifiers.
+ */
 class SignParty(
     val hash: ByteArray,
     val ssid: ByteArray,
     val id : Int,
     val publics: Map<Int, PublicPrecomputation>
 ) {
+    /**
+     * Creates a partial signature for the signer.
+     *
+     * @param kShare The scalar value representing the share of the secret key.
+     * @param chiShare The share of the signature from the presigning process.
+     * @param bigR The point representing the commitment for the signature.
+     * @return A [PartialSignature] instance containing the session ID, signer's ID, and the computed signature share.
+     */
     fun createPartialSignature(kShare: Scalar, chiShare: Scalar, bigR: Point ): PartialSignature {
         val rX = bigR.xScalar()
         val sigmaShare = rX.multiply(chiShare).add(Scalar.scalarFromByteArray(hash).multiply(kShare))
@@ -26,6 +39,14 @@ class SignParty(
         )
     }
 
+    /**
+     * Verifies the output of the third round of the presigning process for a given signer.
+     *
+     * @param j The identifier of the signer whose output is being verified.
+     * @param presignRound3Output The output from the third round for the given signer.
+     * @param k_j The Paillier ciphertext for K corresponding to the signer.
+     * @return True if the verification is successful; otherwise, false.
+     */
     fun verifyPresignRound3Output(
         j : Int,
         presignRound3Output: PresignRound3Output,
@@ -42,7 +63,17 @@ class SignParty(
     }
 }
 
-fun partialSigning(bigR: Point, partialSignatures : List<PartialSignature>, publicPoint: Point, hash : ByteArray) : Signature {
+/**
+ * Combines partial signatures into a final signature.
+ *
+ * @param bigR The point representing the commitment for the signature.
+ * @param partialSignatures A list of partial signatures from each signing party.
+ * @param publicPoint The public point used for verifying the signature.
+ * @param hash The hash of the message that was signed.
+ * @return A [Signature] instance representing the final signature.
+ * @throws IllegalStateException If the final signature is invalid.
+ */
+fun combinePartialSignatures(bigR: Point, partialSignatures : List<PartialSignature>, publicPoint: Point, hash : ByteArray) : Signature {
     val r = bigR.xScalar()
     var sigma = Scalar.zero()
     for (partial in partialSignatures) {
@@ -58,7 +89,16 @@ fun partialSigning(bigR: Point, partialSignatures : List<PartialSignature>, publ
     return signature
 }
 
-
+/**
+ * Processes the presigning outputs from multiple signers to compute the final commitment point.
+ *
+ * @param signers A list of identifiers for the signers.
+ * @param deltaShares A map of delta shares indexed by signer identifiers.
+ * @param bigDeltaShares A map of big delta shares indexed by signer identifiers.
+ * @param gamma The gamma point from the presigning process.
+ * @return The computed point representing the commitment.
+ * @throws Exception If the computed point is inconsistent with the expected value.
+ */
 fun processPresignOutput(
     signers : List<Int>,
     deltaShares: Map<Int, BigInteger>,
@@ -85,9 +125,3 @@ fun processPresignOutput(
 
     return bigR
 }
-
-
-
-
-
-

@@ -14,8 +14,23 @@ import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
 
 import java.math.BigInteger
-import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Public
 
+/**
+ * Represents the output of the second round of the presigning process.
+ *
+ * @property ssid A unique identifier for the session.
+ * @property id The identifier of the signer.
+ * @property bigGammaShare The computed big gamma share for the signer.
+ * @property deltaD The Paillier ciphertext representing Delta D.
+ * @property deltaF The Paillier ciphertext representing Delta F.
+ * @property deltaProof The proof associated with delta.
+ * @property chiD The Paillier ciphertext representing Chi D.
+ * @property chiF The Paillier ciphertext representing Chi F.
+ * @property chiProof The proof associated with chi.
+ * @property proofLog The log-star proof associated with the presigning process.
+ * @property chiBeta The beta value for chi.
+ * @property deltaBeta The beta value for delta.
+ */
 class PresignRound2Output (
     val ssid: ByteArray,
     val id : Int,
@@ -31,6 +46,17 @@ class PresignRound2Output (
     val deltaBeta: BigInteger,
 )
 
+/**
+ * Represents the input for the second round of the presigning process.
+ *
+ * @property ssid A unique identifier for the session.
+ * @property id The identifier of the signer.
+ * @property gammaShare The gamma share for the signer.
+ * @property secretECDSA The ECDSA secret key for the signer.
+ * @property secretPaillier The Paillier secret key for the signer.
+ * @property gNonce The nonce used for generating the proof.
+ * @property publics A map of public precomputed values indexed by signer identifiers.
+ */
 class PresignRound2Input (
     val ssid: ByteArray,
     val id: Int,
@@ -40,6 +66,17 @@ class PresignRound2Input (
     val gNonce: BigInteger,
     val publics: Map<Int, PublicPrecomputation>
 ) {
+    /**
+     * Produces the output for the second round of the presigning process.
+     *
+     * This method generates necessary ciphertexts and proofs for each signer.
+     *
+     * @param signers A list of signer identifiers participating in the presigning.
+     * @param ks A map of Paillier ciphertexts indexed by signer identifiers.
+     * @param gs A map of Paillier ciphertexts indexed by signer identifiers.
+     * @param ecdsas A map of ECDSA points indexed by signer identifiers.
+     * @return A pair containing a map of the presign outputs for each signer and the computed big gamma share.
+     */
     fun producePresignRound2Output(
         signers : List<Int>,
         ks : Map<Int, PaillierCipherText>,
@@ -88,6 +125,13 @@ class PresignRound2Input (
         return result to bigGammaShare
     }
 
+    /**
+     * Verifies the output of the first round of the presigning process from a given signer.
+     *
+     * @param j The identifier of the signer whose output is being verified.
+     * @param presignRound1Output The output from the first round for the given signer.
+     * @return True if the verification is successful; otherwise, false.
+     */
     fun verifyPresignRound1Output(
         j: Int,
         presignRound1Output : PresignRound1Output,

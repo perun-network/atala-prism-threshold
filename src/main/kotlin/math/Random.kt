@@ -6,12 +6,30 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.security.SecureRandom
 
+/**
+ * Maximum number of iterations for random sampling.
+ */
 const val MAX_ITERATIONS = 255
 
+/**
+ * Secure random input stream for generating random bytes.
+ */
 val random = SecureRandomInputStream(SecureRandom.getInstanceStrong())
 
+/**
+ * Exception thrown when the maximum number of iterations is reached without a successful sample.
+ */
 val ERR_MAX_ITERATIONS = IllegalStateException("sample: failed to generate after $MAX_ITERATIONS iterations")
 
+/**
+ * Reads a specified number of bits from the input stream into the provided buffer.
+ *
+ * This function will attempt to read the buffer up to [MAX_ITERATIONS] times.
+ *
+ * @param inputStream The input stream to read from.
+ * @param buffer The byte array where the read bytes will be stored.
+ * @throws IllegalStateException if the maximum number of iterations is reached without reading the buffer.
+ */
 fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     repeat(MAX_ITERATIONS) {
         try {
@@ -23,6 +41,15 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
+/**
+ * Samples a random element from the group of integers modulo `n` that is co-prime to `n`.
+ *
+ * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
+ *
+ * @param n The modulus for the random sampling.
+ * @return A random BigInteger in ℤₙ that is co-prime to `n`.
+ * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
+ */
 fun sampleUnitModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8)
@@ -34,7 +61,15 @@ fun sampleUnitModN(n: BigInteger): BigInteger {
     throw ERR_MAX_ITERATIONS
 }
 
-// modN samples an element of ℤₙ.
+/**
+ * Samples a random element from the integers modulo `n`.
+ *
+ * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
+ *
+ * @param n The modulus for the random sampling.
+ * @return A random BigInteger in ℤₙ.
+ * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
+ */
 fun modN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8)
@@ -46,7 +81,16 @@ fun modN(n: BigInteger): BigInteger {
     throw ERR_MAX_ITERATIONS
 }
 
-// pedersen generates the s, t, λ such that s = tˡ.
+/**
+ * Generates the parameters for the Pedersen commitment.
+ *
+ * This function samples values for `s`, `t`, and `λ` such that:
+ * - `s = tˡ` where `t = τ² mod N`
+ *
+ * @param phi The value used in the computation of `s`.
+ * @param n The modulus used for sampling.
+ * @return A Triple containing the values `(s, t, λ)`.
+ */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
     val lambda = modN(phi)
     val tau  = sampleUnitModN(n)
@@ -59,7 +103,14 @@ fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInte
     return Triple(s, t, lambda)
 }
 
-// Scalar returns a new Scalar by reading bytes from rand.
+/**
+ * Samples a new scalar value from a secure random source.
+ *
+ * This function generates a random 256-bit value, reduces it modulo the secp256k1 order,
+ * and ensures it is not zero.
+ *
+ * @return A new Scalar object.
+ */
 fun sampleScalar(): Scalar {
     while (true) {
         val buffer = ByteArray(32)  // 32 bytes = 256 bits
@@ -77,15 +128,33 @@ fun sampleScalar(): Scalar {
     }
 }
 
-
+/**
+ * A secure random input stream that reads bytes from a SecureRandom source.
+ *
+ * @param secureRandom The SecureRandom instance used for generating random bytes.
+ */
 class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
 
+    /**
+     * Reads a single byte from the input stream.
+     *
+     * @return The byte read as an integer, or -1 if the end of the stream is reached.
+     */
     override fun read(): Int {
         val buffer = ByteArray(1)
         val bytesRead = read(buffer, 0, 1)
         return if (bytesRead == -1) -1 else buffer[0].toInt() and 0xFF
     }
 
+    /**
+     * Reads a specified number of bytes into the provided buffer.
+     *
+     * @param buffer The byte array where the read bytes will be stored.
+     * @param offset The offset in the array where the read bytes should be stored.
+     * @param length The number of bytes to read.
+     * @return The number of bytes read.
+     * @throws IndexOutOfBoundsException if the offset or length is invalid.
+     */
     override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
         if (length <= 0 || offset < 0 || offset >= buffer.size || length > buffer.size - offset) {
             throw IndexOutOfBoundsException("Invalid offset or length")
@@ -95,6 +164,12 @@ class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStr
         return length
     }
 
+    /**
+     * Reads all bytes into the provided buffer.
+     *
+     * @param buffer The byte array where the read bytes will be stored.
+     * @return The number of bytes read.
+     */
     override fun read(buffer: ByteArray): Int {
         return read(buffer, 0, buffer.size)
     }

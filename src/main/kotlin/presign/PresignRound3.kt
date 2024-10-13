@@ -1,20 +1,27 @@
 package perun_network.ecdsa_threshold.presign
 
-import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
-import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
-import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.tuple.Quintuple
 import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
 import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
 import java.math.BigInteger
-import kotlin.math.log
 
+/**
+ * Represents the output of the third round of the presigning process.
+ *
+ * @property ssid A unique identifier for the session.
+ * @property id The identifier of the signer.
+ * @property chiShare The computed chi share for the signer.
+ * @property deltaShare The computed delta share for the signer.
+ * @property bigDeltaShare The computed big delta share for the signer.
+ * @property gamma The computed gamma point for the signer.
+ * @property proofLog The log-star proof associated with the presigning process.
+ */
 data class PresignRound3Output (
     val ssid: ByteArray,
     val id : Int,
@@ -25,6 +32,19 @@ data class PresignRound3Output (
     val proofLog: LogStarProof
 )
 
+/**
+ * Represents the input for the third round of the presigning process.
+ *
+ * @property ssid A unique identifier for the session.
+ * @property id The identifier of the signer.
+ * @property gammaShare The gamma share for the signer.
+ * @property secretPaillier The Paillier secret key for the signer.
+ * @property kShare The scalar value for k.
+ * @property K The Paillier ciphertext for K.
+ * @property kNonce The nonce used for generating the proof.
+ * @property secretECDSA The ECDSA secret key for the signer.
+ * @property publics A map of public precomputed values indexed by signer identifiers.
+ */
 class PresignRound3Input(
     val ssid: ByteArray,
     val id: Int,
@@ -36,6 +56,17 @@ class PresignRound3Input(
     val secretECDSA: BigInteger,
     val publics: Map<Int, PublicPrecomputation>
 ) {
+    /**
+     * Produces the output for the third round of the presigning process.
+     *
+     * This method generates the necessary shares and proofs for each signer.
+     *
+     * @param signers A list of signer identifiers participating in the presigning.
+     * @param bigGammaShares A map of big gamma shares indexed by signer identifiers.
+     * @param presignRound2Outputs A map of outputs from the second round indexed by signer identifiers.
+     * @return A quintuple containing a map of the presign outputs for each signer, the computed chi share,
+     *         the computed delta share, the computed big delta share, and the computed gamma point.
+     */
     fun producePresignRound3Output(
         signers : List<Int>,
         bigGammaShares : Map<Int,Point>,
@@ -58,7 +89,7 @@ class PresignRound3Input(
 
         // Γ = ∑ⱼ Γⱼ
         var bigGamma = newPoint()
-        for ((i, bigGammaShare) in bigGammaShares) {
+        for ((_, bigGammaShare) in bigGammaShares) {
             bigGamma = bigGamma.add(bigGammaShare)
         }
 
@@ -114,6 +145,16 @@ class PresignRound3Input(
         return Quintuple(result, chiShare, deltaShare, bigDeltaShare, bigGamma)
     }
 
+    /**
+     * Verifies the output of the second round of the presigning process for a given signer.
+     *
+     * @param j The identifier of the signer whose output is being verified.
+     * @param presignRound2Output The output from the second round for the given signer.
+     * @param k_i The Paillier ciphertext for K.
+     * @param g_j The Paillier ciphertext for G.
+     * @param ecdsa_j The ECDSA point for the signer.
+     * @return True if the verification is successful; otherwise, false.
+     */
     fun verifyPresignRound2Output(
         j : Int,
         presignRound2Output: PresignRound2Output,

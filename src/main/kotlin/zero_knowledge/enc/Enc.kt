@@ -7,36 +7,77 @@ import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 
+/**
+ * Represents the public parameters for the encryption zero-knowledge proof.
+ *
+ * @property K The ciphertext related to the public key.
+ * @property n0 The Paillier public key used for encryption.
+ * @property aux The Pedersen parameters used for commitment.
+ */
 data class EncPublic(
     val K: PaillierCipherText,
     val n0: PaillierPublic,
     val aux: PedersenParameters
 )
 
+/**
+ * Represents the private parameters for the encryption zero-knowledge proof.
+ *
+ * @property k The private key component, calculated as k ∈ 2ˡ = Dec₀(K).
+ * @property rho The random value ρ used in the proof.
+ */
 data class EncPrivate(
-    val k: BigInteger,   // k = k ∈ 2ˡ = Dec₀(K)
-    val rho: BigInteger  // rho = ρ
+    val k: BigInteger,
+    val rho: BigInteger
 )
 
+/**
+ * Represents the commitment values used in the encryption zero-knowledge proof.
+ *
+ * @property S The value calculated as S = sᵏtᵘ.
+ * @property A The ciphertext calculated from the first private parameter.
+ * @property C The value calculated as C = sᵃtᵍ.
+ */
 data class EncCommitment(
-    val S: BigInteger,  // S = sᵏtᵘ
-    val A: PaillierCipherText, // A = Enc₀ (α, r)
-    val C: BigInteger  // C = sᵃtᵍ
+    val S: BigInteger,
+    val A: PaillierCipherText,
+    val C: BigInteger
 )
 
+/**
+ * Represents the proof in the encryption zero-knowledge protocol.
+ *
+ * @property commitment The commitment associated with this proof.
+ * @property z1 The value calculated as z₁ = α + e⋅k.
+ * @property z2 The value calculated as z₂ = r ⋅ ρᵉ (mod N₀).
+ * @property z3 The value calculated as z₃ = γ + e⋅μ.
+ */
 data class EncProof(
     val commitment: EncCommitment,
-    val z1: BigInteger,  // z₁ = α + e⋅k
-    val z2: BigInteger,  // z₂ = r ⋅ ρᵉ mod N₀
-    val z3: BigInteger   // z₃ = γ + e⋅μ
+    val z1: BigInteger,
+    val z2: BigInteger,
+    val z3: BigInteger
 ) {
-
+    /**
+     * Validates the proof against the provided public parameters.
+     *
+     * @param public The public parameters against which to validate the proof.
+     * @return True if the proof is valid, false otherwise.
+     */
     fun isValid(public: EncPublic): Boolean {
         return public.n0.validateCiphertexts(commitment.A) &&
                 isValidModN(public.n0.n, z2)
     }
 
     companion object {
+        /**
+         * Creates a new proof based on public and private parameters.
+         *
+         * @param id The identifier for the session or proof.
+         * @param public The public parameters for the proof.
+         * @param private The private parameters for the proof.
+         * @return The newly created proof.
+         */
         fun newProof(id: Int, public: EncPublic, private: EncPrivate): EncProof {
             val n = public.n0.n
 
@@ -62,6 +103,14 @@ data class EncProof(
             return EncProof(commitment, z1, z2, z3)
         }
 
+        /**
+         * Generates a challenge based on public parameters and the commitment.
+         *
+         * @param id The identifier for the session or proof.
+         * @param public The public parameters.
+         * @param commitment The commitment associated with the proof.
+         * @return The generated challenge value.
+         */
         private fun challenge(id: Int, public: EncPublic, commitment: EncCommitment): BigInteger {
             // Collect relevant parts to form the challenge
             val inputs = listOf<BigInteger>(
@@ -76,6 +125,13 @@ data class EncProof(
         }
     }
 
+    /**
+     * Verifies the proof's integrity and correctness against public parameters.
+     *
+     * @param id The identifier for the session or proof.
+     * @param public The public parameters used for verification.
+     * @return True if the proof is verified, false otherwise.
+     */
     fun verify(id: Int, public: EncPublic): Boolean {
         if (!isValid(public)) return false
 

@@ -97,7 +97,6 @@ class AffgTest {
         val gammaS = Scalar(gamma.mod(secp256k1Order()))
 
         assertEquals(c, gammaS, "a•b should be equal to α + β")
-
     }
 
 }
