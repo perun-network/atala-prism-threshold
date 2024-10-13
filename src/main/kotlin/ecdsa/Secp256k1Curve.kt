@@ -192,8 +192,8 @@ data class Point(
  */
 fun byteArrayToPoint(bytes: ByteArray): Point {
     require(bytes.size == 65)
-    val x = BigInteger(bytes.copyOfRange(1, 33))
-    val y = BigInteger(bytes.copyOfRange(33, bytes.size))
+    val x = BigInteger(bytes.copyOfRange(1, 33)).mod(P)
+    val y = BigInteger(bytes.copyOfRange(33, bytes.size)).mod(P)
     return Point(x, y)
 }
 

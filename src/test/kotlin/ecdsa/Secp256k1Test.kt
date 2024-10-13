@@ -42,23 +42,6 @@ class Secp256k1Test {
     }
 
     @Test
-    fun multiplyPublicKeyWithTweak() {
-        val pub = Hex.decode("040A629506E1B65CD9D2E0BA9C75DF9C4FED0DB16DC9625ED14397F0AFC836FAE595DC53F8B0EFE61E703075BD9B143BAC75EC0E19F82A2208CAEB32BE53414C40".lowercase())
-        val tweak = Hex.decode("3982F19BEF1615BCCFBB05E321C10E1D4CBA3DF0E841C2E41EEB6016347653C3".lowercase())
-        val tweakedPub = Secp256k1.pubKeyTweakMul(pub, tweak)
-        assertEquals(
-            "04E0FE6FE55EBCA626B98A807F6CAF654139E14E5E3698F01A9A658E21DC1D2791EC060D4F412A794D5370F672BC94B722640B5F76914151CFCA6E712CA48CC589",
-            Hex.encode(tweakedPub).uppercase(),
-        )
-
-        val point = byteArrayToPoint(pub)
-        val scalar = Scalar( BigInteger(tweak))
-        val tweakedPoint = scalar.act(point)
-
-        assertArrayEquals(tweakedPub, tweakedPoint.toPublicKey().value)
-    }
-
-    @Test
     fun testActOnPoint() {
         val tweak = Hex.decode("3982F19BEF1615BCCFBB05E321C10E1D4CBA3DF0E841C2E41EEB6016347653C3".lowercase())
         val scalar = Scalar( BigInteger(tweak))

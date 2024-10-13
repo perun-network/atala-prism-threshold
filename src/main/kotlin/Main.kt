@@ -20,43 +20,48 @@ import java.math.BigInteger
  */
 @OptIn(ExperimentalStdlibApi::class)
 fun main() {
-    val n = 10
-    val t = 5
+    val n = 5
+    val t = 3
 
     val startTime = System.currentTimeMillis() // capture the start time
 
     // Generate Precomputations (Assuming the secret primes are precomputed).
     val (ids, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t, n) // Use generatePrecomputation instead to generate new safe primes.
-    println("Precomputation finished for $n signers with threshold $t")
+    println("Precomputation finished for $n signerIds with threshold $t")
 
     // Message
     val message = "hello"
     val hash = SHA256().digest(message.toByteArray())
 
-    // Determine signers
-    val signers = randomSigners(ids, t)
-    println("Signers: $signers")
-    val publicKey = publicKeyFromShares(signers, publicPrecomps)
-    val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signers, secretPrecomps, publicPrecomps)
+    // Determine signerIds
+    val signerIds = randomSigners(ids, t)
+    println("signerIds: $signerIds")
+    val publicKey = publicKeyFromShares(signerIds, publicPrecomps)
+    val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signerIds, secretPrecomps, publicPrecomps)
     if (publicKey != publicPoint.toPublicKey()) {
         throw IllegalStateException("Inconsistent public Key")
     }
     println("Scaled precomputations finished.\n")
 
+    // Prepare the signers
+    val signers = mutableMapOf<Int, ThresholdSigner>()
+    for (i in signerIds) {
+        signers[i] = ThresholdSigner(
+            id = i,
+            private = scaledPrecomps[i]!!,
+            publics = scaledPublics
+        )
+    }
+
     // **PRESIGN**
     // PRESIGN ROUND 1
     val presignRound1Inputs = mutableMapOf<Int, PresignRound1Input>()
     val presignRound1Outputs = mutableMapOf<Int, Map<Int, PresignRound1Output>>()
-    val ks = mutableMapOf<Int, PaillierCipherText>() // K_i of every party
-    val gs = mutableMapOf<Int, PaillierCipherText>() // G_i of every party
-    val ecdsaPublics = mutableMapOf<Int, Point>() // ecdsa public share of every party
+    val KShares = mutableMapOf<Int, PaillierCipherText>() // K_i of every party
+    val GShares = mutableMapOf<Int, PaillierCipherText>() // G_i of every party
 
 
-    val gammaShares = mutableMapOf<Int, Scalar>()
-    val kShares = mutableMapOf<Int, Scalar>()
-    val gNonces = mutableMapOf<Int, BigInteger>()
-    val kNonces = mutableMapOf<Int, BigInteger>()
-    for (i in signers) {
+    for (i in signerIds) {
         presignRound1Inputs[i] = PresignRound1Input(
             ssid = scaledPrecomps[i]!!.ssid,
             id = scaledPrecomps[i]!!.id,
@@ -64,15 +69,14 @@ fun main() {
         )
 
         // Produce Presign Round1 output
-        val (output, gammaShare, kShare, gNonce, kNonce, K, G) = presignRound1Inputs[i]!!.producePresignRound1Output(signers)
+        val (output, gammaShare, kShare, gNonce, kNonce, K, G) = presignRound1Inputs[i]!!.producePresignRound1Output(signerIds)
         presignRound1Outputs[i] = output
-        gammaShares[i] = gammaShare
-        kShares[i] = kShare
-        gNonces[i] = gNonce
-        kNonces[i] = kNonce
-        ks[i] = K
-        gs[i] = G
-        ecdsaPublics[i] = scaledPublics[i]!!.publicEcdsa
+        signers[i]!!.gammaShare = gammaShare
+        signers[i]!!.kShare = kShare
+        signers[i]!!.gNonce = gNonce
+        signers[i]!!.kNonce = kNonce
+        KShares[i] = K
+        GShares[i] = G
     }
     println("Finish Presign Round 1")
 
@@ -80,15 +84,15 @@ fun main() {
     val bigGammaShares = mutableMapOf<Int, Point>()
     val presignRound2Inputs = mutableMapOf<Int, PresignRound2Input>()
     val presignRound2Outputs = mutableMapOf<Int, Map<Int, PresignRound2Output>>()
-    for (i in signers) {
+    for (i in signerIds) {
         // Prepare Presign Round 2 Inputs
         presignRound2Inputs[i] = PresignRound2Input(
             ssid = scaledPrecomps[i]!!.ssid,
             id = scaledPrecomps[i]!!.id,
-            gammaShare = gammaShares[i]!!,
+            gammaShare = signers[i]!!.gammaShare!!,
             secretECDSA = scaledPrecomps[i]!!.ecdsaShare,
             secretPaillier = scaledPrecomps[i]!!.paillierSecret ,
-            gNonce = gNonces[i]!!,
+            gNonce = signers[i]!!.gNonce!!,
             publics = scaledPublics
         )
 
@@ -104,10 +108,9 @@ fun main() {
 
         // Produce Presign Round2 output
         val (presign2output, bigGammaShare) = presignRound2Inputs[i]!!.producePresignRound2Output(
-            signers,
-            ks,
-            gs,
-            ecdsaPublics)
+            signerIds,
+            KShares,
+            GShares)
 
         presignRound2Outputs[i] = presign2output
         bigGammaShares[i] = bigGammaShare
@@ -119,18 +122,17 @@ fun main() {
     val presignRound3Outputs = mutableMapOf<Int, Map<Int, PresignRound3Output>>()
     val deltaShares = mutableMapOf<Int,BigInteger>()
     val bigDeltaShares = mutableMapOf<Int,Point>()
-    val chiShares = mutableMapOf<Int, Scalar>()
     val bigGammas = mutableMapOf<Int, Point>()
-    for (i in signers) {
+    for (i in signerIds) {
         // Prepare Presign Round 3 Inputs
         presignRound3Inputs[i] = PresignRound3Input(
             ssid = scaledPrecomps[i]!!.ssid,
             id = scaledPrecomps[i]!!.id,
-            gammaShare = gammaShares[i]!!.value,
+            gammaShare = signers[i]!!.gammaShare!!.value,
             secretPaillier = scaledPrecomps[i]!!.paillierSecret,
-            kShare = kShares[i]!!,
-            K = ks[i]!!,
-            kNonce = kNonces[i]!!,
+            kShare = signers[i]!!.kShare!!,
+            K = KShares[i]!!,
+            kNonce = signers[i]!!.kNonce!!,
             secretECDSA = scaledPrecomps[i]!!.ecdsaShare.value,
             publics = scaledPublics
         )
@@ -141,9 +143,9 @@ fun main() {
                 if (!presignRound3Inputs[i]!!.verifyPresignRound2Output(
                         j,
                         presign2output[i]!!,
-                        ks[i]!!,
-                        gs[j]!!,
-                        ecdsaPublics[j]!!
+                        KShares[i]!!,
+                        GShares[j]!!,
+                        scaledPublics[j]!!.publicEcdsa
                     )
                 ) {
                     throw ZeroKnowledgeException("failed to validate presign round 2 output from $j to $i")
@@ -154,12 +156,12 @@ fun main() {
 
         // Produce Presign Round 3 output
         val (presign3output, chiShare, deltaShare, bigDeltaShare, bigGamma) = presignRound3Inputs[i]!!.producePresignRound3Output(
-            signers,
+            signerIds,
             bigGammaShares,
             presignRound2Outputs)
 
         presignRound3Outputs[i] = presign3output
-        chiShares[i] = Scalar(chiShare)
+        signers[i]!!.chiShare = Scalar(chiShare)
         deltaShares[i] = deltaShare
         bigDeltaShares[i] = bigDeltaShare
         bigGammas[i] = bigGamma
@@ -171,17 +173,17 @@ fun main() {
 
     // process Presign output
     val bigR = processPresignOutput(
-        signers= signers,
+        signers= signerIds,
         deltaShares = deltaShares,
         bigDeltaShares = bigDeltaShares,
-        gamma= bigGammas[signers[0]]!!
+        gamma= bigGammas[signerIds[0]]!!
     )
 
-    val partialSigners = mutableMapOf<Int, SignParty>()
+    val partialsignerIds = mutableMapOf<Int, SignParty>()
     val partialSignatures = mutableListOf<PartialSignature>()
-    println("Trying to sign the message: $message")
-    for (i in signers) {
-        partialSigners[i] = SignParty(
+    println("Partial signing the message: \"$message\"")
+    for (i in signerIds) {
+        partialsignerIds[i] = SignParty(
             ssid = scaledPrecomps[i]!!.ssid,
             id = scaledPrecomps[i]!!.id,
             publics = scaledPublics,
@@ -189,9 +191,9 @@ fun main() {
         )
 
         // Verify Presign outputs
-        for (j in signers) {
+        for (j in signerIds) {
             if (j != i) {
-                if (!partialSigners[i]!!.verifyPresignRound3Output(j, presignRound3Outputs[j]!![i]!!, ks[j]!!)) {
+                if (!partialsignerIds[i]!!.verifyPresignRound3Output(j, presignRound3Outputs[j]!![i]!!, KShares[j]!!)) {
                     throw ZeroKnowledgeException("failed to validate presign round 3 output from $j to $i")
                 }
                 println("Validated presign round 3 output from $j to $i ")
@@ -199,9 +201,9 @@ fun main() {
         }
 
         // Produce partial signature
-        partialSignatures.add(partialSigners[i]!!.createPartialSignature(
-            kShare = kShares[i]!!,
-            chiShare = chiShares[i]!!,
+        partialSignatures.add(partialsignerIds[i]!!.createPartialSignature(
+            kShare = signers[i]!!.kShare!!,
+            chiShare = signers[i]!!.chiShare!!,
             bigR= bigR
         ))
     }
@@ -226,10 +228,10 @@ fun main() {
 }
 
 /**
- * Chooses a random list of t signers from the given list of ids.
+ * Chooses a random list of t signerIds from the given list of ids.
  *
  * @param ids A list of signer IDs.
- * @param t The number of signers to randomly select.
+ * @param t The number of signerIds to randomly select.
  * @return A list containing t randomly selected signer IDs.
  */
 fun randomSigners(ids: List<Int>, t : Int) : List<Int> {

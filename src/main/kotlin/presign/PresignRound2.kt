@@ -74,14 +74,12 @@ class PresignRound2Input (
      * @param signers A list of signer identifiers participating in the presigning.
      * @param ks A map of Paillier ciphertexts indexed by signer identifiers.
      * @param gs A map of Paillier ciphertexts indexed by signer identifiers.
-     * @param ecdsas A map of ECDSA points indexed by signer identifiers.
      * @return A pair containing a map of the presign outputs for each signer and the computed big gamma share.
      */
     fun producePresignRound2Output(
         signers : List<Int>,
         ks : Map<Int, PaillierCipherText>,
         gs : Map<Int, PaillierCipherText>,
-        ecdsas : Map<Int, Point>,
     ): Pair<Map<Int, PresignRound2Output>, Point> {
         val result = mutableMapOf<Int, PresignRound2Output>()
         // Γᵢ = [γᵢ]⋅G
@@ -98,7 +96,7 @@ class PresignRound2Input (
                 // compute chiD = D^ᵢⱼ
                 // compute chiF = F^ᵢⱼ
                 // compute chiProof = ψ^j,i
-                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(id, secretECDSA.value, ecdsas[id]!!, ks[j]!!.clone(), secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
+                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(id, secretECDSA.value, publics[id]!!.publicEcdsa, ks[j]!!.clone(), secretPaillier, publics[j]!!.paillierPublic, publics[j]!!.aux)
 
                 val proofLog = LogStarProof.newProof(id,
                     LogStarPublic(gs[id]!!, bigGammaShare, newBasePoint(),  publics[id]!!.paillierPublic, publics[j]!!.aux),
