@@ -1,6 +1,8 @@
 # Threshold ECDSA Signature
 
-This project implements the 3-round threshold ECDSA signing protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) using cryptographic techniques to enhance security and privacy. It allows a group of participants (signers) to collaboratively produce a digital signature for a message without revealing their individual private keys.
+This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) that achieves non-interactive signing using 3 preprocessing rounds. 
+It further provides malicious security and identifiable aborts.
+We provide an implementation of the protocol in Kotlin using the secp256k1 elliptic curve.
 
 The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wiki](https://github.com/perun-network/atala-prism-threshold/wiki/Threshold-ECDSA-Signatures-for-Atala-PRISM-Report).
 
@@ -17,10 +19,9 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 
 ## Features
 
-- Threshold ECDSA signing, where a subset of signers can generate a valid signature.
-- Zero-knowledge proofs for enhanced security and privacy during the signing process.
-- Support for multi-party computations, ensuring that no single party has complete control over the signing process.
-- Integration with Paillier and Pedersen cryptographic schemes for secure data encryption and commitment.
+- Threshold ECDSA signing with preprocessing, where subsets of t signers can create signatures in one round.
+- Implementation of the Paillier encryption scheme and Pedersen commitments.
+- Zero-knowledge proofs for Paillier encryptions, which are during the signing process.
 - The protocol can be integrated to [Apollo](https://github.com/hyperledger/identus-apollo) to be used in crypto services and the threshold Signature can be translated to Apollo's ECDSA Secp256k1 implementation.
 
 ## Architecture
@@ -96,5 +97,7 @@ The current implementation is currently lacking some intended features:
 - Missing key refresh and adversary identification protocols.
 - Main currently using precomputed secret primes to generate precomputations. This is to speed up the process. It is expected to have an accelerated prime generator incorporated in the precomputation phase. 
 
-## License
-This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software. 
+--- 
+## Copyright
+Copyright 2024 PolyCrypt GmbH. \
+Use of the source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
