@@ -3,7 +3,6 @@ package perun_network.ecdsa_threshold
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.keygen.getSamplePrecomputations
 import perun_network.ecdsa_threshold.keygen.publicKeyFromShares
 import perun_network.ecdsa_threshold.keygen.scalePrecomputations
@@ -55,14 +54,12 @@ fun main() {
     // PRESIGN ROUND 1
     val presignRound1Broadcasts = mutableMapOf<Int, Map<Int, PresignRound1Broadcast>>()
     val Ks = mutableMapOf<Int, PaillierCipherText>() // K_i of every party
-    val Gs = mutableMapOf<Int, PaillierCipherText>() // G_i of every party
     val elGamalPublics = mutableMapOf<Int, ElGamalPublic>()
 
 
     for (i in signerIds) {
         presignRound1Broadcasts[i] = signers[i]!!.presignRound1(signerIds)
         Ks[i] = signers[i]!!.K!!
-        Gs[i] = signers[i]!!.G!!
         elGamalPublics[i] = signers[i]!!.elGamalPublic!!
     }
     println("Finish Presign Round 1")
@@ -71,7 +68,7 @@ fun main() {
     val bigGammaShares = mutableMapOf<Int, Point>()
     val presignRound2Broadcasts = mutableMapOf<Int, Map<Int, PresignRound2Broadcast>>()
     for (i in signerIds) {
-        presignRound2Broadcasts[i] = signers[i]!!.presignRound2(signerIds, Ks, Gs, presignRound1Broadcasts)
+        presignRound2Broadcasts[i] = signers[i]!!.presignRound2(signerIds, Ks, presignRound1Broadcasts)
 
         bigGammaShares[i] = signers[i]!!.bigGammaShare!!
     }
@@ -81,7 +78,6 @@ fun main() {
     val presignRound3Broadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
     val deltaShares = mutableMapOf<Int,BigInteger>()
     val bigDeltaShares = mutableMapOf<Int,Point>()
-    val bigGammas = mutableMapOf<Int, Point>()
     for (i in signerIds) {
         presignRound3Broadcasts[i] = signers[i]!!.presignRound3(signerIds, bigGammaShares, elGamalPublics, presignRound2Broadcasts)
         deltaShares[i] = signers[i]!!.deltaShare!!

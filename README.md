@@ -32,8 +32,7 @@ The project is structured into several packages:
 - **`math`**: Mathematical operations and utilities used throughout the signing process.
 - **`paillier`**: Implementation of the Paillier cryptosystem for encryption.
 - **`pedersen`**: Pedersen commitment scheme management.
-- **`presign`**: Management of the presigning process, including rounds of communication and computations between signers.
-- **`sign`**: Signing process management and partial signature combination.
+- **`sign`**: Signing and Presigning process management and partial signature combination.
 - **`zero_knowledge`**: Zero-knowledge proof implementations.
 
 ## Requirements
@@ -82,6 +81,7 @@ The application will output the execution time and confirm if the ECDSA signatur
     - **`pedersen`**: Pedersen commitment management.
     - **`presign`**: Presigning process management.
     - **`sign`**: Signing process management.
+      - **`presign`**: Management of the presigning process, including rounds of communication and computations between signers.
     - **`zkproof`**: Zero-knowledge proofs.
     
   - **`test`**: Contains functionality test.

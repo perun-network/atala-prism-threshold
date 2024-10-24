@@ -38,7 +38,7 @@ class PaillierPublic (
      * @return A pair consisting of the resulting [PaillierCipherText] and the used nonce.
      */
     fun encryptRandom(m: BigInteger): Pair<PaillierCipherText, BigInteger> {
-        val nonce = sampleUnitModN(n)
+        val nonce = sampleModN(n)
         return Pair(encryptWithNonce(m, nonce), nonce)
     }
 
@@ -202,7 +202,7 @@ data class PaillierSecret(
      *
      * @return A pair consisting of [PedersenParameters] and a lambda value.
      */
-    fun generatePedersen(): Pair<PedersenParameters, BigInteger> {
+    fun generatePedersenParameters(): Pair<PedersenParameters, BigInteger> {
         val n = publicKey.n
         val (s, t, lambda) = samplePedersen(phi, publicKey.n)
         val ped = PedersenParameters(n, s, t)

@@ -6,15 +6,20 @@ import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.tuple.Nonuple
-import perun_network.ecdsa_threshold.tuple.Septuple
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
-import perun_network.ecdsa_threshold.zkproof.enc.EncPrivate
-import perun_network.ecdsa_threshold.zkproof.enc.EncProof
-import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
 import java.math.BigInteger
 
+/**
+ * Represents the public parameters for ElGamal encryption.
+ *
+ * @property A1 Elliptic curve point representing g^a.
+ * @property A2 Elliptic curve point representing h^a.
+ * @property B1 Elliptic curve point representing g^b.
+ * @property B2 Elliptic curve point representing h^b.
+ * @property Y Elliptic curve point representing the ciphertext or an associated value (e.g., g^x or g^m).
+ */
 data class ElGamalPublic(
     val A1: Point,
     val A2: Point,
@@ -23,6 +28,13 @@ data class ElGamalPublic(
     val Y: Point
 )
 
+
+/**
+ * Represents the secret parameters for ElGamal encryption.
+ *
+ * @property a Scalar representing the secret exponent a used for encryption of kShare.
+ * @property b Scalar representing the secret exponent b used for encryption of gammaShare.
+ */
 data class ElGamalSecret(
     val a: Scalar,
     val b: Scalar,
@@ -36,11 +48,7 @@ data class ElGamalSecret(
  * @property to The identifier of the receiver.
  * @property K The ciphertext representing Kᵢ.
  * @property G The ciphertext representing Gᵢ.
- * @property Yi The public point used for El-Gamal encryption
- * @property A1 The first public Point used in Enc-Elg zero knowledge proof for K
- * @property A2 The second public Point used in Enc-Elg zero knowledge proof for K
- * @property B1 The first public Point used in Enc-Elg zero knowledge proof for K
- * @property B2 The second public Point used in Enc-Elg zero knowledge proof for G
+ * @property elGamalPublic The public points used for El-Gamal related encryption.
  * @property proof0 The cryptographic proof associated with K.
  * @property proof1 The cryptographic proof associated with G.
  *

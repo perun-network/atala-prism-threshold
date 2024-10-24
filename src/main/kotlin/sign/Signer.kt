@@ -20,8 +20,11 @@ import java.math.BigInteger
  * @property gammaShare The signer's share of the secret value `gammaᵢ` in the presigning protocol (Round 1).
  * @property kNonce The signer's nonce value used in the presigning protocol (Round 1).
  * @property gNonce The group's nonce value used in the presigning protocol (Round 1).
+ * @property a The secret nonce used in El-Gamal encryption of kShare.
+ * @property b The secret nonce used in El-Gamal encryption of gammaShare.
  * @property K The public K_i counterpart of kᵢ in the presigning protocol (Round 1).
  * @property G The public G_i counterpart of gammaᵢ in the presigning protocol (Round 1).
+ * @property elGamalPublic The public points used in El-Gamal encryption.
  *
  * @property bigGammaShare The public `Γi` value produced after presigning round 2 protocol (Round 2).
  *
@@ -99,14 +102,12 @@ data class ThresholdSigner(
      *
      * @param signerIds List of all signers.
      * @param Ks Map of public `K_i` Paillier ciphertexts from all signers.
-     * @param Gs Map of public `G_i` Paillier ciphertexts from all signers.
      * @param presignRound1Broadcasts Broadcasts received in Round 1.
      * @return A map of broadcast messages for the second round, including `Γi` shares and proofs.
      */
     fun presignRound2(
         signerIds: List<Int>,
         Ks : Map<Int, PaillierCipherText>, // public K_i from all peers
-        Gs : Map<Int, PaillierCipherText>, // public G_i from all peers
         presignRound1Broadcasts: Map<Int, Map<Int, PresignRound1Broadcast>>) : Map<Int, PresignRound2Broadcast> {
         // Prepare Presign Round 2 Inputs
         val presignRound2Input = PresignRound2Input(
@@ -146,9 +147,9 @@ data class ThresholdSigner(
      * combining all the secret shares from previous rounds.
      *
      * @param signerIds List of all signers.
-     * @param Gs Map of public `G_i` Paillier ciphertexts from all signers.
      * @param bigGammaShares Map of `Γi` shares from all signers.
      * @param presignRound2Broadcasts Broadcasts received in Round 2.
+     * @param elGamalPublics Public points broadcast by peers for ElGamal proofs.
      * @return A map of broadcast messages for Round 3, including partial signature shares and proofs.
      */
     fun presignRound3(
@@ -208,8 +209,10 @@ data class ThresholdSigner(
      * Verifies the broadcast of the third round of the presigning process from a given signer.
      *
      * @param j The identifier of the signer whose output is being verified.
-     * @param presignRound3Output The output from the third round for the given signer.
-     * @param K_j The Paillier ciphertext for K corresponding to the signer.
+     * @param presignRound3Broadcast The output from the third round for the given signer.
+     * @param A1j First public point A by peer for used in El-Gamal encryption of kShare.
+     * @param A2j Second public point A by peer for used in El-Gamal encryption of kShare.
+     * @param Yj peer's public point to be used in all El-Gamal encryption.
      * @return True if the verification is successful; otherwise, false.
      */
     private fun verifyPresignRound3Broadcast(
@@ -249,7 +252,6 @@ data class ThresholdSigner(
      *
      * @param signers List of identifiers for all signers.
      * @param presignRound3Broadcasts Broadcasts from all signers in Round 3.
-     * @param Ks Map of public `K_i` Paillier ciphertexts from all signers.
      * @param deltaShares Map of `δi` shares from all signers.
      * @param bigDeltaShares Map of `Δi` shares from all signers.
      * @return The final commitment point `R`.

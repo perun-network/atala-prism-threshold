@@ -90,7 +90,7 @@ class LogStarProof(
             val n = public.n0.n
 
             val alpha = sampleLEps()
-            val r = sampleUnitModN(n)
+            val r = sampleModN(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 

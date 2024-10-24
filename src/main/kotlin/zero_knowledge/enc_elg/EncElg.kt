@@ -9,6 +9,16 @@ import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 
+/**
+ * Public parameters for the Range Proof w/ EL-Gamal Commitment (Enc-Elg) zero-knowledge proof.
+ *
+ * @property C Paillier ciphertext representing an encrypted message.
+ * @property A Elliptic curve point representing g^a.
+ * @property B Elliptic curve point representing g^b.
+ * @property X Elliptic curve point representing g^(a*b + x).
+ * @property N0 Paillier public key for the prover.
+ * @property aux Pedersen parameters for commitment schemes.
+ */
 data class EncElgPublic (
     val C: PaillierCipherText,
     val A: Point, // g^a
@@ -19,6 +29,14 @@ data class EncElgPublic (
     val aux: PedersenParameters
 )
 
+/**
+ * Private parameters for the Range Proof w/ EL-Gamal Commitment (Enc-Elg) zero-knowledge proof.
+ *
+ * @property x Private scalar value, representing the decrypted value of C.
+ * @property rho Random nonce associated with the encryption of C.
+ * @property a Scalar value a used in the ElGamal encryption.
+ * @property b Scalar value b used in the ElGamal encryption.
+ */
 data class EncElgPrivate (
     val x : BigInteger, // x= dec(C)
     val rho: BigInteger, // rho = Nonce(C)
@@ -26,6 +44,15 @@ data class EncElgPrivate (
     val b: Scalar,
 )
 
+/**
+ * Commitment values generated during the zero-knowledge proof.
+ *
+ * @property S Commitment based on x and a random value.
+ * @property D Paillier ciphertext representing the encryption of alpha.
+ * @property Y Elliptic curve point representing A^β * G^α.
+ * @property Z Elliptic curve point representing G^β.
+ * @property T Pedersen commitment based on alpha and a random value.
+ */
 data class EncElgCommitment(
     val S : BigInteger, // S = sˣtᵘ
     val D : PaillierCipherText, // D = Enc(α, r)
@@ -34,6 +61,15 @@ data class EncElgCommitment(
     val T: BigInteger // C = sᵃtᵍ
 )
 
+/**
+ * The zero-knowledge proof for the Range Proof w/ EL-Gamal Commitment (Enc-Elg).
+ *
+ * @property commitment The commitments made during the proof.
+ * @property z1 Scalar representing α + ex.
+ * @property w Scalar representing β + eb (mod q).
+ * @property z2 Scalar representing r⋅ρᵉ (mod N₀).
+ * @property z3 Scalar representing γ + eμ.
+ */
 data class EncElgProof (
     val commitment: EncElgCommitment,
     val z1: BigInteger, // z₁ = α + ex
@@ -109,7 +145,7 @@ data class EncElgProof (
             val n = public.N0.n
 
             val alpha = sampleLEps()
-            val r = sampleUnitModN(n)
+            val r = sampleModN(n)
             val mu = sampleLN()
             val beta = sampleScalar()
             val gamma = sampleLEpsN()

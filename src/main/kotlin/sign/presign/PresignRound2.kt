@@ -12,11 +12,6 @@ import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
 import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
 import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
-import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
-
 import java.math.BigInteger
 
 /**
@@ -32,7 +27,7 @@ import java.math.BigInteger
  * @property chiD The Paillier ciphertext representing Chi D.
  * @property chiF The Paillier ciphertext representing Chi F.
  * @property chiProof The proof associated with chi.
- * @property elogProof The log-star proof associated with the presigning process.
+ * @property elogProof The elog proof associated with the presigning process.
  * @property chiBeta The beta value for chi.
  * @property deltaBeta The beta value for delta.
  */
@@ -79,7 +74,9 @@ class PresignRound2Input (
      *
      * @param signers A list of signer identifiers participating in the presigning.
      * @param ks A map of public Paillier ciphertexts indexed by signer identifiers.
-     * @param gs A map of public Paillier ciphertexts indexed by signer identifiers.
+     * @param B1 The first public point B used for El-Gamal encryption of gammaShare.
+     * @param B2 The second public point B used for El-Gamal encryption of gammaShare.
+     * @param Yi The public point used in all El-Gamal encryption.
      * @return A pair containing a map of the presign outputs for each signer and the computed big gamma share.
      */
     fun producePresignRound2Output(
@@ -141,7 +138,7 @@ class PresignRound2Input (
      * Verifies the broadcast message of the first round of the presigning process from a given signer.
      *
      * @param j The identifier of the signer whose output is being verified.
-     * @param presignRound1Output The output from the first round for the given signer.
+     * @param presignRound1Broadcast The output from the first round for the given signer.
      * @return True if the verification is successful; otherwise, false.
      */
     fun verifyPresignRound1Broadcast(

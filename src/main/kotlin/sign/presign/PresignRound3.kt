@@ -9,9 +9,6 @@ import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
 import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPrivate
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarProof
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
 import java.math.BigInteger
 
 /**
@@ -68,6 +65,10 @@ class PresignRound3Input(
      *
      * @param signers A list of signer identifiers participating in the presigning.
      * @param bigGammaShares A map of big gamma shares indexed by signer identifiers.
+     * @param A1 The first public point A used for El-Gamal encryption of k.
+     * @param A2 The second public point A used for El-Gamal encryption of k.
+     * @param Yi The public point used in El-Gamal encryption.
+     * @param a The secret Scalar used to encrypt kShare.
      * @param presignRound2Broadcasts A map of broadcasts from the second round indexed by signer identifiers.
      * @return A quintuple containing a map of the presign outputs for each signer, the computed chi share,
      *         the computed delta share, the computed big delta share, and the computed gamma point.
@@ -162,6 +163,10 @@ class PresignRound3Input(
      * @param presignRound2Broadcast The broadcast from the second round for the given signer.
      * @param k_i The Paillier ciphertext for K.
      * @param ecdsa_j The ECDSA point for the signer.
+     * @param bigGammaShareJ The broadcasted bigGammaShare by peer.
+     * @param Bj1 The first public point for El-Gamal encryption of peer's bigGammaShare.
+     * @param Bj2 The second public point for El-Gamal encryption of peer's bigGammaShare
+     * @param Yj The public point for verification of the zero knowledge proof of bigGammaShare.
      * @return True if the verification is successful; otherwise, false.
      */
     fun verifyPresignRound2Broadcast(

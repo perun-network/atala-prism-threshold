@@ -4,15 +4,17 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof.Companion
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
-import perun_network.ecdsa_threshold.zkproof.enc.EncCommitment
-import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
 import java.math.BigInteger
 
+/**
+ * Public parameters for the Dlog with El-Gamal Commitment (elog) zero-knowledge proof.
+ *
+ * @property L Elliptic curve point representing G^λ.
+ * @property M Elliptic curve point representing G^y * X^λ.
+ * @property X ElGamal public key.
+ * @property Y Elliptic curve point representing h^y.
+ * @property h Base point for ElGamal encryption.
+ */
 data class ElogPublic (
     val L: Point, // L = G^lambda
     val M: Point, // M = G^y*X^lambda
@@ -22,17 +24,37 @@ data class ElogPublic (
 
 )
 
+/**
+ * Private parameters for the Dlog with El-Gamal Commitment (elog) zero-knowledge proof.
+ *
+ * @property y Scalar representing a secret value used in the proof.
+ * @property lambda Scalar representing a secret exponent.
+ */
 data class ElogPrivate(
     val y: Scalar,
     val lambda : Scalar
 )
 
+/**
+ * Commitment values generated during the zero-knowledge proof.
+ *
+ * @property A Elliptic curve point representing G^α.
+ * @property N Elliptic curve point representing G^m + X^α.
+ * @property B Elliptic curve point representing h^m.
+ */
 data class ElogCommitment(
     val A : Point, // A = G^α
     val N : Point, // N = G^m+X^α
     val B : Point // B = h^m
 )
 
+/**
+ * The zero-knowledge proof for the Dlog with El-Gamal Commitment (elog).
+ *
+ * @property commitment The commitments made during the proof.
+ * @property z Scalar representing α + eλ (mod q).
+ * @property u Scalar representing m + ey (mod q).
+ */
 data class ElogProof (
     val commitment : ElogCommitment,
     val z: Scalar, // z = α+eλ (mod q)

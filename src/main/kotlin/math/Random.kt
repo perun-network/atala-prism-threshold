@@ -6,6 +6,20 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.security.SecureRandom
 
+// Security parameter definition
+const val SecParam = 256
+const val L = 1 * SecParam     // = 256
+const val LPrime = 5 * SecParam     // = 1280
+const val Epsilon = 2 * SecParam     // = 512
+const val LPlusEpsilon = L + Epsilon      // = 768
+const val LPrimePlusEpsilon = LPrime + Epsilon // 1792
+
+const val BitsIntModN = 8 * SecParam    // = 2048
+
+const val BitsBlumPrime = 4 * SecParam      // = 1024
+const val BitsPaillier = 2 * BitsBlumPrime // = 2048
+
+
 /**
  * Maximum number of iterations for random sampling.
  */
@@ -50,7 +64,7 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
  * @return A random BigInteger in ℤₙ that is co-prime to `n`.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-fun sampleUnitModN(n: BigInteger): BigInteger {
+fun sampleModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8)
     repeat(MAX_ITERATIONS) {
@@ -85,7 +99,7 @@ fun modN(n: BigInteger): BigInteger {
  * Generates the parameters for the Pedersen commitment.
  *
  * This function samples values for `s`, `t`, and `λ` such that:
- * - `s = tˡ` where `t = τ² mod N`
+ * - `s = t^λ` where `t = τ² mod N`
  *
  * @param phi The value used in the computation of `s`.
  * @param n The modulus used for sampling.
@@ -93,12 +107,12 @@ fun modN(n: BigInteger): BigInteger {
  */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
     val lambda = modN(phi)
-    val tau  = sampleUnitModN(n)
+    val tau  = sampleModN(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)
 
-    // s = tˡ mod N
+    // s = t^λ mod N
     val s = t.modPow(lambda, n)
     return Triple(s, t, lambda)
 }
@@ -127,6 +141,66 @@ fun sampleScalar(): Scalar {
         }
     }
 }
+
+
+
+/**
+ * Generates a random integer with the given number of bits, potentially negated.
+ *
+ * @param inputStream The input stream to read random bytes from.
+ * @param bits The number of bits for the random integer.
+ * @return A randomly generated BigInteger, which may be negative.
+ */
+fun sampleNeg(inputStream: InputStream, bits: Int): BigInteger {
+    val buf = ByteArray(bits / 8 + 1)
+    mustReadBits(inputStream, buf)
+    val neg = buf[0].toInt() and 1
+    val out = BigInteger(1, buf.copyOfRange(1, buf.size))
+    return if (neg == 1) -out else out
+}
+
+/**
+ * Samples a random integer L in the range ±2^l.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleL() : BigInteger = sampleNeg(random, L)
+
+/**
+ * Samples a random integer in the range ±2^l'.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLPrime(): BigInteger = sampleNeg(random,LPrime)
+
+/**
+ * Samples a random integer in the range ±2^(l+ε).
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLEps(): BigInteger = sampleNeg(random, LPlusEpsilon)
+
+/**
+ * Samples a random integer in the range ±2^(l'+ε).
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLPrimeEps(): BigInteger = sampleNeg(random, LPrimePlusEpsilon)
+
+/**
+ * Samples a random integer in the range ±2^l•N, where N is the size of a Paillier modulus.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLN(): BigInteger = sampleNeg(random, L + BitsIntModN)
+
+/**
+ * Samples a random integer in the range ±2^(l+ε)•N.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BitsIntModN)
+
 
 /**
  * A secure random input stream that reads bytes from a SecureRandom source.

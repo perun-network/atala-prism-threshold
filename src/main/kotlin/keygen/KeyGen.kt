@@ -4,8 +4,8 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.PublicKey
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newPoint
+import perun_network.ecdsa_threshold.math.shamir.Polynomial.Companion.newPolynomial
 import perun_network.ecdsa_threshold.math.shamir.lagrange
-import perun_network.ecdsa_threshold.math.shamir.sampleEcdsaShare
 import perun_network.ecdsa_threshold.paillier.*
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
@@ -81,7 +81,7 @@ fun generatePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretP
     val (secretShares, publicShares) = sampleEcdsaShare(t, ids)
     for (i in ids) {
             val (paillierPublic, paillierSecret) = paillierKeyGen()
-            val (aux, _) = paillierSecret.generatePedersen()
+            val (aux, _) = paillierSecret.generatePedersenParameters()
 
             val secretPrecomputation = SecretPrecomputation(
                 id = i,
@@ -170,7 +170,7 @@ fun getSamplePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, Secret
     for (i in ids) {
         val paillierSecret = newPaillierSecretFromPrimes(precomputedPrimes[i-1].first, precomputedPrimes[i-1].second)
         val paillierPublic = paillierSecret.publicKey
-        val (aux, _) = paillierSecret.generatePedersen()
+        val (aux, _) = paillierSecret.generatePedersenParameters()
 
         val secretPrecomputation = SecretPrecomputation(
             id = i,
@@ -213,6 +213,7 @@ fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPreco
 
 /**
  * Scales the precomputations for signers using Lagrange's coefficients and computes the combined public point.
+ * Scaling in threshold secret sharing ensures that each participant's share is correctly weighted when reconstructing the secret or combining values.
  *
  * @param signers The list of party IDs that are participating.
  * @param precomps The map of secret precomputations for the parties.
@@ -269,4 +270,23 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
  */
 fun generatePartyIds(n: Int): List<Int> {
     return (1.. n).shuffled().take(n)
+}
+
+/**
+ * Generates secret ECDSA shares and their corresponding public points using Shamir's Secret Sharing scheme.
+ *
+ * @param threshold The threshold number of shares required to reconstruct the secret.
+ * @param ids The list of participant IDs.
+ * @return A pair containing the secret shares and their corresponding public points.
+ */
+fun sampleEcdsaShare(threshold: Int, ids: List<Int>) : Pair<Map<Int, Scalar>, Map<Int, Point>> {
+    val secretShares = mutableMapOf<Int, Scalar>()
+    val publicShares = mutableMapOf<Int, Point>()
+    val polynomial = newPolynomial(threshold)
+    for (i in ids) {
+        secretShares[i] = (polynomial.eval(Scalar(BigInteger.valueOf(i.toLong()))))
+        publicShares[i] = (secretShares[i]!!.actOnBase())
+    }
+
+    return secretShares to publicShares
 }
