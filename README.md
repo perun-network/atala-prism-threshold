@@ -4,8 +4,7 @@ This project implements the threshold ECDSA protocol by [Canetti et al.](https:/
 It further provides malicious security and identifiable aborts.
 We provide an implementation of the protocol in Kotlin using the secp256k1 elliptic curve.
 
-The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wiki](https://github.com/perun-network/atala-prism-threshold/wiki/Threshold-ECDSA-Signatures-for-Atala-PRISM-Report).
-
+The report on threshold ECDSA signatures for Atala PRISM and the project timeline can be found in the [Wiki](https://github.com/perun-network/atala-prism-threshold/wiki/Threshold-ECDSA-Signatures-for-Atala-PRISM-Report).
 
 ## Table of Contents
 
