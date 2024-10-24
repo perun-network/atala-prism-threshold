@@ -10,12 +10,6 @@ import java.math.BigInteger
  * @property n The modulus, calculated as n = p * q, where p and q are prime factors.
  * @property nSquared The square of the modulus, calculated as n².
  * @property nPlusOne The value of n + 1.
- *
- * @constructor Creates a new instance of [PaillierPublic] with the given parameters.
- *
- * @param n The modulus.
- * @param nSquared The square of the modulus.
- * @param nPlusOne The value of n + 1.
  */
 class PaillierPublic (
     val n: BigInteger,

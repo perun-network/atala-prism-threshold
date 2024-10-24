@@ -13,7 +13,7 @@ import perun_network.ecdsa_threshold.tuple.Quintuple
 import java.math.BigInteger
 
 /**
- * Represents the public parameters for the Aff-g zero-knowledge proof.
+ * Represents the public parameters for the Aff-g (Paillier Affine Operation with Group Commitment in Range ZK) zero-knowledge proof.
  *
  * @property C The ciphertext related to a certain commitment.
  * @property D Another ciphertext used in the proof.
@@ -34,7 +34,7 @@ data class AffgPublic (
 )
 
 /**
- * Represents the private parameters for the Aff-g zero-knowledge proof.
+ * Represents the private parameters for the Aff-g (Paillier Affine Operation with Group Commitment in Range ZK) zero-knowledge proof.
  *
  * @property x The private value used in the proof.
  * @property y Another private value used in the proof.
@@ -70,7 +70,7 @@ data class AffgCommitment(
 )
 
 /**
- * Represents the proof in the Aff-g zero-knowledge protocol.
+ * Represents the proof in the Aff-g (Paillier Affine Operation with Group Commitment in Range ZK) zero-knowledge protocol.
  *
  * @property commitment The commitment associated with this proof.
  * @property z1 The value z1 calculated from α and e·x.

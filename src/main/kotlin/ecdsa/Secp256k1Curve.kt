@@ -288,6 +288,16 @@ data class Scalar (
         }
 
         /**
+         * Creates a scalar from a BigInteger value.
+         *
+         * @param value The integer value.
+         * @return The corresponding scalar.
+         */
+        fun scalarFromBigInteger(value: BigInteger): Scalar {
+            return Scalar(value.mod(N))
+        }
+
+        /**
          * Creates a scalar from an integer value.
          *
          * @param value The integer value.

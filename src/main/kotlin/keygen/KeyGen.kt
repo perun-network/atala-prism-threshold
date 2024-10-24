@@ -68,16 +68,14 @@ fun generateSessionId(byteSize: Int = 16): ByteArray {
  *
  * @param n The number of parties.
  * @param t The threshold for the protocol.
- * @param idRange The range of IDs to choose from for the parties.
  * @return A Triple containing the list of party IDs, a map of secret precomputations, and a map of public precomputations.
  * @throws IllegalArgumentException if `idRange` is less than `n`.
  */
-fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
-    if (idRange < n ) throw IllegalArgumentException("id must be higher than n")
-    val ids = generatePartyIds(n, idRange)
+fun generatePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
+    val ids = generatePartyIds(n)
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
-    val publics = mutableMapOf<Int, PublicPrecomputation>()
+    val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
 
     // generate threshold precomputations
     val (secretShares, publicShares) = sampleEcdsaShare(t, ids)
@@ -100,11 +98,11 @@ fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Ma
                 paillierPublic = paillierPublic,
                 aux = aux
             )
-            publics[i] = publicPrecomp
+            publicPrecomps[i] = publicPrecomp
             precomps[i] = secretPrecomputation
     }
 
-    return Triple(ids ,  precomps , publics)
+    return Triple(ids ,  precomps , publicPrecomps)
 }
 
 /**
@@ -112,11 +110,10 @@ fun generatePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Ma
  *
  * @param n The number of parties.
  * @param t The threshold for the protocol.
- * @param idRange The range of IDs to choose from for the parties.
  * @return A Triple containing the list of party IDs, a map of secret precomputations, and a map of public precomputations.
  * @throws IllegalArgumentException if `idRange` is less than `n`.
  */
-fun getSamplePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
+fun getSamplePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
     // Precomputed safe Blum prime pairs
     val precomputedPrimes: List<Pair<BigInteger, BigInteger>> = listOf(
         Pair(
@@ -161,13 +158,12 @@ fun getSamplePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, M
         )
     )
 
-    if (idRange < n ) throw IllegalArgumentException("id must be higher than n")
     if (n > precomputedPrimes.size) throw IllegalArgumentException("not enough precomputed primes")
-    val ids = generatePartyIds(n, idRange)
+    val ids = generatePartyIds(n)
     println("Parties: $ids")
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
-    val publics = mutableMapOf<Int, PublicPrecomputation>()
+    val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
 
     // generate threshold precomputations
     val (secretShares, publicShares) = sampleEcdsaShare(t, ids)
@@ -191,12 +187,12 @@ fun getSamplePrecomputations(n: Int, t: Int, idRange: Int) : Triple<List<Int>, M
             paillierPublic = paillierPublic,
             aux = aux
         )
-        publics[i] = publicPrecomp
+        publicPrecomps[i] = publicPrecomp
         precomps[i] = secretPrecomputation
         println("Finished precomputation for $i")
     }
 
-    return Triple(ids ,  precomps , publics)
+    return Triple(ids ,  precomps , publicPrecomps)
 }
 
 /**
@@ -220,10 +216,10 @@ fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPreco
  *
  * @param signers The list of party IDs that are participating.
  * @param precomps The map of secret precomputations for the parties.
- * @param publics The map of public precomputations for the parties.
+ * @param publicPrecomps The map of public precomputations for the parties.
  * @return A Triple containing scaled secret precomputations, scaled public precomputations, and the combined public point.
  */
-fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>, publics : Map<Int, PublicPrecomputation>)
+fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>, publicPrecomps : Map<Int, PublicPrecomputation>)
 : Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int,PublicPrecomputation>, Point> {
     val lagrangeCoefficients = lagrange(signers)
 
@@ -236,14 +232,14 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
     for (id in signers) {
         val scaledEcdsaShare = lagrangeCoefficients[id]!!.multiply(precomps[id]!!.ecdsaShare)
 
-        val scaledPublicShare = lagrangeCoefficients[id]!!.act(publics[id]!!.publicEcdsa)
+        val scaledPublicShare = lagrangeCoefficients[id]!!.act(publicPrecomps[id]!!.publicEcdsa)
 
         scaledPublics[id] = PublicPrecomputation(
             id = id,
             ssid = precomps[id]!!.ssid,
             publicEcdsa = scaledPublicShare,
-            paillierPublic = publics[id]!!.paillierPublic,
-            aux = publics[id]!!.aux
+            paillierPublic = publicPrecomps[id]!!.paillierPublic,
+            aux = publicPrecomps[id]!!.aux
         )
 
         // Create a new SecretPrecomputation with the scaled private and public shares
@@ -268,11 +264,9 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
  * Generates a list of distinct party IDs from a given range.
  *
  * @param n The number of party IDs to generate.
- * @param idRange The range within which to generate party IDs.
  * @return A list of unique party IDs.
  * @throws IllegalArgumentException if `n` is greater than `idRange`.
  */
-fun generatePartyIds(n: Int, idRange: Int): List<Int> {
-    if (n > idRange)  throw IllegalArgumentException("Cannot generate $n distinct numbers in the range [1, 100]")
-    return (1.. idRange).shuffled().take(n)
+fun generatePartyIds(n: Int): List<Int> {
+    return (1.. n).shuffled().take(n)
 }

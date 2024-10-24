@@ -9,12 +9,6 @@ import java.math.BigInteger
  * @property n The modulus used for calculations in the commitment scheme.
  * @property s The first base used for the commitment.
  * @property t The second base used for the commitment.
- *
- * @constructor Creates an instance of [PedersenParameters].
- *
- * @param n The modulus.
- * @param s The first base.
- * @param t The second base.
  */
 data class PedersenParameters(
     val n: BigInteger, // Modulus
