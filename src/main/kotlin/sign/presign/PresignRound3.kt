@@ -73,7 +73,7 @@ class PresignRound3Input(
      * @return A quintuple containing a map of the presign outputs for each signer, the computed chi share,
      *         the computed delta share, the computed big delta share, and the computed gamma point.
      */
-    fun producePresignRound3Output(
+    internal fun producePresignRound3Output(
         signers : List<Int>,
         bigGammaShares : Map<Int,Point>,
         A1 : Point,
@@ -169,7 +169,7 @@ class PresignRound3Input(
      * @param Yj The public point for verification of the zero knowledge proof of bigGammaShare.
      * @return True if the verification is successful; otherwise, false.
      */
-    fun verifyPresignRound2Broadcast(
+    internal fun verifyPresignRound2Broadcast(
         j : Int,
         presignRound2Broadcast : PresignRound2Broadcast,
         k_i : PaillierCipherText,

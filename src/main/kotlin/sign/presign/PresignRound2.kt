@@ -79,7 +79,7 @@ class PresignRound2Input (
      * @param Yi The public point used in all El-Gamal encryption.
      * @return A pair containing a map of the presign outputs for each signer and the computed big gamma share.
      */
-    fun producePresignRound2Output(
+    internal fun producePresignRound2Output(
         signers : List<Int>,
         ks : Map<Int, PaillierCipherText>,
         B1: Point,
@@ -141,7 +141,7 @@ class PresignRound2Input (
      * @param presignRound1Broadcast The output from the first round for the given signer.
      * @return True if the verification is successful; otherwise, false.
      */
-    fun verifyPresignRound1Broadcast(
+    internal fun verifyPresignRound1Broadcast(
         j: Int,
         presignRound1Broadcast : PresignRound1Broadcast,
     ) : Boolean {
