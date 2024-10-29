@@ -29,7 +29,7 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 The project is structured into several packages:
 
 - **`ecdsa`**: Core ECDSA functionalities and mathematical operations.
-- **`keygen`**: Key generation and precomputation.
+- **`precomp``**: Key generation and precomputation.
 - **`math`**: Mathematical operations and utilities used throughout the signing process.
 - **`paillier`**: Implementation of the Paillier cryptosystem for encryption.
 - **`pedersen`**: Pedersen commitment scheme with parameter generation.
@@ -77,7 +77,7 @@ The application will output the execution time and confirm if the ECDSA signatur
 - **`src`**: Contains all source code.
   - **`main`**: Contains main functionality.
     - **`ecdsa`**: Core functionalities.
-    - **`keygen`**: Key generation and precomputation.
+    - **`precomp`**: Key generation and precomputation.
     - **`math`**: Mathematical operations and utilities.
     - **`paillier`**: Paillier cryptosystem implementation.
     - **`pedersen`**: Pedersen commitment management.

@@ -9,8 +9,10 @@ import java.math.BigInteger
 
 /**
  * Represents the public parameters for the Π_enc (Paillier Encryption in Range ZK) zero-knowledge proof.
+ * The following relation verifies that the plaintext value of Paillier
+ * ciphertext C is in a desired range I = ±2^l
  *
- * @property K The ciphertext related to the public key.
+ * @property K The public ciphertext related to the public key.
  * @property n0 The Paillier public key used for encryption.
  * @property aux The Pedersen parameters used for commitment.
  */

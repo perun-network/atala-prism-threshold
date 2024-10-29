@@ -104,6 +104,7 @@ fun main() {
     val ecdsaSignature= combinePartialSignatures(signers[signerIds[0]]!!.bigR!!, partialSignatures, publicPoint, hash)
     println("Finish Combining ECDSA Signature: ${ecdsaSignature.toSecp256k1Signature().toHexString().uppercase()}.\n")
 
+    // ** ECDSA VERIFICATION ** //
 
     if (ecdsaSignature.verifySecp256k1(hash, publicKey)) {
         println("ECDSA signature verified successfully.\n")
