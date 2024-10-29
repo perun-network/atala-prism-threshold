@@ -23,10 +23,10 @@ import java.math.BigInteger
  * @property bigGammaShare The computed big gamma share for the signer.
  * @property deltaD The Paillier ciphertext representing Delta D.
  * @property deltaF The Paillier ciphertext representing Delta F.
- * @property deltaProof The proof associated with delta.
+ * @property deltaProof The Aff-G proof associated with delta.
  * @property chiD The Paillier ciphertext representing Chi D.
  * @property chiF The Paillier ciphertext representing Chi F.
- * @property chiProof The proof associated with chi.
+ * @property chiProof The Aff-G proof associated with chi.
  * @property elogProof The elog proof associated with the presigning process.
  * @property chiBeta The beta value for chi.
  * @property deltaBeta The beta value for delta.

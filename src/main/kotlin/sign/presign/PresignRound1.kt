@@ -49,8 +49,8 @@ data class ElGamalSecret(
  * @property K The ciphertext representing Kᵢ.
  * @property G The ciphertext representing Gᵢ.
  * @property elGamalPublic The public points used for El-Gamal related encryption.
- * @property proof0 The cryptographic proof associated with K.
- * @property proof1 The cryptographic proof associated with G.
+ * @property proof0 The enc-elg proof associated with K.
+ * @property proof1 The enc-elg proof associated with G.
  *
  */
 class PresignRound1Broadcast (
