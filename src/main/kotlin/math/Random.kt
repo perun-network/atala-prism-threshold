@@ -66,7 +66,7 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
  */
 fun sampleModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
-    val buf = ByteArray((bitLength + 7) / 8)
+    val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
         val candidate = BigInteger(buf)
@@ -86,7 +86,7 @@ fun sampleModN(n: BigInteger): BigInteger {
  */
 fun modN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
-    val buf = ByteArray((bitLength + 7) / 8)
+    val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
         val candidate = BigInteger(buf)
