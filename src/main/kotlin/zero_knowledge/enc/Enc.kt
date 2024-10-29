@@ -66,7 +66,7 @@ data class EncProof(
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: EncPublic): Boolean {
+    private fun isValid(public: EncPublic): Boolean {
         return public.n0.validateCiphertexts(commitment.A) &&
                 isValidModN(public.n0.n, z2)
     }

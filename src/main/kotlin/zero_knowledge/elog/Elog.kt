@@ -65,7 +65,7 @@ data class ElogProof (
      *
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(): Boolean {
+    private fun isValid(): Boolean {
         if (commitment.A.isIdentity() || commitment.N.isIdentity() || commitment.B.isIdentity()) {
             return false
         }

@@ -95,7 +95,7 @@ class AffgProof(
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: AffgPublic): Boolean {
+    private fun isValid(public: AffgPublic): Boolean {
         if (!public.n1.validateCiphertexts(commitment.A)) return false
         if (!public.n0.validateCiphertexts(commitment.By)) return false
         if (!isValidModN(public.n1.n, wY)) return false
@@ -171,7 +171,7 @@ class AffgProof(
          * @param commitment The commitment associated with the proof.
          * @return The generated challenge value.
          */
-        fun challenge(id: Int, public: AffgPublic, commitment: AffgCommitment): BigInteger {
+        private fun challenge(id: Int, public: AffgPublic, commitment: AffgCommitment): BigInteger {
             // Collect relevant parts to form the challenge
             val inputs = listOf<BigInteger>(
                 public.aux.n,
@@ -268,7 +268,7 @@ class AffgProof(
  * @param receiver The receiver's Paillier public key.
  * @return A quintuple containing computed values necessary for the proof.
  */
-fun computeZKMaterials(
+private fun computeZKMaterials(
     senderSecretShare: BigInteger,
     receiverEncryptedShare: PaillierCipherText,
     sender: PaillierSecret,
