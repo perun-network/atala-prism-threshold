@@ -70,7 +70,7 @@ class LogStarProof(
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: LogStarPublic): Boolean {
+    private fun isValid(public: LogStarPublic): Boolean {
         if (!public.n0.validateCiphertexts(commitment.A)) return false
         if (commitment.Y.isIdentity()) return false
         if (!isValidModN(public.n0.n, z2)) return false
@@ -120,7 +120,7 @@ class LogStarProof(
          * @param commitment The commitment associated with the proof.
          * @return The generated challenge value.
          */
-        fun challenge(id: Int, public: LogStarPublic, commitment: LogStarCommitment): BigInteger {
+        private fun challenge(id: Int, public: LogStarPublic, commitment: LogStarCommitment): BigInteger {
             // Collect relevant parts to form the challenge
             val inputs = listOf<BigInteger>(
                 public.aux.n,

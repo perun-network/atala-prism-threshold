@@ -1,6 +1,6 @@
 # Threshold ECDSA Signature
 
-This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) that achieves non-interactive signing using 3 preprocessing rounds. 
+This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (October 21, 2024) that achieves non-interactive signing using 3 preprocessing rounds. 
 It further provides malicious security and identifiable aborts.
 We provide an implementation of the protocol in Kotlin using the secp256k1 elliptic curve.
 
@@ -11,7 +11,7 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 
 - [Features](#features)
 - [Architecture](#architecture)
-- [Requirements](#requirements)
+  - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Code Structure](#code-structure)
@@ -93,7 +93,7 @@ The application will output the execution time and confirm if the ECDSA signatur
 ## Limitations
 The current implementation is currently lacking some intended features:
 
-- Distributed key generation protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) have not been fully implemented. (Currently centralized)
+- Distributed key generation protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (Version October 21, 2024) have not been fully implemented. (Currently centralized)
 - Missing key refresh and adversary identification protocols.
 - Main currently using precomputed secret primes to generate precomputations. This is to speed up the process. It is expected to have an accelerated prime generator incorporated in the precomputation phase. 
 

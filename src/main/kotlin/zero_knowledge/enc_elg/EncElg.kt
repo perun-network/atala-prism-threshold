@@ -83,7 +83,7 @@ data class EncElgProof (
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: EncElgPublic): Boolean {
+    private fun isValid(public: EncElgPublic): Boolean {
         if (!public.N0.validateCiphertexts(commitment.D)) {
             return false
         }

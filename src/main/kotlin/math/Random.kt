@@ -84,7 +84,7 @@ fun sampleModN(n: BigInteger): BigInteger {
  * @return A random BigInteger in ℤₙ.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-fun modN(n: BigInteger): BigInteger {
+private fun modN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
