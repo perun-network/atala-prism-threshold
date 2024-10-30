@@ -1,6 +1,6 @@
 # Threshold ECDSA Signature
 
-This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) that achieves non-interactive signing using 3 preprocessing rounds. 
+This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (2021) that achieves non-interactive signing using 3 preprocessing rounds. 
 It further provides malicious security and identifiable aborts.
 We provide an implementation of the protocol in Kotlin using the secp256k1 elliptic curve.
 
@@ -14,7 +14,8 @@ The report on threshold ECDSA signatures for Atala PRISM and the project timelin
 - [Installation](#installation)
 - [Usage](#usage)
 - [Code Structure](#code-structure)
-- [License](#license)
+- [Limitations](#limitations)
+- [Copyright](#copyright)
 
 ## Features
 
@@ -96,7 +97,20 @@ The current implementation is currently lacking some intended features:
 - Missing key refresh and adversary identification protocols.
 - Main currently using precomputed secret primes to generate precomputations. This is to speed up the process. It is expected to have an accelerated prime generator incorporated in the precomputation phase. 
 
---- 
+---
 ## Copyright
 Copyright 2024 PolyCrypt GmbH. \
-Use of the source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Use of the source code is governed by the Apache 2.0 license that can be found in the [LICENSE](LICENSE) file.
