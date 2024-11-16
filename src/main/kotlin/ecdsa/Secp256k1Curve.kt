@@ -95,6 +95,12 @@ data class Point(
         return PublicKey.newPublicKey(data)
     }
 
+    fun toByteArray() : ByteArray {
+        val xBytes = bigIntegerToByteArray(x)
+        val yBytes = bigIntegerToByteArray(y)
+        return xBytes + yBytes
+    }
+
     /**
      * Adds this point to another point on the curve.
      *
