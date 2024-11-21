@@ -68,19 +68,19 @@ data class SchnorrProof(
 
             return SchnorrProof(z, commitment.A)
         }
-
-        private fun challenge(id: Int, public: SchnorrPublic, A: Point): BigInteger {
-            // Collect relevant parts to form the challenge
-            val inputs = listOf<BigInteger>(
-                public.X.x,
-                public.X.y,
-                A.x,
-                A.y,
-                BigInteger.valueOf(id.toLong())
-            )
-            return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(
-                secp256k1Order()
-            )
-        }
     }
+}
+
+private fun challenge(id: Int, public: SchnorrPublic, A: Point): BigInteger {
+    // Collect relevant parts to form the challenge
+    val inputs = listOf<BigInteger>(
+        public.X.x,
+        public.X.y,
+        A.x,
+        A.y,
+        BigInteger.valueOf(id.toLong())
+    )
+    return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(
+        secp256k1Order()
+    )
 }

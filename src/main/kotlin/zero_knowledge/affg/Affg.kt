@@ -214,8 +214,8 @@ class AffgProof(
             val beta = sampleLPrimeEps() // β ← ±2^(l'+ε)
 
             // r ← Z∗N0 , ry ← Z∗N1
-            val r = sampleModN(n0)
-            val ry = sampleModN(n1)
+            val r = sampleModNStar(n0)
+            val ry = sampleModNStar(n1)
 
             // γ ← ±2^l+ε· N, m ˆ ← ±2^l· N
             val gamma = sampleLEpsN()

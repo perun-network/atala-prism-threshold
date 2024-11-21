@@ -54,4 +54,23 @@ data class PedersenParameters(
         val rhs = te.multiply(S).mod(n) // rhs = S⋅Tᵉ (mod N)
         return lhs == rhs
     }
+
+    fun toByteArray(): ByteArray {
+        // Convert each BigInteger to its byte array representation
+        val nBytes = n.toByteArray()
+        val sBytes = s.toByteArray()
+        val tBytes = t.toByteArray()
+
+        // Helper function to convert an integer size to a 4-byte array
+        fun Int.toByteArray(): ByteArray = byteArrayOf(
+            (this shr 24).toByte(),
+            (this shr 16).toByte(),
+            (this shr 8).toByte(),
+            this.toByte()
+        )
+
+        // Combine the lengths and the actual byte arrays
+        return nBytes.size.toByteArray() + nBytes + sBytes.size.toByteArray() + sBytes +
+                tBytes.size.toByteArray() + tBytes
+    }
 }
