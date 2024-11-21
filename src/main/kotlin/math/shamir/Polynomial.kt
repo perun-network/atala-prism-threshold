@@ -2,6 +2,7 @@ package perun_network.ecdsa_threshold.math.shamir
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
+import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.math.shamir.Polynomial.Companion.newPolynomial
 import perun_network.ecdsa_threshold.math.sampleScalar
 import java.math.BigInteger
@@ -50,6 +51,21 @@ class Polynomial (
             result = result.multiply(x).add(coefficients[i])
         }
         return result
+    }
+
+    fun exponentPolynomial(): ExponentPolynomial {
+        val coefficients = mutableListOf<Point>()
+        val isConstant = this.coefficients[0].isZero()
+
+        for (i in this.coefficients.size - 1 downTo 0) {
+            if (i == 0 && isConstant) {
+                continue
+            }
+
+            coefficients.add(this.coefficients[i].actOnBase())
+        }
+
+        return ExponentPolynomial(isConstant, coefficients)
     }
 }
 

@@ -49,3 +49,14 @@ fun isInIntervalLEps(n: BigInteger): Boolean {
 fun isInIntervalLPrimeEps(n: BigInteger): Boolean {
     return n.bitLength() <= LPrimePlusEpsilon
 }
+
+/**
+ * Checks if n ∈ [-2^(1+L+E+√N), ..., 2^(1+L+E+√N)], for a Paillier modulus N.
+ *
+ * @param n The integer to check.
+ * @return True if n is within the interval, false otherwise.
+ */
+fun isInIntervalLEpsPlus1RootN(n: BigInteger?): Boolean {
+    if (n == null) return false
+    return n.bitLength() <= 1 + Params.LPlusEpsilon + (Params.BitsIntModN / 2)
+}

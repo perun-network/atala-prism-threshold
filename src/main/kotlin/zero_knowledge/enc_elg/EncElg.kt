@@ -145,7 +145,7 @@ data class EncElgProof (
             val n = public.N0.n
 
             val alpha = sampleLEps()
-            val r = sampleModN(n)
+            val r = sampleModNStar(n)
             val mu = sampleLN()
             val beta = sampleScalar()
             val gamma = sampleLEpsN()
