@@ -38,7 +38,7 @@ class PaillierPublic (
      * @return A pair consisting of the resulting [PaillierCipherText] and the used nonce.
      */
     fun encryptRandom(m: BigInteger): Pair<PaillierCipherText, BigInteger> {
-        val nonce = sampleModN(n)
+        val nonce = sampleModNStar(n)
         return Pair(encryptWithNonce(m, nonce), nonce)
     }
 
@@ -88,6 +88,26 @@ class PaillierPublic (
             if (!ct.c.gcd(nSquared).equals(BigInteger.ONE) ) return false
         }
         return true
+    }
+
+    fun toByteArray(): ByteArray {
+        // Convert each BigInteger to its byte array representation
+        val nBytes = n.toByteArray()
+        val nSquaredBytes = nSquared.toByteArray()
+        val nPlusOneBytes = nPlusOne.toByteArray()
+
+        // Helper function to convert an integer size to a 4-byte array
+        fun Int.toByteArray(): ByteArray = byteArrayOf(
+            (this shr 24).toByte(),
+            (this shr 16).toByte(),
+            (this shr 8).toByte(),
+            this.toByte()
+        )
+
+        // Combine the lengths and the actual byte arrays
+        return nBytes.size.toByteArray() + nBytes +
+                nSquaredBytes.size.toByteArray() + nSquaredBytes +
+                nPlusOneBytes.size.toByteArray() + nPlusOneBytes
     }
 }
 

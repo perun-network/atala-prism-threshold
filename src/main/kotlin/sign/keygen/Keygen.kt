@@ -4,11 +4,9 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newBasePoint
 import perun_network.ecdsa_threshold.ecdsa.newPoint
+import perun_network.ecdsa_threshold.math.sampleRID
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
+import perun_network.ecdsa_threshold.zero_knowledge.sch.*
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -22,7 +20,7 @@ data class Keygen (
     private var rhoShare : Scalar? = null,
     private var alphaCommitment : Scalar? = null,
     private var AShare : Point? = null,
-    private var uShare: Scalar? = null,
+    private var uShare: ByteArray? = null,
     private var VShare : ByteArray? = null,
 
     // KEYGEN ROUND 3
@@ -40,16 +38,18 @@ data class Keygen (
         val rhoShare = sampleScalar()
         val schnorrCommitment = SchnorrCommitment.newCommitment()
 
-        val uShare = sampleScalar()
+        val uShare = sampleRID()
         val VShare = hash(ssid, id, rhoShare, publicShare, schnorrCommitment.A, uShare)
 
         for (j in parties) {
-            broadcasts[j] = KeygenRound1Broadcast(
-                ssid = ssid,
-                from = id,
-                to = j,
-                VShare = VShare
-            )
+            if (j != id) {
+                broadcasts[j] = KeygenRound1Broadcast(
+                    ssid = ssid,
+                    from = id,
+                    to = j,
+                    VShare = VShare
+                )
+            }
         }
 
         this.xShare = xShare
@@ -68,15 +68,17 @@ data class Keygen (
     ) : Map<Int, KeygenRound2Broadcast> {
         val broadcasts = mutableMapOf<Int, KeygenRound2Broadcast>()
         for (j in parties) {
-            broadcasts[j] = KeygenRound2Broadcast(
-                ssid = ssid,
-                from = id,
-                to = j,
-                rhoShare = rhoShare!!,
-                XShare = XShare!!,
-                AShare = AShare!!,
-                uShare = uShare!!
-            )
+            if (j != id) {
+                broadcasts[j] = KeygenRound2Broadcast(
+                    ssid = ssid,
+                    from = id,
+                    to = j,
+                    rhoShare = rhoShare!!,
+                    XShare = XShare!!,
+                    AShare = AShare!!,
+                    uShare = uShare!!
+                )
+            }
         }
 
         return broadcasts
@@ -89,6 +91,7 @@ data class Keygen (
     ) : Map<Int, KeygenRound3Broadcast> {
         // Validates Round 2 Broadcasts.
         for (j in parties) {
+            if (j == id ) continue
             if (!keygenRound1Broadcasts.containsKey(j) || !keygenRound2Broadcasts.containsKey(j)) {
                 throw KeygenException("broacasts missing key $j of signer $id")
             }
@@ -130,12 +133,14 @@ data class Keygen (
         )
 
         for (j in parties) {
-            broadcasts[j] = KeygenRound3Broadcast(
-                ssid = ssid,
-                from = id,
-                to = j,
-                schnorrProof = schnorrProof
-            )
+            if (j != id ) {
+                broadcasts[j] = KeygenRound3Broadcast(
+                    ssid = ssid,
+                    from = id,
+                    to = j,
+                    schnorrProof = schnorrProof
+                )
+            }
         }
 
         return broadcasts
@@ -148,6 +153,8 @@ data class Keygen (
     ) : Point {
         // Validates Round 3 Broadcasts.
         for (j in parties) {
+            if (j == id) continue
+
             if (!keygenRound3Broadcasts.containsKey(j) || !keygenRound2Broadcasts.containsKey(j)) {
                 throw KeygenException("broacasts missing key $j of signer $id")
             }
@@ -184,7 +191,7 @@ data class Keygen (
 }
 
 
-private fun hash(ssid: ByteArray, id: Int, rhoShare: Scalar, publicShare: Point, A: Point, uShare: Scalar) : ByteArray {
+private fun hash(ssid: ByteArray, id: Int, rhoShare: Scalar, publicShare: Point, A: Point, uShare: ByteArray) : ByteArray {
     // Initialize a MessageDigest for SHA-256
     val digest = MessageDigest.getInstance("SHA-256")
 
@@ -194,7 +201,7 @@ private fun hash(ssid: ByteArray, id: Int, rhoShare: Scalar, publicShare: Point,
     digest.update(rhoShare.toByteArray())
     digest.update(publicShare.toByteArray())
     digest.update(A.toByteArray())
-    digest.update(uShare.toByteArray())
+    digest.update(uShare)
 
     // Compute and return the hash
     return digest.digest()

@@ -8,13 +8,14 @@ import java.security.SecureRandom
 
 // Security parameter definition
 const val SecParam = 256
+const val SEC_BYTES = SecParam / 8
 const val L = 1 * SecParam     // = 256
 const val LPrime = 5 * SecParam     // = 1280
 const val Epsilon = 2 * SecParam     // = 512
 const val LPlusEpsilon = L + Epsilon      // = 768
 const val LPrimePlusEpsilon = LPrime + Epsilon // 1792
 
-const val BitsIntModN = 8 * SecParam    // = 2048
+const val BITS_INT_MOD_N = 8 * SecParam    // = 2048
 
 const val BitsBlumPrime = 4 * SecParam      // = 1024
 const val BitsPaillier = 2 * BitsBlumPrime // = 2048
@@ -55,8 +56,14 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
+fun sampleRID() : ByteArray {
+    val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
+    random.read(byteArray)   // Fill the array with random bytes
+    return byteArray
+}
+
 /**
- * Samples a random element from the group of integers modulo `n` that is co-prime to `n`.
+ * Samples a random element from the group of integers modulo `n` that is co-prime to `n` (u ∈ ℤₙˣ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -64,7 +71,7 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
  * @return A random BigInteger in ℤₙ that is co-prime to `n`.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-fun sampleModN(n: BigInteger): BigInteger {
+fun sampleModNStar(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
@@ -76,7 +83,7 @@ fun sampleModN(n: BigInteger): BigInteger {
 }
 
 /**
- * Samples a random element from the integers modulo `n`.
+ * Samples a random element from the integers modulo `n` (u ∈ ℤₙ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -84,7 +91,7 @@ fun sampleModN(n: BigInteger): BigInteger {
  * @return A random BigInteger in ℤₙ.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-private fun modN(n: BigInteger): BigInteger {
+fun sampleModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
@@ -93,6 +100,46 @@ private fun modN(n: BigInteger): BigInteger {
         if (candidate < n) return candidate
     }
     throw ERR_MAX_ITERATIONS
+}
+
+fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
+    val buffer = ByteArray(BITS_INT_MOD_N / 8)
+    repeat(MAX_ITERATIONS) {
+        // Generate a random number modulo n
+        random.read(buffer)
+        val candidate = BigInteger(1, buffer).mod(n)
+
+        // Check if it's a quadratic non-residue
+        if (candidate.jacobiSymbol(n) == -1) {
+            return candidate
+        }
+    }
+    throw IllegalStateException("Exceeded maximum iterations to find a QNR")
+}
+
+// Extension function: Computes the Jacobi symbol (a/n)
+private fun BigInteger.jacobiSymbol(n: BigInteger): Int {
+    var a = this.mod(n)
+    var b = n
+    var result = 1
+
+    while (a != BigInteger.ZERO) {
+        while (a.and(BigInteger.ONE) == BigInteger.ZERO) {
+            a = a.shiftRight(1)
+            val mod8 = b.mod(BigInteger.valueOf(8))
+            if (mod8 == BigInteger.valueOf(3) || mod8 == BigInteger.valueOf(5)) {
+                result = -result
+            }
+        }
+        a = a.also { b = b }.mod(b)
+        if (a.mod(BigInteger.valueOf(4)) == BigInteger.valueOf(3) &&
+            b.mod(BigInteger.valueOf(4)) == BigInteger.valueOf(3)
+        ) {
+            result = -result
+        }
+    }
+
+    return if (b == BigInteger.ONE) result else 0
 }
 
 /**
@@ -106,8 +153,8 @@ private fun modN(n: BigInteger): BigInteger {
  * @return A Triple containing the values `(s, t, λ)`.
  */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
-    val lambda = modN(phi)
-    val tau  = sampleModN(n)
+    val lambda = sampleModN(phi)
+    val tau  = sampleModNStar(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)
@@ -192,14 +239,20 @@ fun sampleLPrimeEps(): BigInteger = sampleNeg(random, LPrimePlusEpsilon)
  *
  * @return A randomly generated BigInteger within the specified range.
  */
-fun sampleLN(): BigInteger = sampleNeg(random, L + BitsIntModN)
+fun sampleLN(): BigInteger = sampleNeg(random, L + BITS_INT_MOD_N)
+
+fun sampleLN2(): BigInteger = sampleNeg(random, L + (2* BITS_INT_MOD_N))
 
 /**
  * Samples a random integer in the range ±2^(l+ε)•N.
  *
  * @return A randomly generated BigInteger within the specified range.
  */
-fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BitsIntModN)
+fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BITS_INT_MOD_N)
+
+fun sampleLEpsN2(): BigInteger = sampleNeg(random, LPlusEpsilon + (2* BITS_INT_MOD_N))
+
+fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_MOD_N/2))
 
 
 /**

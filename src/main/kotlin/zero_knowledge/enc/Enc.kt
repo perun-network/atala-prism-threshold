@@ -84,7 +84,7 @@ data class EncProof(
             val n = public.n0.n
 
             val alpha = sampleLEps()
-            val r = sampleModN(n)
+            val r = sampleModNStar(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 

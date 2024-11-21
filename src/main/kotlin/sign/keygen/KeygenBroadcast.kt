@@ -19,7 +19,7 @@ data class KeygenRound2Broadcast (
     val rhoShare: Scalar,
     val XShare: Point,
     val AShare: Point,
-    val uShare: Scalar,
+    val uShare: ByteArray,
 )
 
 data class KeygenRound3Broadcast (
