@@ -3,12 +3,15 @@ package perun_network.ecdsa_threshold
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.getSamplePrecomputations
-import perun_network.ecdsa_threshold.keygen.publicKeyFromShares
-import perun_network.ecdsa_threshold.keygen.scalePrecomputations
-import perun_network.ecdsa_threshold.paillier.PaillierCipherText
+import perun_network.ecdsa_threshold.keygen.*
 import perun_network.ecdsa_threshold.sign.ThresholdSigner
+import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
+import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
+import perun_network.ecdsa_threshold.sign.aux.AuxRound3Broadcast
 import perun_network.ecdsa_threshold.sign.combinePartialSignatures
+import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
+import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
+import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
 import perun_network.ecdsa_threshold.sign.presign.*
 import java.math.BigInteger
 
@@ -22,86 +25,56 @@ fun main() {
 
     val startTime = System.currentTimeMillis() // capture the start time
 
-    // Generate Precomputations (Assuming the secret primes are precomputed).
-    val (ids, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t) // Use generatePrecomputation instead to generate new safe primes.
-    println("Precomputation finished for $n signerIds with threshold $t")
+    val ssid = generateSessionId()
+    val parties = mutableMapOf<Int, ThresholdSigner>()
+    for (i in 1..n) {
+        parties[i] = ThresholdSigner(
+            id = i,
+            ssid = ssid,
+            threshold = t,
+        )
+    }
+    // KEY GENERATION
+    println("Key generation started for $n signers with threshold $t \n")
+    keygen(parties)
+    println("Key generation finished for $n signers with threshold $t \n")
 
-    // Message
-    val message = "hello"
-    val hash = SHA256().digest(message.toByteArray())
+    // AUXILIARX INFO
+    println("Begin auxiliary info protocol for parties: ${parties.keys} \n")
+    val publicPrecomps = aux(parties)
+    println("Finished auxiliary info protocol for parties: ${parties.keys} \n")
 
     // Determine signerIds
-    val signerIds = randomSigners(ids, t)
-    println("signerIds: $signerIds")
-    val publicKey = publicKeyFromShares(signerIds, publicPrecomps)
-    val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signerIds, secretPrecomps, publicPrecomps)
+    val signers = randomSigners(parties, t)
+    val signerIds = signers.keys.toList()
+    println("Randomly chosen signers: $signerIds")
+    val publicKey = publicKeyFromShares(signers.keys.toList(), publicPrecomps)
+
+    // Scale Secret/Public Precomputations
+    val (publicPoint, scaledPrecomps) =  scalePrecomputation(signers)
     if (publicKey != publicPoint.toPublicKey()) {
         throw IllegalStateException("Inconsistent public Key")
     }
     println("Scaled precomputations finished.\n")
 
-    // Prepare the signers
-    val signers = mutableMapOf<Int, ThresholdSigner>()
-    for (i in signerIds) {
-        signers[i] = ThresholdSigner(
-            id = i,
-            private = scaledPrecomps[i]!!,
-            publicPrecomps = scaledPublics
-        )
-    }
 
     // **PRESIGN**
-    // PRESIGN ROUND 1
-    val presignRound1Broadcasts = mutableMapOf<Int, Map<Int, PresignRound1Broadcast>>()
-    val Ks = mutableMapOf<Int, PaillierCipherText>() // K_i of every party
-    val elGamalPublics = mutableMapOf<Int, ElGamalPublic>()
+    println("Begin Presigning protocol for signers $signerIds.\n")
+    val bigR = presign(signers)
+    println("Finished presigning protocol for signers $signerIds.\n")
 
-
-    for (i in signerIds) {
-        presignRound1Broadcasts[i] = signers[i]!!.presignRound1(signerIds)
-        Ks[i] = signers[i]!!.K!!
-        elGamalPublics[i] = signers[i]!!.elGamalPublic!!
-    }
-    println("Finish Presign Round 1")
-
-    // PRESIGN ROUND 2
-    val bigGammaShares = mutableMapOf<Int, Point>()
-    val presignRound2Broadcasts = mutableMapOf<Int, Map<Int, PresignRound2Broadcast>>()
-    for (i in signerIds) {
-        presignRound2Broadcasts[i] = signers[i]!!.presignRound2(signerIds, Ks, presignRound1Broadcasts)
-
-        bigGammaShares[i] = signers[i]!!.bigGammaShare!!
-    }
-    println("Finish Presign Round 2.\n")
-
-    // PRESIGN ROUND 3
-    val presignRound3Broadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
-    val deltaShares = mutableMapOf<Int,BigInteger>()
-    val bigDeltaShares = mutableMapOf<Int,Point>()
-    for (i in signerIds) {
-        presignRound3Broadcasts[i] = signers[i]!!.presignRound3(signerIds, bigGammaShares, elGamalPublics, presignRound2Broadcasts)
-        deltaShares[i] = signers[i]!!.deltaShare!!
-        bigDeltaShares[i] = signers[i]!!.bigDeltaShare!!
-    }
-    println("Finish Presign Round 3.\n")
-
-    // PROCESS PRESIGN OUTPUTS
-    for (i in signerIds) {
-        signers[i]!!.processPresignOutput(signerIds, presignRound3Broadcasts, elGamalPublics, deltaShares, bigDeltaShares)
-    }
+    // Message
+    val message = "hello"
+    val hash = SHA256().digest(message.toByteArray())
 
     // ** PARTIAL SIGNING **
-    val partialSignatures = mutableListOf<PartialSignature>()
     println("Partial signing the message: \"$message\"")
-
-    for (i in signerIds) {
-        partialSignatures.add(signers[i]!!.partialSignMessage(scaledPublics[i]!!.ssid, hash))
-    }
+    val partialSignatures = partialSignMessage(signers, hash)
     println("Finish ECDSA Partial Signing.\n")
 
 
     // ** ECDSA SIGNING **
-    val ecdsaSignature= combinePartialSignatures(signers[signerIds[0]]!!.bigR!!, partialSignatures, publicPoint, hash)
+    val ecdsaSignature= combinePartialSignatures(bigR, partialSignatures, publicPoint, hash)
     println("Finish Combining ECDSA Signature: ${ecdsaSignature.toSecp256k1Signature().toHexString().uppercase()}.\n")
 
     // ** ECDSA VERIFICATION ** //
@@ -119,15 +92,176 @@ fun main() {
 }
 
 /**
- * Chooses a random list of t signerIds from the given list of ids.
+ * Chooses a random subset of t signerIds and their corresponding ThresholdSigners from the given map of parties.
  *
- * @param ids A list of signer IDs.
+ * @param parties A map where the keys are signer IDs and the values are ThresholdSigners.
  * @param t The number of signerIds to randomly select.
- * @return A list containing t randomly selected signer IDs.
+ * @return A map containing t randomly selected signer IDs and their corresponding ThresholdSigners.
  */
-fun randomSigners(ids: List<Int>, t : Int) : List<Int> {
-    require(t <= ids.size) { "t must be less than or equal to n" }
+fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, ThresholdSigner> {
+    require(t <= parties.size) { "t must be less than or equal to the number of parties." }
+    require(t > 0) { "t must be greater than 0." }
+
+    val partyIds = parties.keys.toList()
 
     // Shuffle the list and take the first t elements
-    return ids.shuffled().take(t)
+    val signerIds = partyIds.shuffled().take(t)
+
+    // Filter the map to include only the randomly selected signer IDs
+    return parties.filterKeys { it in signerIds }
+}
+
+fun keygen(parties : Map<Int, ThresholdSigner>) {
+    val partyIds = parties.keys.toList()
+    // KEYGEN ROUND 1
+    println("KEYGEN ROUND 1 started.")
+    val keygenRound1AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound1Broadcast>>()
+    for (i in partyIds) {
+        keygenRound1AllBroadcasts[i] = parties[i]!!.keygenRound1(partyIds)
+    }
+    println("KEYGEN ROUND 1 finished.\n")
+
+    // KEYGEN ROUND 2
+    println("KEYGEN ROUND 2 started.")
+    val keygenRound2AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound2Broadcast>>()
+    for (i in partyIds) {
+        keygenRound2AllBroadcasts[i] = parties[i]!!.keygenRound2(partyIds)
+    }
+    println("KEYGEN ROUND 2 finished.\n")
+
+    // KEYGEN ROUND 3
+    println("KEYGEN ROUND 3 started.")
+    val keygenRound3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
+    for (i in partyIds) {
+        keygenRound3AllBroadcasts[i] = parties[i]!!.keygenRound3(partyIds, keygenRound1AllBroadcasts, keygenRound2AllBroadcasts)
+    }
+    println("KEYGEN ROUND 3 finished.\n")
+
+    // KEYGEN OUTPUT
+    println("PROCESS KEYGEN OUTPUT.")
+    val publicPoints = mutableMapOf<Int, Point>()
+    for (i in partyIds) {
+        publicPoints[i] = parties[i]!!.keygenOutput(partyIds, keygenRound2AllBroadcasts, keygenRound3AllBroadcasts)
+    }
+    println("KEYGEN FINISHED.\n")
+
+
+    // Check all public Points
+    val publicPoint = publicPoints[partyIds[0]]!!
+    for (i in partyIds) {
+        if (publicPoints[i] != publicPoint) throw IllegalStateException("Inconsistent public Key")
+    }
+}
+
+fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
+    val partyIds = parties.keys.toList()
+
+    // AUX ROUND 1
+    println("AUX ROUND 1 started.")
+    val auxRound1AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound1Broadcast>>()
+    for (i in partyIds) {
+        auxRound1AllBroadcasts[i] = parties[i]!!.auxRound1(partyIds)
+    }
+    println("AUX ROUND 1 finished.\n")
+
+    // AUX ROUND 2
+    println("AUX ROUND 2 started.")
+    val auxRound2AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound2Broadcast>>()
+    for (i in partyIds) {
+        auxRound2AllBroadcasts[i] = parties[i]!!.auxRound2(partyIds)
+    }
+    println("AUX ROUND 2 finished.\n")
+
+    // AUX ROUND 3
+    println("AUX ROUND 3 started.")
+    val auxRound3AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound3Broadcast>>()
+    for (i in partyIds) {
+        auxRound3AllBroadcasts[i] = parties[i]!!.auxRound3(partyIds, auxRound1AllBroadcasts, auxRound2AllBroadcasts)
+    }
+    println("AUX ROUND 3 finished.\n")
+
+    // AUX OUTPUT
+    println("PROCESS AUX OUTPUT.")
+    val publicPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
+    for (i in partyIds) {
+        publicPrecomps[i] = parties[i]!!.auxOutput(partyIds, auxRound2AllBroadcasts, auxRound3AllBroadcasts)
+    }
+    println("AUX FINISHED.\n")
+
+    // Check all public Points
+    val publicPrecomp = publicPrecomps[partyIds[0]]!!
+
+    return publicPrecomp
+}
+
+fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Point, Map<Int, PublicPrecomputation>> {
+    val publicPoints = mutableMapOf<Int, Point>()
+    val publicAllPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
+    for (i in signers.keys.toList()) {
+        val (publicPrecomp, publicPoint) = signers[i]!!.scalePrecomputations(signers.keys.toList())
+        publicPoints[i] = publicPoint
+        publicAllPrecomps[i] = publicPrecomp
+    }
+
+    // Check output consistency
+    val referencePoint = publicPoints[signers.keys.first()]!!
+    val referencePrecomp = publicAllPrecomps[signers.keys.first()]!!
+    for (i in signers.keys) {
+        if (publicPoints[i] != referencePoint) throw IllegalStateException("Inconsistent public Key")
+    }
+
+    return referencePoint to referencePrecomp
+}
+
+fun presign(signers: Map<Int, ThresholdSigner>) : Point {
+    val signerIds = signers.keys.toList()
+
+    // PRESIGN ROUND 1
+    println("PRESIGN ROUND1 started.")
+    val presignRound1AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound1Broadcast>>()
+    for (i in signerIds) {
+        presignRound1AllBroadcasts[i] = signers[i]!!.presignRound1(signerIds)
+    }
+    println("PRESIGN ROUND 1 finished.\n")
+
+    // PRESIGN ROUND 2
+    println("PRESIGN ROUND 2 started.")
+    val presignRound2AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound2Broadcast>>()
+    for (i in signerIds) {
+        presignRound2AllBroadcasts[i] = signers[i]!!.presignRound2(signerIds, presignRound1AllBroadcasts)
+    }
+    println("PRESIGN ROUND 2 finished.\n")
+
+    // PRESIGN ROUND 3
+    println("PRESIGN ROUND 3 started.")
+    val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
+    for (i in signerIds) {
+        presignRound3AllBroadcasts[i] = signers[i]!!.presignRound3(signerIds, presignRound2AllBroadcasts)
+    }
+    println("PRESIGN ROUND 3 finished.\n")
+
+    // PRESIGN OUTPUT
+    println("Process PRESIGN output.")
+    val bigRs = mutableMapOf<Int, Point>()
+    for (i in signerIds) {
+        bigRs[i] = signers[i]!!.presignOutput(signerIds, presignRound3AllBroadcasts)
+    }
+
+    // VERIFY OUTPUT CONSISTENCY
+    val referenceBigR = bigRs[signerIds[0]]!!
+    for (i in signerIds) {
+        if (referenceBigR != bigRs[i]) throw IllegalStateException("Inconsistent public Key")
+    }
+    println("PRESIGN finished.\n")
+    return referenceBigR
+}
+
+fun partialSignMessage(signers: Map<Int, ThresholdSigner>, hash: ByteArray) : List<PartialSignature> {
+    val partialSignatures = mutableListOf<PartialSignature>()
+
+    for (i in signers.keys.toList()) {
+        partialSignatures.add(signers[i]!!.partialSignMessage(hash))
+    }
+
+    return partialSignatures
 }

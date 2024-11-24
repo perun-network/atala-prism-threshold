@@ -58,5 +58,5 @@ fun isInIntervalLPrimeEps(n: BigInteger): Boolean {
  */
 fun isInIntervalLEpsPlus1RootN(n: BigInteger?): Boolean {
     if (n == null) return false
-    return n.bitLength() <= 1 + Params.LPlusEpsilon + (Params.BitsIntModN / 2)
+    return n.bitLength() <= 1 + LPlusEpsilon + (BITS_INT_MOD_N / 2)
 }

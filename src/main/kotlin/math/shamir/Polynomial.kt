@@ -24,11 +24,10 @@ class Polynomial (
          * @param degree The degree of the polynomial.
          * @return A polynomial with randomly sampled coefficients.
          */
-        fun newPolynomial(degree: Int) : Polynomial {
+        fun newPolynomial(degree: Int, constant : Scalar = sampleScalar()) : Polynomial {
             val coefficients = mutableListOf<Scalar>()
 
             // sample a0
-            val constant = sampleScalar()
             coefficients.add(constant)
 
             for (i in 1..degree) {
@@ -57,7 +56,7 @@ class Polynomial (
         val coefficients = mutableListOf<Point>()
         val isConstant = this.coefficients[0].isZero()
 
-        for (i in this.coefficients.size - 1 downTo 0) {
+        for (i in 0..<this.coefficients.size) {
             if (i == 0 && isConstant) {
                 continue
             }

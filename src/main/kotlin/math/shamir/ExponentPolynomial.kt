@@ -11,22 +11,21 @@ class ExponentPolynomial (
     fun eval(x : Scalar) : Point {
         var result = newPoint()
 
+        // Iterate over coefficients in reverse order
         for (i in coefficients.size - 1 downTo 0) {
             result = x.act(result).add(coefficients[i])
         }
 
         if (isConstant) {
+            // If constant, multiply result by x
             result = x.act(result)
         }
+
         return result
     }
 
     fun clone() : ExponentPolynomial {
-        val cloneCoeffs = mutableListOf<Point>()
-        for (i in coefficients.indices) {
-            cloneCoeffs.add(coefficients[i])
-        }
-        return ExponentPolynomial(isConstant = isConstant, coefficients = cloneCoeffs)
+        return ExponentPolynomial(isConstant, coefficients.toMutableList())
     }
 
     fun add(other: ExponentPolynomial) : ExponentPolynomial {

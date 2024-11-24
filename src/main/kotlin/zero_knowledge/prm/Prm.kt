@@ -31,7 +31,8 @@ data class PrmProof (
     val Zs: List<BigInteger>
 ) {
     fun verify(id: Int, public: PrmPublic) : Boolean {
-        val eList = challenge(id, public, As)
+        val (eList, exc) = challenge(id, public, As)
+        if (exc != null) throw exc
 
         val n = public.aux.n
         val s = public.aux.s
@@ -44,22 +45,28 @@ data class PrmProof (
             val a = As[i]
 
             // Check if `a` and `z` are valid under modulus `n`
-            if (!isValidModN(n, a, z)) return false
+            if (!isValidModN(n, a, z)) {
+                return false
+            }
 
             // Check if `a` is not equal to 1
-            if (a == one) return false
+            if (a == one) {
+                return false
+            }
 
             val lhs = t.modPow(z, n)
 
             // Conditional multiplication
             if (eList[i]) {
-                rhs = a.multiply(s).mod(n)
+                rhs = (a.multiply(s)).mod(n)
             } else {
                 rhs = a
             }
 
             // Compare lhs and rhs
-            if (lhs != rhs) return false
+            if (lhs != rhs) {
+                return false
+            }
         }
 
         return true
@@ -79,14 +86,17 @@ data class PrmProof (
                 AList.add(A)
             }
 
-            val eList = challenge(id, public, AList)
+            val (eList, exc) = challenge(id, public, AList)
+            if (exc != null) {
+                throw exc
+            }
 
             for (i in 0..PROOF_NUM-1) {
                 var z = aList[i]
 
 
                 if (eList[i]) {
-                    z = z.add(private.lambda).mod(private.phi)
+                    z = (z.add(private.lambda)).mod(private.phi)
                 }
 
                 ZList.add(z)
@@ -97,26 +107,41 @@ data class PrmProof (
     }
 }
 
-private fun challenge(id: Int, public: PrmPublic, aList: List<BigInteger>): List<Boolean> {
-    val eList = mutableListOf<Boolean>()
+private fun challenge(
+    id: Int,
+    public: PrmPublic,
+    A: List<BigInteger>
+): Pair<List<Boolean>, Exception?> {
+    return try {
+        // Initialize the MessageDigest for SHA-256
+        val digest = MessageDigest.getInstance("SHA-256")
 
-    // Initialize a MessageDigest for SHA-256
-    val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(id.toByte())
 
-    digest.update(id.toByte())
-    digest.update(public.aux.n.toByteArray())
-    digest.update(public.aux.s.toByteArray())
-    digest.update(public.aux.t.toByteArray())
-    digest.update(aList.size.toByte())
+        // Update the digest with the public auxiliary components
+        digest.update(public.aux.n.toByteArray())
+        digest.update(public.aux.s.toByteArray())
+        digest.update(public.aux.t.toByteArray())
 
-    for (i in 0..PROOF_NUM-1) {
-        digest.update(aList[i].toByteArray())
+        // Update the digest with each element in A
+        A.forEach { element ->
+            digest.update(element.toByteArray())
+        }
+
+        // Generate the hash digest
+        val tmpBytes = digest.digest()
+
+        // Create a list of booleans based on the hash digest
+        val es = List(PROOF_NUM) { i ->
+            (tmpBytes[i % tmpBytes.size].toInt() and 1) == 1
+        }
+
+        // Return the list of booleans and no error
+        Pair(es, null)
+    } catch (e: Exception) {
+        // Return an empty list and the exception if something goes wrong
+        Pair(emptyList(), e)
     }
-
-    val tmpBytes = digest.digest()
-
-    val es = List(PROOF_NUM) { i -> (tmpBytes[i] and 1).toInt() == 1 }
-
-    return es
 }
+
 
