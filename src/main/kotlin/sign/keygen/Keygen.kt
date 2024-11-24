@@ -121,8 +121,9 @@ data class Keygen (
 
         // Compute rho, schnorrProof
         val broadcasts = mutableMapOf<Int, KeygenRound3Broadcast>()
-        var rho = Scalar.zero()
+        var rho = this.rhoShare!!
         for (j in parties) {
+            if (j == id) continue
             rho = rho.add(keygenRound2Broadcasts[j]!!.rhoShare)
         }
 
@@ -150,7 +151,7 @@ data class Keygen (
         parties: List<Int>,
         keygenRound2Broadcasts: Map<Int, KeygenRound2Broadcast>,
         keygenRound3Broadcasts: Map<Int, KeygenRound3Broadcast>,
-    ) : Point {
+    ) : Triple<Scalar, Map<Int,Point>, Point> {
         // Validates Round 3 Broadcasts.
         for (j in parties) {
             if (j == id) continue
@@ -175,18 +176,23 @@ data class Keygen (
                 throw KeygenException("corrupted AShare for key $j of signer $id")
             }
 
-            if (!keygenRound3Broadcasts[j]!!.schnorrProof.verify(j, SchnorrPublic(keygenRound2Broadcasts[j]!!.AShare))) {
+            if (!keygenRound3Broadcasts[j]!!.schnorrProof.verify(j, SchnorrPublic(keygenRound2Broadcasts[j]!!.XShare))) {
                 throw KeygenException("corrupted schnorr Proof for key $j of signer $id")
             }
         }
 
         // Output public point
-        var public = newPoint()
+
+        val publics = mutableMapOf<Int, Point>()
+        var public = XShare!!
+        publics[id] = public
         for (j in parties) {
+            if (j == id) continue
+            publics[j] = keygenRound2Broadcasts[j]!!.XShare
             public = public.add(keygenRound2Broadcasts[j]!!.XShare)
         }
 
-        return public
+        return Triple(this.xShare!!, publics,  public)
     }
 }
 

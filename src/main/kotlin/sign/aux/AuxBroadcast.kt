@@ -6,6 +6,7 @@ import perun_network.ecdsa_threshold.math.shamir.ExponentPolynomial
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
+import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.sign.presign.ElGamalPublic
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacCommitment
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
@@ -15,16 +16,16 @@ import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
 import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
 
 data class AuxRound1Broadcast (
-    val ssid: ByteArray,
-    val from: Int,
-    val to: Int,
+    override val ssid: ByteArray,
+    override val from: Int,
+    override val to: Int,
     val VHash: ByteArray
-)
+) : Broadcast(ssid, from, to)
 
 data class AuxRound2Broadcast (
-    val ssid: ByteArray,
-    val from: Int,
-    val to: Int,
+    override val ssid: ByteArray,
+    override val from: Int,
+    override val to: Int,
     val ePolyShare: ExponentPolynomial,
     val As: Map<Int, Point>,
     val paillierPublic: PaillierPublic,
@@ -32,13 +33,13 @@ data class AuxRound2Broadcast (
     val rid: ByteArray,
     val uShare: ByteArray,
     val prmProof: PrmProof
-)
+) : Broadcast(ssid, from, to) {}
 
 data class AuxRound3Broadcast (
-    val ssid: ByteArray,
-    val from: Int,
-    val to: Int,
+    override val ssid: ByteArray,
+    override val from: Int,
+    override val to: Int,
     val modProof : ModProof,
     val facProof : FacProof,
     val CShare: PaillierCipherText
-)
+) : Broadcast(ssid, from, to) {}

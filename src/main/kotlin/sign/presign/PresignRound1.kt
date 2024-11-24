@@ -5,6 +5,7 @@ import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
+import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.tuple.Nonuple
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof
@@ -54,15 +55,15 @@ data class ElGamalSecret(
  *
  */
 class PresignRound1Broadcast (
-    val ssid: ByteArray,
-    val from : Int,
-    val to: Int,
+    override val ssid: ByteArray,
+    override val from : Int,
+    override val to: Int,
     val K : PaillierCipherText, // K = K_i
     val G: PaillierCipherText, // G = G_i
     val elGamalPublic: ElGamalPublic,
     val proof0: EncElgProof,
     val proof1: EncElgProof
-)
+) : Broadcast(ssid, from, to)
 
 /**
  * Represents the input for the first round of the presigning process.
