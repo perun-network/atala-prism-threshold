@@ -1,5 +1,6 @@
 package perun_network.ecdsa_threshold.zero_knowledge.mod
 
+import perun_network.ecdsa_threshold.math.jacobi
 import perun_network.ecdsa_threshold.math.sampleModN
 import perun_network.ecdsa_threshold.math.sampleQuadraticNonResidue
 import perun_network.ecdsa_threshold.zero_knowledge.prm.PROOF_NUM
@@ -8,8 +9,6 @@ import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPublic
 import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.experimental.and
-
-const val PROOF_NUM = 80
 
 data class ModPublic (
     val n : BigInteger,
@@ -33,14 +32,15 @@ data class ModCommitment(
             return false
         }
 
-        val lhsX = x.pow(4).mod(n) // lhs = x⁴ mod n
+        val lhsX = x.modPow(BigInteger.valueOf(4), n) // lhs = x⁴ mod n
 
         // rhs = (-1)ᵃ * wᵇ * y mod n
         var rhs = y
         if (a) rhs = rhs.negate().mod(n)
         if (b) rhs = rhs.multiply(w).mod(n)
 
-        return lhsX == rhs
+        val result = lhsX == rhs
+        return result
     }
 }
 
@@ -48,21 +48,16 @@ data class ModProof(
     val w: BigInteger,
     val responses: List<ModCommitment>
 ) {
-    internal fun verify(id: Int, public: ModPublic) : Boolean {
+    internal fun verify(id: Int, rid:ByteArray, public: ModPublic) : Boolean {
         val n = public.n
 
-        // Ensure n is odd and likely prime
-        if (n.testBit(0).not() || !n.isProbablePrime(20)) {
-            return false
-        }
-
         // Check if (w/n) = -1
-        if (w.jacobiSymbol(n) != -1) {
+        if (jacobi(w, n) != -1) {
             return false
         }
 
         // Generate challenges [yᵢ]
-        val ys = challenge(id, n, w)
+        val ys = challenge(id, rid, n, w)
 
         // Verify each response in parallel
         return responses.zip(ys).all { (response, y) -> response.verify(n, w, y) }
@@ -70,14 +65,14 @@ data class ModProof(
 
 
     companion object {
-        internal fun newProof(id: Int, public: ModPublic, private: ModPrivate): ModProof {
+        internal fun newProof(id: Int, rid: ByteArray, public: ModPublic, private: ModPrivate): ModProof {
             val n = public.n
             val p = private.p
             val q = private.q
             val phi = private.phi
 
-            val pHalf = private.p.subtract(BigInteger.ONE).shiftRight(1)
-            val qHalf = private.p.subtract(BigInteger.ONE).shiftRight(1)
+            val pHalf = (p - BigInteger.ONE) / BigInteger.TWO
+            val qHalf = (q - BigInteger.ONE) / BigInteger.TWO
 
             val w = sampleQuadraticNonResidue(public.n)
 
@@ -85,7 +80,7 @@ data class ModProof(
             val e = fourthRootExponent(phi) // Fourth root exponent
 
             // Generate challenges [yᵢ]
-            val ys = challenge(id, n, w)
+            val ys = challenge(id, rid, n, w)
 
             val commitments = mutableListOf<ModCommitment>()
             ys.forEach { y ->
@@ -116,13 +111,13 @@ private fun isQRModPQ(y: BigInteger, pHalf: BigInteger, qHalf: BigInteger, p: Bi
     return pCheck && qCheck
 }
 
-private fun fourthRootExponent(phi: BigInteger): BigInteger {
+internal fun fourthRootExponent(phi: BigInteger): BigInteger {
     val four = BigInteger.valueOf(4)
     val ePrime = phi.add(four).shiftRight(3) // e' = (φ + 4) / 8
     return ePrime.pow(2) // e = (e')²
 }
 
-private fun makeQuadraticResidue(
+internal fun makeQuadraticResidue(
     y: BigInteger, w: BigInteger, pHalf: BigInteger, qHalf: BigInteger, n: BigInteger, p: BigInteger, q: BigInteger
 ): Triple<Boolean, Boolean, BigInteger> {
     var out = y.mod(n)
@@ -147,44 +142,22 @@ private fun makeQuadraticResidue(
     return Triple(a, b, out)
 }
 
-// Computes Jacobi symbol (a/n)
-private fun BigInteger.jacobiSymbol(n: BigInteger): Int {
-    var a = this
-    var b = n
-    var result = 1
-
-    while (a != BigInteger.ZERO) {
-        while (a.and(BigInteger.ONE) == BigInteger.ZERO) {
-            a = a.shiftRight(1)
-            val mod8 = b.mod(BigInteger.valueOf(8))
-            if (mod8 == BigInteger.valueOf(3) || mod8 == BigInteger.valueOf(5)) {
-                result = -result
-            }
-        }
-        a = a.also { b = b }.mod(b)
-        if (a.mod(BigInteger.valueOf(4)) == BigInteger.valueOf(3) &&
-            b.mod(BigInteger.valueOf(4)) == BigInteger.valueOf(3)
-        ) {
-            result = -result
-        }
-    }
-
-    return if (b == BigInteger.ONE) result else 0
-}
-
-private fun challenge(id: Int, n: BigInteger, w: BigInteger): List<BigInteger> {
+private fun challenge(id: Int, rid: ByteArray, n: BigInteger, w: BigInteger): List<BigInteger> {
     // Initialize a MessageDigest for SHA-256
     val digest = MessageDigest.getInstance("SHA-256")
 
     digest.update(id.toByte())
+    digest.update(rid)
     digest.update(n.toByteArray())
     digest.update(w.toByteArray())
 
 
     val tmpBytes = digest.digest()
 
-    // Generate `statParam` challenges mod n
     return List(PROOF_NUM) {
-        BigInteger(1, tmpBytes).mod(n)
+        // Update the digest for each iteration
+        digest.update(tmpBytes)
+        val newDigest = digest.digest()
+        BigInteger(1, newDigest)
     }
 }

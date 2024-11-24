@@ -2,6 +2,7 @@ package perun_network.ecdsa_threshold.sign.aux
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
+import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
 import perun_network.ecdsa_threshold.math.SEC_BYTES
@@ -14,6 +15,7 @@ import perun_network.ecdsa_threshold.math.shamir.sum
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.paillier.paillierKeyGen
+import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.sign.keygen.KeygenException
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
@@ -38,6 +40,9 @@ class Aux (
     val id: Int,
     val threshold: Int,
 
+    private val previousShare : Scalar?,
+    private val previousPublic: Map<Int, Point>?,
+
     private var selfPolynomial : Polynomial? = null,
     var selfExpPolynomial: ExponentPolynomial? = null,
     private var selfShare: Scalar? = null,
@@ -59,7 +64,7 @@ class Aux (
     ) {
     fun auxRound1(parties: List<Int>) : Map<Int, AuxRound1Broadcast> {
         // sample Paillier and Pedersen
-        val (paillierPublic, paillierSecret) = paillierKeyGen()
+        val (paillierPublic, paillierSecret) = paillierKeyGenMock()
         val (publicPedersen, secretLambda) = paillierSecret.generatePedersenParameters()
 
         // Compute ψi = M(prove, Πprm,(sid, i),(Nˆi, si, ti); λi).
@@ -160,7 +165,7 @@ class Aux (
                     throw AuxException("sender's id mismatch for key $party of signer $id")
                 }
 
-                if (round2Broadcast.to != id || round1Broadcast.to != party)  {
+                if (round2Broadcast.to != id || round1Broadcast.to != id)  {
                     throw AuxException("receiver's id mismatch for key $party of signer $id")
                 }
 
@@ -189,23 +194,26 @@ class Aux (
         // RID = ⊕ⱼ RIDⱼ
         var rid = this.rid!!
         for (party in parties) {
+            if (party == id) continue
             rid = xorByteArrays(rid, round2Broadcasts[party]!!.rid)
         }
 
+        this.rid = rid
+
         // Prove N is a blum prime with zkmod
-        val modProof = ModProof.newProof(id, ModPublic(paillierPublic!!.n), ModPrivate(paillierSecret!!.p, paillierSecret!!.q, paillierSecret!!.phi))
+        val modProof = ModProof.newProof(id, rid, ModPublic(paillierPublic!!.n), ModPrivate(paillierSecret!!.p, paillierSecret!!.q, paillierSecret!!.phi))
 
         val broadcasts = mutableMapOf<Int, AuxRound3Broadcast>()
         for (j in parties) {
             if (j != id) {
                 // Prove that the factors of N are relatively large
-                val facProof = FacProof.newProof(id, rid, FacPublic(paillierPublic!!.n, pedersenPublic!!),
+                val facProof = FacProof.newProof(id, rid, FacPublic(paillierPublic!!.n, round2Broadcasts[j]!!.pedersenPublic),
                     FacPrivate(paillierSecret!!.p, paillierSecret!!.q))
 
                 // compute fᵢ(j)
                 val share =  selfPolynomial!!.eval(Scalar.scalarFromInt(j))
                 // Encrypt share
-                val (C,_) = paillierPublic!!.encryptRandom(share.value)
+                val (C,_) = round2Broadcasts[j]!!.paillierPublic.encryptRandom(share.value)
 
 
                 broadcasts[j] = AuxRound3Broadcast(
@@ -246,7 +254,7 @@ class Aux (
                 throw AuxException("sender's id mismatch for key $party of signer $id")
             }
 
-            if (round2Broadcast.to != id || round3Broadcast.to != party)  {
+            if (round2Broadcast.to != id || round3Broadcast.to != id)  {
                 throw AuxException("receiver's id mismatch for key $party of signer $id")
             }
 
@@ -257,18 +265,18 @@ class Aux (
 
             // Decrypt share and verify with polynomial
             val decryptedShare = Scalar.scalarFromBigInteger(paillierSecret!!.decrypt(round3Broadcast.CShare))
-            val expectedPublicShare = round2Broadcast.ePolyShare.eval(Scalar.scalarFromInt(party))
+            val expectedPublicShare = round2Broadcast.ePolyShare.eval(Scalar.scalarFromInt(id))
             // X == Fⱼ(i)
             if (expectedPublicShare != decryptedShare.actOnBase()) {
                 throw AuxException("failed to validate ECDSA Share of $party with signer $id")
             }
 
             // Check ZK ModProof and FacProof
-            if (!round3Broadcast.modProof.verify(party,ModPublic(round2Broadcast.paillierPublic.n))) {
+            if (!round3Broadcast.modProof.verify(party, rid!!, ModPublic(round2Broadcast.paillierPublic.n))) {
                 throw AuxException("Mod ZK verification failed for key $party to signer $id")
             }
 
-            if (!round3Broadcast.facProof.verify(party, round2Broadcast.rid, FacPublic(round2Broadcast.pedersenPublic.n, round2Broadcast.pedersenPublic))) {
+            if (!round3Broadcast.facProof.verify(party, rid!!, FacPublic(round2Broadcast.pedersenPublic.n, pedersenPublic!!))) {
                 throw AuxException("Fac ZK verification failed for key $party of signer $id")
             }
 
@@ -276,16 +284,28 @@ class Aux (
         }
 
         // Calculate the new secret/ public shares
-        val secretECDSA = selfShare!!
+        var secretECDSA = selfShare!!
+        val publicECDSA = mutableMapOf<Int, Point>()
         val shamirPolynomials = mutableListOf<ExponentPolynomial>()
         shamirPolynomials.add(this.selfExpPolynomial!!)
         for (party in parties) {
             if (party == id) continue
-            secretECDSA.add(shareReceiveds[party]!!)
+            secretECDSA = secretECDSA.add(shareReceiveds[party]!!)
             shamirPolynomials.add(round2Broadcasts[party]!!.ePolyShare)
         }
 
         val shamirPublicPolynomial = sum(shamirPolynomials)
+        for (party in parties) {
+            publicECDSA[party] = shamirPublicPolynomial.eval(Scalar.scalarFromInt(party))
+        }
+
+        if (previousShare != null && previousPublic != null) {
+            secretECDSA = secretECDSA.add(previousShare)
+            for (party in parties) {
+                publicECDSA[party] = publicECDSA[party]!!.add(previousPublic[party]!!)
+            }
+        }
+
 
         // Compute Precomp
         val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
@@ -294,7 +314,7 @@ class Aux (
                 publicPrecomps[party] = PublicPrecomputation(
                     id = id,
                     ssid = ssid,
-                    publicEcdsa = shamirPublicPolynomial.eval(Scalar.scalarFromInt(party)),
+                    publicEcdsa = publicECDSA[party]!!,
                     paillierPublic = this.paillierPublic!!,
                     aux = this.pedersenPublic!!
                 )
@@ -302,7 +322,7 @@ class Aux (
                 publicPrecomps[party] = PublicPrecomputation(
                     id = party,
                     ssid = ssid,
-                    publicEcdsa = shamirPublicPolynomial.eval(Scalar.scalarFromInt(party)),
+                    publicEcdsa = publicECDSA[party]!!,
                     paillierPublic = round2Broadcasts[party]!!.paillierPublic,
                     aux = round2Broadcasts[party]!!.pedersenPublic
                 )

@@ -6,6 +6,7 @@ import perun_network.ecdsa_threshold.ecdsa.newBasePoint
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
+import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
@@ -32,9 +33,9 @@ import java.math.BigInteger
  * @property deltaBeta The beta value for delta.
  */
 class PresignRound2Broadcast (
-    val ssid: ByteArray,
-    val from : Int,
-    val to: Int,
+    override val ssid: ByteArray,
+    override val from : Int,
+    override val to: Int,
     val bigGammaShare : Point,
     val deltaD: PaillierCipherText,
     val deltaF: PaillierCipherText,
@@ -45,7 +46,7 @@ class PresignRound2Broadcast (
     val elogProof: ElogProof,
     val chiBeta: BigInteger,
     val deltaBeta: BigInteger,
-)
+) : Broadcast(ssid, from, to)
 
 /**
  * Represents the input for the second round of the presigning process.

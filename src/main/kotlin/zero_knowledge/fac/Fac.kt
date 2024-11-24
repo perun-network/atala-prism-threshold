@@ -96,13 +96,13 @@ data class FacProof(
             val e = challenge(id, rid, public, comm)
 
             // Compute z1, z2, w1, w2, and v
-            val z1 = e.multiply(pInt).negate().add(alpha)
-            val z2 = e.multiply(qInt).negate().add(beta)
-            val w1 = e.multiply(mu).negate().add(x)
-            val w2 = e.multiply(nu).negate().add(y)
+            val z1 = e.multiply(pInt).add(alpha)
+            val z2 = e.multiply(qInt).add(beta)
+            val w1 = e.multiply(mu).add(x)
+            val w2 = e.multiply(nu).add(y)
 
             val sigmaHat = nu.multiply(pInt).negate().add(sigma)
-            val v = e.multiply(sigmaHat).negate().add(r)
+            val v = e.multiply(sigmaHat).add(r)
 
             return FacProof(comm, sigma, z1, z2, w1, w2, v)
         }
