@@ -37,10 +37,10 @@ data class SchnorrProof(
         return true
     }
 
-    fun verify(id: Int, public: SchnorrPublic) : Boolean {
+    fun verify(id: Int, rid: ByteArray, public: SchnorrPublic) : Boolean {
         if (!isValid()) return false
 
-        val e = challenge(id, public, A)
+        val e = challenge(id, rid, public, A)
 
         // Check g^z = A · X^e
         if (z.actOnBase() != Scalar.scalarFromBigInteger(e).act(public.X).add(A)) {
@@ -51,19 +51,19 @@ data class SchnorrProof(
     }
 
     companion object {
-        internal fun newProof(id: Int, public: SchnorrPublic, private: SchnorrPrivate): SchnorrProof {
+        internal fun newProof(id: Int, rid: ByteArray, public: SchnorrPublic, private: SchnorrPrivate): SchnorrProof {
             val alpha = sampleScalar()
 
             val A = alpha.actOnBase()
 
-            val e = challenge(id, public, A)
+            val e = challenge(id, rid, public, A)
 
             val z = alpha.add(private.x.multiply(Scalar.scalarFromBigInteger(e)))
             return SchnorrProof(z, A)
         }
 
-        internal fun newProofWithCommitment(id: Int, public: SchnorrPublic, private: SchnorrPrivate, commitment: SchnorrCommitment): SchnorrProof {
-            val e = challenge(id, public, commitment.A)
+        internal fun newProofWithCommitment(id: Int, rid: ByteArray, public: SchnorrPublic, private: SchnorrPrivate, commitment: SchnorrCommitment): SchnorrProof {
+            val e = challenge(id, rid, public, commitment.A)
             val z = commitment.alpha.add(private.x.multiply(Scalar.scalarFromBigInteger(e)))
 
             return SchnorrProof(z, commitment.A)
@@ -71,14 +71,15 @@ data class SchnorrProof(
     }
 }
 
-private fun challenge(id: Int, public: SchnorrPublic, A: Point): BigInteger {
+private fun challenge(id: Int, rid: ByteArray, public: SchnorrPublic, A: Point): BigInteger {
     // Collect relevant parts to form the challenge
     val inputs = listOf<BigInteger>(
         public.X.x,
         public.X.y,
         A.x,
         A.y,
-        BigInteger.valueOf(id.toLong())
+        BigInteger.valueOf(id.toLong()),
+        BigInteger(rid)
     )
     return inputs.fold(BigInteger.ZERO) { acc, value -> acc.add(value).mod(secp256k1Order()) }.mod(
         secp256k1Order()
