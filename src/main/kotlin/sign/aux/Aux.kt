@@ -2,23 +2,20 @@ package perun_network.ecdsa_threshold.sign.aux
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
+import perun_network.ecdsa_threshold.ecdsa.Scalar.Companion.scalarFromInt
 import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
 import perun_network.ecdsa_threshold.math.SEC_BYTES
 import perun_network.ecdsa_threshold.math.sampleRID
-import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.math.shamir.ExponentPolynomial
 import perun_network.ecdsa_threshold.math.shamir.Polynomial
 import perun_network.ecdsa_threshold.math.shamir.Polynomial.Companion.newPolynomial
 import perun_network.ecdsa_threshold.math.shamir.sum
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
-import perun_network.ecdsa_threshold.paillier.paillierKeyGen
 import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.sign.keygen.KeygenException
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPublic
@@ -203,6 +200,16 @@ class Aux (
         // Prove N is a blum prime with zkmod
         val modProof = ModProof.newProof(id, rid, ModPublic(paillierPublic!!.n), ModPrivate(paillierSecret!!.p, paillierSecret!!.q, paillierSecret!!.phi))
 
+        // Prove Schnorr's commitment consistency.
+        val schProofs = mutableMapOf<Int, SchnorrProof>()
+        for (j in parties) {
+            val jScalar = Scalar.scalarFromInt(j)
+            val x_j = selfPolynomial!!.eval(jScalar)
+            val X_j = x_j.actOnBase()
+
+            schProofs[j] = SchnorrProof.newProofWithCommitment(id, rid, SchnorrPublic(X_j), SchnorrPrivate(x_j), schnorrCommitments!![j]!!)
+        }
+
         val broadcasts = mutableMapOf<Int, AuxRound3Broadcast>()
         for (j in parties) {
             if (j != id) {
@@ -222,6 +229,7 @@ class Aux (
                     to = j,
                     modProof = modProof,
                     facProof = facProof,
+                    schProofs = schProofs,
                     CShare = C,
                 )
             }
@@ -278,6 +286,14 @@ class Aux (
 
             if (!round3Broadcast.facProof.verify(party, rid!!, FacPublic(round2Broadcast.pedersenPublic.n, pedersenPublic!!))) {
                 throw AuxException("Fac ZK verification failed for key $party of signer $id")
+            }
+
+            // Check all Schnorr's proofs
+            for (j in parties) {
+                val jScalar = scalarFromInt(j)
+                if (!round3Broadcast.schProofs[j]!!.verify(party, rid!!, SchnorrPublic(round2Broadcast.ePolyShare.eval(jScalar)))) {
+                    throw AuxException("Schnorr Proof ZK verification failed for key $party at index $j of signer $id")
+                }
             }
 
             shareReceiveds[party] = decryptedShare

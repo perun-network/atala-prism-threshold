@@ -129,7 +129,7 @@ data class Keygen (
 
         this.rho = rho
 
-        val schnorrProof = SchnorrProof.newProofWithCommitment(id,
+        val schnorrProof = SchnorrProof.newProofWithCommitment(id, rho.toByteArray(),
             SchnorrPublic(XShare!!), SchnorrPrivate(xShare!!), SchnorrCommitment(alphaCommitment!!, AShare!!)
         )
 
@@ -176,7 +176,7 @@ data class Keygen (
                 throw KeygenException("corrupted AShare for key $j of signer $id")
             }
 
-            if (!keygenRound3Broadcasts[j]!!.schnorrProof.verify(j, SchnorrPublic(keygenRound2Broadcasts[j]!!.XShare))) {
+            if (!keygenRound3Broadcasts[j]!!.schnorrProof.verify(j, rho!!.toByteArray(), SchnorrPublic(keygenRound2Broadcasts[j]!!.XShare))) {
                 throw KeygenException("corrupted schnorr Proof for key $j of signer $id")
             }
         }
