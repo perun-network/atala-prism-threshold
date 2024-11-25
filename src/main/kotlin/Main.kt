@@ -111,7 +111,27 @@ fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, Threshol
     return parties.filterKeys { it in signerIds }
 }
 
+private fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Point, Map<Int, PublicPrecomputation>> {
+    val publicPoints = mutableMapOf<Int, Point>()
+    val publicAllPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
+    for (i in signers.keys.toList()) {
+        val (publicPrecomp, publicPoint) = signers[i]!!.scalePrecomputations(signers.keys.toList())
+        publicPoints[i] = publicPoint
+        publicAllPrecomps[i] = publicPrecomp
+    }
+
+    // Check output consistency
+    val referencePoint = publicPoints[signers.keys.first()]!!
+    val referencePrecomp = publicAllPrecomps[signers.keys.first()]!!
+    for (i in signers.keys) {
+        if (publicPoints[i] != referencePoint) throw IllegalStateException("Inconsistent public Key")
+    }
+
+    return referencePoint to referencePrecomp
+}
+
 fun keygen(parties : Map<Int, ThresholdSigner>) {
+    val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
     // KEYGEN ROUND 1
     println("KEYGEN ROUND 1 started.")
@@ -143,7 +163,10 @@ fun keygen(parties : Map<Int, ThresholdSigner>) {
     for (i in partyIds) {
         publicPoints[i] = parties[i]!!.keygenOutput(partyIds, keygenRound2AllBroadcasts, keygenRound3AllBroadcasts)
     }
-    println("KEYGEN FINISHED.\n")
+
+    val endTime = System.currentTimeMillis() // End time in milliseconds
+    val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
+    println("KEYGEN FINISHED after $elapsedTime seconds.\n")
 
 
     // Check all public Points
@@ -154,6 +177,7 @@ fun keygen(parties : Map<Int, ThresholdSigner>) {
 }
 
 fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
+    val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
 
     // AUX ROUND 1
@@ -186,7 +210,10 @@ fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
     for (i in partyIds) {
         publicPrecomps[i] = parties[i]!!.auxOutput(partyIds, auxRound2AllBroadcasts, auxRound3AllBroadcasts)
     }
-    println("AUX FINISHED.\n")
+
+    val endTime = System.currentTimeMillis() // End time in milliseconds
+    val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
+    println("AUX FINISHED after $elapsedTime seconds.\n")
 
     // Check all public Points
     val publicPrecomp = publicPrecomps[partyIds[0]]!!
@@ -194,26 +221,10 @@ fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
     return publicPrecomp
 }
 
-fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Point, Map<Int, PublicPrecomputation>> {
-    val publicPoints = mutableMapOf<Int, Point>()
-    val publicAllPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
-    for (i in signers.keys.toList()) {
-        val (publicPrecomp, publicPoint) = signers[i]!!.scalePrecomputations(signers.keys.toList())
-        publicPoints[i] = publicPoint
-        publicAllPrecomps[i] = publicPrecomp
-    }
 
-    // Check output consistency
-    val referencePoint = publicPoints[signers.keys.first()]!!
-    val referencePrecomp = publicAllPrecomps[signers.keys.first()]!!
-    for (i in signers.keys) {
-        if (publicPoints[i] != referencePoint) throw IllegalStateException("Inconsistent public Key")
-    }
 
-    return referencePoint to referencePrecomp
-}
-
-fun presign(signers: Map<Int, ThresholdSigner>) : Point {
+private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
+    val startTime = System.currentTimeMillis() // capture the start time
     val signerIds = signers.keys.toList()
 
     // PRESIGN ROUND 1
@@ -252,7 +263,9 @@ fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     for (i in signerIds) {
         if (referenceBigR != bigRs[i]) throw IllegalStateException("Inconsistent public Key")
     }
-    println("PRESIGN finished.\n")
+    val endTime = System.currentTimeMillis() // End time in milliseconds
+    val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
+    println("PRESIGN finished after $elapsedTime seconds.\n")
     return referenceBigR
 }
 

@@ -41,5 +41,6 @@ data class AuxRound3Broadcast (
     override val to: Int,
     val modProof : ModProof,
     val facProof : FacProof,
+    val schProofs : Map<Int, SchnorrProof>,
     val CShare: PaillierCipherText
 ) : Broadcast(ssid, from, to) {}
