@@ -1,16 +1,10 @@
 package perun_network.ecdsa_threshold.zero_knowledge.prm
 
-import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.isValidModN
 import perun_network.ecdsa_threshold.math.sampleModN
-import perun_network.ecdsa_threshold.math.sampleModNStar
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
 import java.math.BigInteger
 import java.security.MessageDigest
-import kotlin.experimental.and
 
 /**
  * [PROOF_NUM] is the standard numbers of challenges and proofs.

@@ -7,10 +7,10 @@ import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.sampleL
 import perun_network.ecdsa_threshold.math.sampleLPrime
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zkproof.affg.AffgPrivate
-import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
-import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
-import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
+import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgProof
+import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.affg.produceAffGMaterials
 import java.math.BigInteger
 import kotlin.test.assertEquals
 

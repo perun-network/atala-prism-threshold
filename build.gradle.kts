@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20-RC2"
+    id("org.jetbrains.kotlinx.kover") version "0.6.1"
 }
 
 group = "perun_network.ecdsa_threshold"
@@ -10,6 +11,8 @@ repositories {
     mavenCentral()
     maven("https://jitpack.io")
 }
+
+apply(plugin = "org.jetbrains.kotlinx.kover")
 
 dependencies {
     // define the BOM and its version
@@ -32,4 +35,23 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(11)
+}
+
+kover {
+    verify {
+        rule {
+            isEnabled = true
+            name = "Coverage must be more than 60%"
+            bound {
+                minValue = 60
+            }
+        }
+    }
+
+    filters {
+        classes {
+            excludes += listOf("perun_network.ecdsa_threshold.tuple.*") // Exclude specific classes or packages
+            excludes += listOf("perun_network.ecdsa_threshold.MainKt")
+        }
+    }
 }

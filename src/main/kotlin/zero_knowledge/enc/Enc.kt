@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.enc
+package perun_network.ecdsa_threshold.zero_knowledge.enc
 
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*

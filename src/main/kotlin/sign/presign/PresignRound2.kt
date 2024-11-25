@@ -11,8 +11,8 @@ import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
 import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
-import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
-import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
+import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgProof
+import perun_network.ecdsa_threshold.zero_knowledge.affg.produceAffGMaterials
 import java.math.BigInteger
 
 /**
