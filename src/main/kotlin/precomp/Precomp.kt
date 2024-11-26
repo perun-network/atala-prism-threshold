@@ -44,7 +44,16 @@ class PublicPrecomputation (
     val publicEcdsa: Point,
     val paillierPublic : PaillierPublic,
     val aux: PedersenParameters
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (other !is PublicPrecomputation) return false
+        return id == other.id
+                && ssid.contentEquals(other.ssid)
+                && publicEcdsa == other.publicEcdsa
+                && paillierPublic == other.paillierPublic
+                && aux == other.aux
+    }
+}
 
 /**
  * Generates a random session identifier (SSID) of a given byte size, hashed with SHA-256.

@@ -47,4 +47,11 @@ tasks.jacocoTestReport {
         xml.required.set(true) // Generate XML report
         html.required.set(true) // Generate HTML report
     }
+    classDirectories.setFrom(files(classDirectories.files.map {
+        fileTree(it) {
+            setExcludes(listOf(
+                "**/MainKt.class",
+            ))
+        }
+    }))
 }

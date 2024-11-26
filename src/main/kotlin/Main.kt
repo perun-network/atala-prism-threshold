@@ -217,6 +217,13 @@ fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
 
     // Check all public Points
     val publicPrecomp = publicPrecomps[partyIds[0]]!!
+    for (i in partyIds) {
+        for (j in partyIds) {
+            if (publicPrecomps[i]!![j]!! != publicPrecomp[j]) {
+                throw IllegalStateException("Inconsistent public precomputations of index $j from party $i.")
+            }
+        }
+    }
 
     return publicPrecomp
 }

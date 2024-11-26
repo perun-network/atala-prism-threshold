@@ -1,4 +1,4 @@
-package sign
+package sign.presign
 
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
@@ -13,9 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 
-
-
-class ThresholdSignTest {
+class PresignTest {
     @Test
     fun testThresholdSign() {
         val n = 5 // Number of total parties.
