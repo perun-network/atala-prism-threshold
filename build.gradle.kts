@@ -43,6 +43,7 @@ jacoco {
 
 tasks.jacocoTestReport {
     reports {
+        csv.required.set(true)
         xml.required.set(true) // Generate XML report
         html.required.set(true) // Generate HTML report
     }
