@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.keygen
+package perun_network.ecdsa_threshold.precomp
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.PublicKey
@@ -81,6 +81,7 @@ fun generateSessionId(byteSize: Int = 16): ByteArray {
  * @throws IllegalArgumentException if `idRange` is less than `n`.
  */
 fun generatePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
+    require(n >= t, { "threshold must be less than or equals total parties" })
     val ids = generatePartyIds(n)
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
@@ -186,7 +187,7 @@ fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPreco
  * @return A Triple containing scaled secret precomputations, scaled public precomputations, and the combined public point.
  */
 fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>, publicPrecomps : Map<Int, PublicPrecomputation>)
-: Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int,PublicPrecomputation>, Point> {
+: Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int, PublicPrecomputation>, Point> {
     val lagrangeCoefficients = lagrange(signers)
 
 

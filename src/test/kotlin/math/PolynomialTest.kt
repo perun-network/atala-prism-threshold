@@ -9,9 +9,9 @@ import perun_network.ecdsa_threshold.math.shamir.sum
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ExponenPolynomialTest {
+class PolynomialTest {
     @Test
-    fun testExponentEvaluate() {
+    fun testEvaluate() {
         var lhs: Point
         for (x in 0 until 5) {
             val N = 1000

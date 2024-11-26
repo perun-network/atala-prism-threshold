@@ -1,22 +1,16 @@
 package sign.aux
 
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
-import perun_network.ecdsa_threshold.keygen.generatePrecomputations
-import perun_network.ecdsa_threshold.keygen.generateSessionId
-import perun_network.ecdsa_threshold.keygen.getSamplePrecomputations
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.generateSessionId
+import perun_network.ecdsa_threshold.precomp.getSamplePrecomputations
 import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.sign.aux.Aux
 import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound3Broadcast
-import perun_network.ecdsa_threshold.sign.keygen.Keygen
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class AuxTest {
     @Test
@@ -63,7 +57,7 @@ class AuxTest {
         for (i in parties) {
             val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
             val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-            val (secret, publics) = auxSigners[i]!!.auxOutput(parties, incomingRound2Broadcasts, incomingRound3Broadcasts)
+            val (_, publics) = auxSigners[i]!!.auxOutput(parties, incomingRound2Broadcasts, incomingRound3Broadcasts)
             allPublics[i] = publics
         }
 
@@ -83,7 +77,7 @@ class AuxTest {
 
         val ssid = generateSessionId()
 
-        val (ids, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t)
+        val (_, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t)
         val publics = mutableMapOf<Int, Map<Int, Point>>()
         for (i in 1..n) {
             val map = mutableMapOf<Int, Point>()
@@ -130,8 +124,8 @@ class AuxTest {
         for (i in parties) {
             val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
             val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-            val (secret, publics) = auxSigners[i]!!.auxOutput(parties, incomingRound2Broadcasts, incomingRound3Broadcasts)
-            allPublics[i] = publics
+            val (_, public) = auxSigners[i]!!.auxOutput(parties, incomingRound2Broadcasts, incomingRound3Broadcasts)
+            allPublics[i] = public
         }
 
         // Check all public Points

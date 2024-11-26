@@ -191,19 +191,6 @@ data class Point(
 }
 
 /**
- * Converts a byte array into a Point on the secp256k1 curve.
- *
- * @param bytes The byte array to convert.
- * @return The resulting Point.
- */
-fun byteArrayToPoint(bytes: ByteArray): Point {
-    require(bytes.size == 65)
-    val x = BigInteger(bytes.copyOfRange(1, 33)).mod(P)
-    val y = BigInteger(bytes.copyOfRange(33, bytes.size)).mod(P)
-    return Point(x, y)
-}
-
-/**
  * Creates a new base point (G) on the secp256k1 curve.
  *
  * @return The base point (G).

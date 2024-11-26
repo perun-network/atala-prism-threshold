@@ -1,8 +1,8 @@
 package perun_network.ecdsa_threshold.sign.presign
 
 import perun_network.ecdsa_threshold.ecdsa.*
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
-import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.SecretPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
 import java.math.BigInteger

@@ -1,7 +1,7 @@
 package sign.keygen
 
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.generateSessionId
+import perun_network.ecdsa_threshold.precomp.generateSessionId
 import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.Keygen
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast

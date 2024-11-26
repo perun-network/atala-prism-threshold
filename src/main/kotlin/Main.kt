@@ -3,7 +3,9 @@ package perun_network.ecdsa_threshold
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.*
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.generateSessionId
+import perun_network.ecdsa_threshold.precomp.publicKeyFromShares
 import perun_network.ecdsa_threshold.sign.ThresholdSigner
 import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
@@ -13,7 +15,6 @@ import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
 import perun_network.ecdsa_threshold.sign.presign.*
-import java.math.BigInteger
 
 /**
  * Main function to demonstrate the threshold ECDSA signing process.
@@ -51,7 +52,7 @@ fun main() {
     val publicKey = publicKeyFromShares(signers.keys.toList(), publicPrecomps)
 
     // Scale Secret/Public Precomputations
-    val (publicPoint, scaledPrecomps) =  scalePrecomputation(signers)
+    val (publicPoint, _) =  scalePrecomputation(signers)
     if (publicKey != publicPoint.toPublicKey()) {
         throw IllegalStateException("Inconsistent public Key")
     }

@@ -3,8 +3,10 @@ package sign.presign
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.*
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
+import perun_network.ecdsa_threshold.precomp.getSamplePrecomputations
+import perun_network.ecdsa_threshold.precomp.publicKeyFromShares
+import perun_network.ecdsa_threshold.precomp.scalePrecomputations
 import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.sign.combinePartialSignatures
 import perun_network.ecdsa_threshold.sign.presign.*
@@ -18,8 +20,6 @@ class PresignTest {
     fun testThresholdSign() {
         val n = 5 // Number of total parties.
         val t = 3 // Threshold of minimum required signers.
-
-        val startTime = System.currentTimeMillis() // capture the start time
 
         // Generate Precomputations (Assuming the secret primes are precomputed).
         val (ids, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t) // Use generatePrecomputation instead to generate new safe primes.
