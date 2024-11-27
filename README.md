@@ -1,7 +1,7 @@
 # Threshold ECDSA Signature
 
 [![Test Coverage](https://github.com/perun-network/ecdsa-threshold/blob/gh-pages/badges/jacoco.svg?raw=true)](https://perun-network.github.io/ecdsa-threshold/)
-[![THRESHOLD ECDSA KOTLIN CI/CD WORKFLOW](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml/badge.svg?branch=keygen)](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml)
+[![CI](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml/badge.svg?branch=keygen)](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml)
 
 This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (October 21, 2024) that achieves non-interactive signing using 3 preprocessing rounds. 
 It further provides malicious security and identifiable aborts.
