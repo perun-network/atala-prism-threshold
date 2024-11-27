@@ -51,7 +51,7 @@ tasks.jacocoTestReport {
         fileTree(it) {
             setExcludes(listOf(
                 "**/MainKt.class",
-                "perun_network.ecdsa_threshold.tuple/*",
+                "perun_network/ecdsa_threshold/tuple/*",
             ))
         }
     }))

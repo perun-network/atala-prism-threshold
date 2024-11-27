@@ -60,20 +60,8 @@ val PRECOMPUTED_PRIMES: List<Pair<BigInteger, BigInteger>> = listOf(
 class PaillierPublic (
     val n: BigInteger,
     val nSquared: BigInteger,
-    private val nPlusOne: BigInteger
+    val nPlusOne: BigInteger
 ) {
-    companion object {
-        /**
-         * Creates a new instance of [PaillierPublic] using the specified modulus n.
-         *
-         * @param n The modulus to be used for the public key.
-         * @return A new instance of [PaillierPublic].
-         */
-        fun newPublicKey(n: BigInteger): PaillierPublic {
-            return PaillierPublic(n, n.multiply(n), n.add(BigInteger.ONE))
-        }
-    }
-
     /**
      * Encrypts a message using a randomly generated nonce.
      *
@@ -254,10 +242,11 @@ data class PaillierSecret(
 
         // x = C(N+1)⁻ᵐ (mod N)
         val n = publicKey.n
-        val x = publicKey.n.modPow(mNeg, n).multiply(ct.c).mod(n)
+        var x = publicKey.nPlusOne.modPow(mNeg, publicKey.n)
+        x = x.multiply(ct.c).mod(publicKey.n)
 
         // r = xⁿ⁻¹ (mod N)
-        val nInverse = phi.modInverse(n)
+        val nInverse = n.modInverse(phi)
         val r = x.modPow(nInverse, n)
 
         return m to r

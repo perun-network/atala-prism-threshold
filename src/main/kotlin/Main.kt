@@ -6,7 +6,7 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
 import perun_network.ecdsa_threshold.precomp.generateSessionId
 import perun_network.ecdsa_threshold.precomp.publicKeyFromShares
-import perun_network.ecdsa_threshold.sign.ThresholdSigner
+import perun_network.ecdsa_threshold.sign.Signer
 import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound3Broadcast
@@ -27,9 +27,9 @@ fun main() {
     val startTime = System.currentTimeMillis() // capture the start time
 
     val ssid = generateSessionId()
-    val parties = mutableMapOf<Int, ThresholdSigner>()
+    val parties = mutableMapOf<Int, Signer>()
     for (i in 1..n) {
-        parties[i] = ThresholdSigner(
+        parties[i] = Signer(
             id = i,
             ssid = ssid,
             threshold = t,
@@ -99,7 +99,7 @@ fun main() {
  * @param t The number of signerIds to randomly select.
  * @return A map containing t randomly selected signer IDs and their corresponding ThresholdSigners.
  */
-fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, ThresholdSigner> {
+fun randomSigners(parties: Map<Int, Signer>, t: Int): Map<Int, Signer> {
     require(t <= parties.size) { "t must be less than or equal to the number of parties." }
     require(t > 0) { "t must be greater than 0." }
 
@@ -112,7 +112,7 @@ fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, Threshol
     return parties.filterKeys { it in signerIds }
 }
 
-private fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Point, Map<Int, PublicPrecomputation>> {
+private fun scalePrecomputation(signers : Map<Int, Signer>) : Pair<Point, Map<Int, PublicPrecomputation>> {
     val publicPoints = mutableMapOf<Int, Point>()
     val publicAllPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
     for (i in signers.keys.toList()) {
@@ -131,7 +131,8 @@ private fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Poin
     return referencePoint to referencePrecomp
 }
 
-fun keygen(parties : Map<Int, ThresholdSigner>) {
+
+private fun keygen(parties : Map<Int, Signer>) {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
     // KEYGEN ROUND 1
@@ -177,7 +178,7 @@ fun keygen(parties : Map<Int, ThresholdSigner>) {
     }
 }
 
-fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
+private fun aux(parties: Map<Int, Signer>) : Map<Int, PublicPrecomputation> {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
 
@@ -231,7 +232,7 @@ fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
 
 
 
-private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
+private fun presign(signers: Map<Int, Signer>) : Point {
     val startTime = System.currentTimeMillis() // capture the start time
     val signerIds = signers.keys.toList()
 
@@ -277,7 +278,7 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     return referenceBigR
 }
 
-fun partialSignMessage(signers: Map<Int, ThresholdSigner>, hash: ByteArray) : List<PartialSignature> {
+private fun partialSignMessage(signers: Map<Int, Signer>, hash: ByteArray) : List<PartialSignature> {
     val partialSignatures = mutableListOf<PartialSignature>()
 
     for (i in signers.keys.toList()) {
@@ -286,3 +287,6 @@ fun partialSignMessage(signers: Map<Int, ThresholdSigner>, hash: ByteArray) : Li
 
     return partialSignatures
 }
+
+
+

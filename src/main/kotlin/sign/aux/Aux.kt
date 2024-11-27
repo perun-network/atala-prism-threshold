@@ -14,6 +14,7 @@ import perun_network.ecdsa_threshold.math.shamir.sum
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
+import perun_network.ecdsa_threshold.paillier.validateN
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
@@ -165,9 +166,15 @@ class Aux (
                     throw AuxException("receiver's id mismatch for key $party of signer $id")
                 }
 
-                // Check RID lengths
+                // Check RID lengths.
                 if (round2Broadcast.uShare.size != SEC_BYTES || round2Broadcast.rid.size != SEC_BYTES) {
                     throw AuxException("invalid rid length of broadcast from $party to $id")
+                }
+
+                // Check Pedersen Public.
+                val exc = validateN(round2Broadcast.pedersenPublic.n)
+                if (exc != null) {
+                    throw AuxException("invalid pedersen parameters from $party to $id: ${exc.message}")
                 }
 
                 // Verify ZK-PRM Proof
