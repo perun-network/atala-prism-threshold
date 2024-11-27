@@ -32,6 +32,29 @@ import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
 import java.math.BigInteger
 import java.security.MessageDigest
 
+/**
+ * This class handles the auxiliary information for the threshold ECDSA signature generation,
+ * including key generation, polynomial management, cryptographic proofs, and communication
+ * between the parties in a multi-party signing protocol.
+ *
+ * @param ssid Session identifier used for the specific signing session.
+ * @param id The identifier of the current party (signer).
+ * @param threshold The threshold number of parties required to sign.
+ * @param previousShare The share of the previous round's secret, if applicable.
+ * @param previousPublic The public points from the previous round, if applicable.
+ * @param selfPolynomial The polynomial for the current party in the Shamir secret sharing.
+ * @param selfExpPolynomial The exponent polynomial used in the protocol.
+ * @param selfShare The share of the secret for the current party.
+ * @param rid The random identifier of the current iteration of precomputations.
+ * @param uShare The u_i value used in the Aux-Info protocol.
+ * @param paillierSecret The Paillier secret key for encryption.
+ * @param paillierPublic The Paillier public key for encryption.
+ * @param pedersenLambda The lambda value for the Pedersen commitment.
+ * @param pedersenPublic The public parameters for the Pedersen commitment.
+ * @param prmProof The proof for the Pedersen commitment.
+ * @param schnorrCommitments The Schnorr commitments for each party.
+ * @param As The set of public points associated with each Schnorr commitment.
+ */
 class Aux (
     val ssid: ByteArray,
     val id: Int,
@@ -55,10 +78,15 @@ class Aux (
 
     private var schnorrCommitments: Map<Int, SchnorrCommitment>? = null,
     var As : Map<Int, Point>? = null
-
-
-
-    ) {
+) {
+    /**
+     * Executes the first round of the auxiliary protocol.
+     * In this round, Paillier and Pedersen parameters are sampled, a new polynomial is created,
+     * and Schnorr commitments are made.
+     *
+     * @param parties A list of party identifiers involved in the protocol.
+     * @return A map of broadcasts to be sent to each party containing necessary information.
+     */
     fun auxRound1(parties: List<Int>) : Map<Int, AuxRound1Broadcast> {
         // sample Paillier and Pedersen
         val (paillierPublic, paillierSecret) = paillierKeyGenMock()
@@ -117,6 +145,13 @@ class Aux (
         return broadcasts
     }
 
+    /**
+     * Executes the second round of the auxiliary protocol.
+     * In this round, shares and cryptographic commitments are broadcast to the other parties.
+     *
+     * @param parties A list of party identifiers involved in the protocol.
+     * @return A map of broadcasts containing shares and commitments to be sent.
+     */
     fun auxRound2(parties: List<Int>) : Map<Int, AuxRound2Broadcast> {
         val broadcasts = mutableMapOf<Int, AuxRound2Broadcast>()
 
@@ -140,6 +175,16 @@ class Aux (
         return broadcasts
     }
 
+    /**
+     * Executes the third round of the auxiliary protocol.
+     * This round verifies the second-round broadcasts, computes the final signatures,
+     * and generates the necessary proofs for each party.
+     *
+     * @param parties A list of party identifiers involved in the protocol.
+     * @param round1Broadcasts The broadcasts from the first round.
+     * @param round2Broadcasts The broadcasts from the second round.
+     * @return A map of broadcasts containing the final cryptographic proofs and encrypted shares.
+     */
     fun auxRound3(
         parties: List<Int>,
         round1Broadcasts: Map<Int, AuxRound1Broadcast>,
@@ -238,6 +283,15 @@ class Aux (
         return broadcasts
     }
 
+    /**
+     * Finalizes the auxiliary protocol by verifying all broadcasts, combining the shares
+     * from the other parties, and generating the final secret and public precomputations.
+     *
+     * @param parties A list of party identifiers involved in the protocol.
+     * @param round2Broadcasts The broadcasts from the second round.
+     * @param round3Broadcasts The broadcasts from the third round.
+     * @return A pair consisting of the final secret precomputation and a map of public precomputations.
+     */
     fun auxOutput(
         parties: List<Int>,
         round2Broadcasts: Map<Int, AuxRound2Broadcast>,
@@ -360,6 +414,17 @@ class Aux (
     }
 }
 
+/**
+ * Computes a hash of the given inputs using the SHA-256 algorithm.
+ *
+ * @param ssid Session identifier.
+ * @param id The identifier of the current party.
+ * @param epoly The exponent polynomial.
+ * @param As A map of Schnorr commitments.
+ * @param paillierPublic The Paillier public key.
+ * @param pedersenPublic The Pedersen public parameters.
+ * @return The resulting hash as a byte array.
+ */
 private fun hash(ssid: ByteArray, id: Int, epoly: ExponentPolynomial, As: Map<Int, Point>, paillierPublic: PaillierPublic, pedersenPublic: PedersenParameters) : ByteArray {
     // Initialize a MessageDigest for SHA-256
     val digest = MessageDigest.getInstance("SHA-256")
@@ -378,7 +443,14 @@ private fun hash(ssid: ByteArray, id: Int, epoly: ExponentPolynomial, As: Map<In
     return digest.digest()
 }
 
-
+/**
+ * Performs a bitwise XOR operation on two byte arrays.
+ *
+ * @param a The first byte array.
+ * @param b The second byte array.
+ * @return A new byte array containing the XORed result.
+ * @throws IllegalArgumentException If the byte arrays have different lengths.
+ */
 private fun xorByteArrays(a: ByteArray, b: ByteArray): ByteArray {
     require(a.size == b.size) { "Byte arrays must have the same length" }
     return ByteArray(a.size) { i -> (a[i].toInt() xor b[i].toInt()).toByte() }

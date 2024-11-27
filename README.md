@@ -17,6 +17,7 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 - [Installation](#installation)
 - [Usage](#usage)
 - [Code Structure](#code-structure)
+- [Limitations](#limitations)
 - [Copyright](#copyright)
 
 ## Features

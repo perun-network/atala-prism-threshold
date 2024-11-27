@@ -15,6 +15,14 @@ import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmProof
 import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
 import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
 
+/**
+ * Represents the first round of auxiliary broadcasting in the protocol.
+ *
+ * @property ssid The unique session identifier for the protocol.
+ * @property from The identifier of the sender party.
+ * @property to The identifier of the recipient party.
+ * @property VHash A hash value used to verify the broadcast message.
+ */
 data class AuxRound1Broadcast (
     override val ssid: ByteArray,
     override val from: Int,
@@ -22,6 +30,21 @@ data class AuxRound1Broadcast (
     val VHash: ByteArray
 ) : Broadcast(ssid, from, to)
 
+
+/**
+ * Represents the second round of auxiliary broadcasting in the protocol.
+ *
+ * @property ssid The unique session identifier for the protocol.
+ * @property from The identifier of the sender party.
+ * @property to The identifier of the recipient party.
+ * @property ePolyShare The exponent polynomial shared by the sender.
+ * @property As A map of public Schnorr's commitments from the parties.
+ * @property paillierPublic The public key for Paillier encryption.
+ * @property pedersenPublic The public parameters for the Pedersen commitment.
+ * @property rid A random identifier used for the protocol.
+ * @property uShare A random value shared by the sender.
+ * @property prmProof A proof for the Pedersen commitment.
+ */
 data class AuxRound2Broadcast (
     override val ssid: ByteArray,
     override val from: Int,
@@ -35,6 +58,17 @@ data class AuxRound2Broadcast (
     val prmProof: PrmProof
 ) : Broadcast(ssid, from, to) {}
 
+/**
+ * Represents the third round of auxiliary broadcasting in the protocol.
+ *
+ * @property ssid The unique session identifier for the protocol.
+ * @property from The identifier of the sender party.
+ * @property to The identifier of the recipient party.
+ * @property modProof A proof for the modulus of N in the Paillier encryption.
+ * @property facProof A proof for the factorization of the Paillier modulus.
+ * @property schProofs A map of Schnorr proofs for the commitments.
+ * @property CShare The Paillier ciphertext representing the sender's share to be sent.
+ */
 data class AuxRound3Broadcast (
     override val ssid: ByteArray,
     override val from: Int,
