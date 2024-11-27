@@ -56,6 +56,13 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
+/**
+ * Generates a random identifier (RID) as a secure random byte array.
+ *
+ * The RID is a 256-bit (32-byte) cryptographically secure random value.
+ *
+ * @return A 32-byte array of secure random values.
+ */
 fun sampleRID() : ByteArray {
     val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
     random.read(byteArray)   // Fill the array with random bytes
@@ -102,6 +109,23 @@ fun sampleModN(n: BigInteger): BigInteger {
     throw ERR_MAX_ITERATIONS
 }
 
+/**
+ * Samples a quadratic non-residue modulo `n`.
+ *
+ * This function generates a random integer modulo `n` and checks if it is a
+ * quadratic non-residue (QNR) using the Jacobi symbol. It repeats the process
+ * up to [MAX_ITERATIONS] times until a valid QNR is found.
+ *
+ * A quadratic non-residue `x` modulo `n` satisfies the condition that the
+ * Jacobi symbol `(x/n)` is -1, indicating that `x` is not a square in the
+ * group of integers modulo `n`.
+ *
+ * @param n The modulus for which a quadratic non-residue is sampled.
+ *          It is expected to be a positive integer.
+ * @return A randomly sampled quadratic non-residue modulo `n`.
+ * @throws IllegalStateException if no quadratic non-residue is found
+ *         within [MAX_ITERATIONS].
+ */
 fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
     val buffer = ByteArray(BITS_INT_MOD_N / 8)
     repeat(MAX_ITERATIONS) {
@@ -279,6 +303,13 @@ fun sampleLPrimeEps(): BigInteger = sampleNeg(random, LPrimePlusEpsilon)
  */
 fun sampleLN(): BigInteger = sampleNeg(random, L + BITS_INT_MOD_N)
 
+/**
+ * Samples a random integer in the range ±2^l•2N, where N is the size of a Paillier modulus.
+ *
+ * The sampled integer is uniformly distributed in the range [-2^l•2N, 2^l•2N].
+ *
+ * @return A randomly generated BigInteger in the range ±2^l•2N.
+ */
 fun sampleLN2(): BigInteger = sampleNeg(random, L + (2* BITS_INT_MOD_N))
 
 /**
@@ -288,8 +319,22 @@ fun sampleLN2(): BigInteger = sampleNeg(random, L + (2* BITS_INT_MOD_N))
  */
 fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BITS_INT_MOD_N)
 
+/**
+ * Samples a random integer in the range ±2^(l+ε)•2N, where N is the size of a Paillier modulus.
+ *
+ * The sampled integer is uniformly distributed in the range [-2^(l+ε)•2N, 2^(l+ε)•2N].
+ *
+ * @return A randomly generated BigInteger in the range ±2^(l+ε)•2N.
+ */
 fun sampleLEpsN2(): BigInteger = sampleNeg(random, LPlusEpsilon + (2* BITS_INT_MOD_N))
 
+/**
+ * Samples a random integer in the range ±2^(l+ε)•√N, where N is the size of a Paillier modulus.
+ *
+ * The sampled integer is uniformly distributed in the range [-2^(l+ε)•√N, 2^(l+ε)•√N].
+ *
+ * @return A randomly generated BigInteger in the range ±2^(l+ε)•√N.
+ */
 fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_MOD_N/2))
 
 

@@ -52,6 +52,12 @@ class Polynomial (
         return result
     }
 
+    /**
+     * Converts this polynomial into an exponent polynomial.
+     * Each coefficient is treated as a scalar acting on the curve base point.
+     *
+     * @return The corresponding ExponentPolynomial.
+     */
     fun exponentPolynomial(): ExponentPolynomial {
         val coefficients = mutableListOf<Point>()
         val isConstant = this.coefficients[0].isZero()

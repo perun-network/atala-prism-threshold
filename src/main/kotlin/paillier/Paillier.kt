@@ -155,6 +155,13 @@ class PaillierPublic (
                 nSquaredBytes.size.toByteArray() + nSquaredBytes +
                 nPlusOneBytes.size.toByteArray() + nPlusOneBytes
     }
+
+    override fun hashCode(): Int {
+        var result = n.hashCode()
+        result = 31 * result + nSquared.hashCode()
+        result = 31 * result + nPlusOne.hashCode()
+        return result
+    }
 }
 
 /**
@@ -169,7 +176,7 @@ class PaillierPublic (
  */
 fun validateN(n: BigInteger): Exception? {
     if (n.signum() <= 0) return IllegalArgumentException("modulus N is nil")
-    if (n.bitLength() != BitsPaillier) {
+    if (n.bitLength() > BitsPaillier) {
         return IllegalArgumentException("Expected bit length: $BitsPaillier, found: ${n.bitLength()}")
     }
     if (!n.testBit(0)) return IllegalArgumentException("Modulus N is even")

@@ -339,26 +339,6 @@ data class Scalar (
         return value == BigInteger.ZERO
     }
 
-    /**
-     * Checks if the scalar is high (greater than the curve order divided by 2).
-     *
-     * @return True if the scalar is high, otherwise false.
-     */
-    fun isHigh(): Boolean {
-        return value > N.divide(BigInteger.valueOf(2))
-    }
-
-    /**
-     * Normalizes the scalar to ensure it's below the midpoint of the curve order.
-     *
-     * @return The normalized scalar.
-     */
-    fun normalize() : Scalar {
-        if (isHigh()) {
-            return Scalar(N-value)
-        }
-        return this
-    }
 
     /**
      * Converts the scalar to a private key.

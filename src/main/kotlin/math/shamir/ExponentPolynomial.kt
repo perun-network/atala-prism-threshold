@@ -4,10 +4,25 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.newPoint
 
+/**
+ * Represents a polynomial over points on an elliptic curve.
+ * The polynomial has the form:
+ *   f(X) = P₀ + P₁⋅X + P₂⋅X² + ... + Pₜ⋅Xᵗ
+ * where Pᵢ are points on the elliptic curve, and X is a scalar.
+ *
+ * @property isConstant Indicates if the polynomial represents a constant value.
+ * @property coefficients List of elliptic curve points representing the coefficients.
+ */
 class ExponentPolynomial (
     val isConstant: Boolean,
     val coefficients: List<Point>
 ) {
+    /**
+     * Evaluates the polynomial at a given scalar `x` using Horner's method.
+     *
+     * @param x The scalar at which to evaluate the polynomial.
+     * @return The result as a Point on the elliptic curve.
+     */
     fun eval(x : Scalar) : Point {
         var result = newPoint()
 
@@ -24,10 +39,23 @@ class ExponentPolynomial (
         return result
     }
 
+    /**
+     * Provides a clone of this exponent polynomial.
+     *
+     * @return A cloned ExponentPolynomial based on this Exponent Polynomial.
+     */
     fun clone() : ExponentPolynomial {
         return ExponentPolynomial(isConstant, coefficients.toMutableList())
     }
 
+    /**
+     * Adds this polynomial to another polynomial.
+     *
+     * @param other The ExponentPolynomial to add.
+     * @return A new ExponentPolynomial representing the sum.
+     * @throws IllegalArgumentException If the two polynomials have different lengths
+     *                                  or different `isConstant` flags.
+     */
     fun add(other: ExponentPolynomial) : ExponentPolynomial {
         if (this.coefficients.size != other.coefficients.size) {
             throw IllegalArgumentException("different length coefficients")
@@ -44,6 +72,11 @@ class ExponentPolynomial (
         return ExponentPolynomial(isConstant = isConstant, coefficients = newCoeffs)
     }
 
+    /**
+     * Serializes the polynomial to a byte array.
+     *
+     * @return The serialized byte array representation.
+     */
     fun toByteArray(): ByteArray {
         // Convert the `isConstant` boolean to a byte (1 for true, 0 for false)
         val constantByte = if (isConstant) 1.toByte() else 0.toByte()
@@ -56,6 +89,13 @@ class ExponentPolynomial (
     }
 }
 
+/**
+ * Computes the sum of a list of ExponentPolynomial objects.
+ *
+ * @param ePolynoms The list of ExponentPolynomial objects.
+ * @return The resulting sum as a single ExponentPolynomial.
+ * @throws IllegalArgumentException If the input list is empty.
+ */
 fun sum(ePolynoms: List<ExponentPolynomial>) : ExponentPolynomial {
     var sum = ePolynoms[0].clone()
 

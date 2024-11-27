@@ -116,7 +116,6 @@ fun generatePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretP
 fun getSamplePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
     if (n > PRECOMPUTED_PRIMES.size) throw IllegalArgumentException("not enough precomputed primes")
     val ids = generatePartyIds(n)
-    println("Parties: $ids")
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
     val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
@@ -145,7 +144,6 @@ fun getSamplePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, Secret
         )
         publicPrecomps[i] = publicPrecomp
         precomps[i] = secretPrecomputation
-        println("Finished precomputation for $i")
     }
 
     return Triple(ids ,  precomps , publicPrecomps)
