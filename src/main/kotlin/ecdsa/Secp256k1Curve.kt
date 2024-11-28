@@ -166,6 +166,13 @@ data class Point(
         return this.x == BigInteger.ZERO || this.y == BigInteger.ZERO
     }
 
+
+    /**
+     * Checks equality between this [Point] and another object.
+     *
+     * @param other The object to compare with.
+     * @return `true` if the other object is a [Point] with the same byte array, otherwise `false`.
+     */
     override fun equals(other: Any?): Boolean {
         return (other is Point) && (x == other.x && y == other.y)
     }

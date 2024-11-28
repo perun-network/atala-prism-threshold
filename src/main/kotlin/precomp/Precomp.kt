@@ -44,7 +44,22 @@ class PublicPrecomputation (
     val publicEcdsa: Point,
     val paillierPublic : PaillierPublic,
     val aux: PedersenParameters
-)
+) {
+    /**
+     * Checks equality between this [PublicPrecomputation] and another object.
+     *
+     * @param other The object to compare with.
+     * @return `true` if the other object is a [PublicPrecomputation] with the same byte array, otherwise `false`.
+     */
+    override fun equals(other: Any?): Boolean {
+        if (other !is PublicPrecomputation) return false
+        return id == other.id
+                && ssid.contentEquals(other.ssid)
+                && publicEcdsa == other.publicEcdsa
+                && paillierPublic == other.paillierPublic
+                && aux == other.aux
+    }
+}
 
 /**
  * Generates a random session identifier (SSID) of a given byte size, hashed with SHA-256.
@@ -72,6 +87,7 @@ fun generateSessionId(byteSize: Int = 16): ByteArray {
  * @throws IllegalArgumentException if `idRange` is less than `n`.
  */
 fun generatePrecomputations(n: Int, t: Int) : Triple<List<Int>, Map<Int, SecretPrecomputation>, Map<Int, PublicPrecomputation>> {
+    require(n >= t, { "threshold must be less than or equals total parties" })
     val ids = generatePartyIds(n)
     val ssid = generateSessionId()
     val precomps = mutableMapOf<Int, SecretPrecomputation>()
@@ -175,7 +191,7 @@ fun publicKeyFromShares(signers : List<Int>, publicShares : Map<Int, PublicPreco
  * @return A Triple containing scaled secret precomputations, scaled public precomputations, and the combined public point.
  */
 fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecomputation>, publicPrecomps : Map<Int, PublicPrecomputation>)
-: Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int,PublicPrecomputation>, Point> {
+: Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int, PublicPrecomputation>, Point> {
     val lagrangeCoefficients = lagrange(signers)
 
 

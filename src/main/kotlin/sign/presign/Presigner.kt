@@ -59,7 +59,7 @@ class Presigner (
     var bigDeltaShare: Point? = null,
     var bigGamma: Point? = null,
 
-    var bigR : Point? = null,
+    private var bigR : Point? = null,
 ) {
 
     /**

@@ -17,19 +17,44 @@ import kotlin.experimental.and
  */
 const val PROOF_NUM = 80
 
+/**
+ * Represents the public parameters of the Pedersen Parameters ZK proof (Πprm).
+ *
+ * @property aux The Pedersen parameters including modulus `n`, base `s`, and generator `t`.
+ */
 data class PrmPublic (
     val aux : PedersenParameters,
 )
 
+/**
+ * Represents the private parameters of the Pedersen Parameters ZK proof (Πprm).
+ *
+ * @property phi Euler's totient function value φ(N), used for sampling random elements in Zφ(N).
+ * @property lambda The secret exponent λ such that s = t^λ mod N.
+ */
 data class PrmPrivate (
     val phi: BigInteger,
     val lambda : BigInteger
 )
 
+/**
+ * Represents the zero-knowledge proof for Pedersen parameters (Πprm).
+ *
+ * @property As List of commitments `A_i = t^a_i mod N` sent to the verifier.
+ * @property Zs List of responses `z_i = a_i + e_i * λ mod φ(N)` from the prover.
+ */
 data class PrmProof (
     val As : List<BigInteger>,
     val Zs: List<BigInteger>
 ) {
+    /**
+     * Verifies the proof against the public parameters.
+     *
+     * @param id The unique identifier for the proof session.
+     * @param public The public parameters used in the protocol.
+     * @return `true` if the proof is valid, otherwise `false`.
+     * @throws Exception If the challenge generation encounters an error.
+     */
     fun verify(id: Int, public: PrmPublic) : Boolean {
         val (eList, exc) = challenge(id, public, As)
         if (exc != null) throw exc
@@ -40,7 +65,7 @@ data class PrmProof (
 
         val one = BigInteger.ONE
         for (i in 0..PROOF_NUM-1) {
-            var rhs = BigInteger.ZERO
+            var rhs: BigInteger
             val z = Zs[i]
             val a = As[i]
 
@@ -73,6 +98,15 @@ data class PrmProof (
     }
 
     companion object {
+        /**
+         * Generates a new zero-knowledge proof for the given public and private parameters.
+         *
+         * @param id The unique identifier for the proof session.
+         * @param public The public parameters used in the protocol.
+         * @param private The private parameters (secret inputs) of the prover.
+         * @return A valid instance of [PrmProof].
+         * @throws Exception If the challenge generation encounters an error.
+         */
         internal fun newProof(id: Int, public: PrmPublic, private: PrmPrivate) : PrmProof {
             val aList = mutableListOf<BigInteger>()
             val AList = mutableListOf<BigInteger>()
@@ -107,6 +141,14 @@ data class PrmProof (
     }
 }
 
+/**
+ * Generates the challenge values (e_i) for the proof, based on a hash function.
+ *
+ * @param id The unique identifier for the proof session.
+ * @param public The public parameters used in the protocol.
+ * @param A List of commitments sent by the prover.
+ * @return A pair consisting of the list of challenge bits and an optional exception.
+ */
 private fun challenge(
     id: Int,
     public: PrmPublic,

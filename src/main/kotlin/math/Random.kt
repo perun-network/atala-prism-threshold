@@ -29,7 +29,7 @@ const val MAX_ITERATIONS = 255
 /**
  * Secure random input stream for generating random bytes.
  */
-val random = SecureRandomInputStream(SecureRandom.getInstanceStrong())
+private val random = SecureRandomInputStream(SecureRandom.getInstanceStrong())
 
 /**
  * Exception thrown when the maximum number of iterations is reached without a successful sample.
@@ -147,12 +147,12 @@ fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
  * @param y The denominator (must be an odd integer).
  * @return The Jacobi symbol of (x/y).
  */
-fun jacobi(x: BigInteger, y: BigInteger): Int {
+internal fun jacobi(x: BigInteger, y: BigInteger): Int {
     require(y > BigInteger.ZERO && y.and(BigInteger.ONE) == BigInteger.ONE) {
         "The second argument (y) must be an odd integer greater than zero."
     }
 
-    var a = x
+    var a = x.abs()  // Use the absolute value of x
     var b = y
     var j = 1
 
@@ -343,7 +343,7 @@ fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_
  *
  * @param secureRandom The SecureRandom instance used for generating random bytes.
  */
-class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
+private class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
 
     /**
      * Reads a single byte from the input stream.

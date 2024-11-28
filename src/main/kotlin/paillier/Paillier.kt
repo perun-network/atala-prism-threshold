@@ -155,13 +155,6 @@ class PaillierPublic (
                 nSquaredBytes.size.toByteArray() + nSquaredBytes +
                 nPlusOneBytes.size.toByteArray() + nPlusOneBytes
     }
-
-    override fun hashCode(): Int {
-        var result = n.hashCode()
-        result = 31 * result + nSquared.hashCode()
-        result = 31 * result + nPlusOne.hashCode()
-        return result
-    }
 }
 
 /**

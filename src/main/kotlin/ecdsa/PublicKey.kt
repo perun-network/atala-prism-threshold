@@ -46,8 +46,4 @@ class PublicKey(
     override fun equals(other: Any?): Boolean {
         return (other is PublicKey) && value.contentEquals(other.value)
     }
-
-    override fun hashCode(): Int {
-        return value.contentHashCode()
-    }
 }
