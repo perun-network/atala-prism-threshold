@@ -2,12 +2,12 @@ package perun_network.ecdsa_threshold.sign.keygen
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.newBasePoint
-import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.math.sampleRID
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.sch.*
-import java.math.BigInteger
+import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
+import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
 import java.security.MessageDigest
 
 data class Keygen (

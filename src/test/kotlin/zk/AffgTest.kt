@@ -32,7 +32,7 @@ class AffgTest {
         val (Y, rhoY) = prover.encryptRandom(y)
 
         val Cx = C.clone().modPowNSquared(verifierPaillier, x)
-        var (Dtmp, rho) = verifierPaillier.encryptRandom(y)
+        val (Dtmp, rho) = verifierPaillier.encryptRandom(y)
         val D = Dtmp.modMulNSquared(verifierPaillier, Cx)
 
         val affgPublic = AffgPublic(

@@ -3,7 +3,6 @@ package sign.keygen
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.precomp.generateSessionId
 import perun_network.ecdsa_threshold.sign.Broadcast
-import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.Keygen
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
@@ -322,7 +321,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
 
@@ -342,7 +341,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
 
@@ -362,7 +361,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
 
@@ -382,7 +381,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
 
@@ -402,7 +401,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
 
@@ -422,7 +421,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[i]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
 
@@ -442,7 +441,7 @@ class KeygenTest {
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[i]!!.uShare
                 )
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
             }
         }
     }
