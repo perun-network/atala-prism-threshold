@@ -3,13 +3,11 @@ package sign.keygen
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.precomp.generateSessionId
 import perun_network.ecdsa_threshold.sign.Broadcast
-import perun_network.ecdsa_threshold.sign.keygen.Keygen
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
-import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
+import perun_network.ecdsa_threshold.sign.keygen.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 
 class KeygenTest {
     @Test
@@ -93,7 +91,7 @@ class KeygenTest {
         // KEYGEN ROUND 3
 
         // Filter an entry
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -105,7 +103,7 @@ class KeygenTest {
         }
 
         // Modify ssid.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -127,16 +125,17 @@ class KeygenTest {
         }
 
         // Modify sender's id.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
+                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[i]!!.from,
+                    from = incomingRound2Broadcasts[copyId]!!.from,
                     to = incomingRound2Broadcasts[modifiedId]!!.to,
                     rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
                     XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
@@ -149,17 +148,18 @@ class KeygenTest {
         }
 
         // Modify receiver's id.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
+                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
                     from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[i]!!.to,
+                    to = copyId,
                     rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
                     XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
@@ -171,18 +171,19 @@ class KeygenTest {
         }
 
         // Modify rho_i.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
+                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
                     from = incomingRound2Broadcasts[modifiedId]!!.from,
                     to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[i]!!.rhoShare,
+                    rhoShare = incomingRound2Broadcasts[copyId]!!.rhoShare,
                     XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
@@ -193,19 +194,20 @@ class KeygenTest {
         }
 
         // Modify X_i.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
+                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
                     from = incomingRound2Broadcasts[modifiedId]!!.from,
                     to = incomingRound2Broadcasts[modifiedId]!!.to,
                     rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[i]!!.XShare,
+                    XShare = incomingRound2Broadcasts[copyId]!!.XShare,
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
@@ -215,20 +217,21 @@ class KeygenTest {
         }
 
         // Modify A_i.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
+                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
                     from = incomingRound2Broadcasts[modifiedId]!!.from,
                     to = incomingRound2Broadcasts[modifiedId]!!.to,
                     rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
                     XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[i]!!.AShare,
+                    AShare = incomingRound2Broadcasts[copyId]!!.AShare,
                     uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
                 )
                 round3AllBroadcasts[i] =
@@ -237,13 +240,14 @@ class KeygenTest {
         }
 
         // Modify u_i.
-        assertFails {
+        assertFailsWith<KeygenException> {
             val round3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
+                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
                     from = incomingRound2Broadcasts[modifiedId]!!.from,
@@ -251,7 +255,7 @@ class KeygenTest {
                     rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
                     XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
                     AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[i]!!.uShare
+                    uShare = incomingRound2Broadcasts[copyId]!!.uShare
                 )
                 round3AllBroadcasts[i] =
                     keygenSigners[i]!!.keygenRound3(parties, incomingRound1Broadcasts, modifiedRound2Broadcasts)
@@ -295,153 +299,83 @@ class KeygenTest {
         }
 
         val publics = mutableMapOf<Int, Point>()
-        assertFails {
+        assertFailsWith<KeygenException> {
             for (i in parties) {
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap().filterKeys { j -> j == (i+1)%n + 1 }
-                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val modifiedRound3Broadcasts = incomingRound3Broadcasts.toMutableMap().filterKeys { j -> j == (i+1)%n + 1 }
+                val (_, _, public) = keygenSigners[i]!!.keygenOutput(parties, incomingRound2Broadcasts, modifiedRound3Broadcasts)
                 publics[i] = public
             }
         }
 
         // Modify ssid.
-        assertFails {
+        assertFailsWith<KeygenException> {
             for (i in parties) {
                 val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
+                val modifiedRound3Broadcasts = incomingRound3Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
+                modifiedRound3Broadcasts[modifiedId] = KeygenRound3Broadcast(
                     ssid = generateSessionId(),
-                    from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
+                    from = incomingRound3Broadcasts[modifiedId]!!.from,
+                    to = incomingRound3Broadcasts[modifiedId]!!.to,
+                    schnorrProof = incomingRound3Broadcasts[modifiedId]!!.schnorrProof,
                 )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, incomingRound2Broadcasts, modifiedRound3Broadcasts)
             }
         }
 
         // Modify sender's id.
-        assertFails {
+        assertFailsWith<KeygenException> {
             for (i in parties) {
                 val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
+                val modifiedRound3Broadcasts = incomingRound3Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
-                    ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[i]!!.from,
-                    to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
+                val copyId = (i+2)%n + 1
+                modifiedRound3Broadcasts[modifiedId] = KeygenRound3Broadcast(
+                    ssid = incomingRound3Broadcasts[modifiedId]!!.ssid,
+                    from = incomingRound3Broadcasts[copyId]!!.from,
+                    to = incomingRound3Broadcasts[modifiedId]!!.to,
+                    schnorrProof = incomingRound3Broadcasts[modifiedId]!!.schnorrProof,
                 )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, incomingRound2Broadcasts, modifiedRound3Broadcasts)
             }
         }
 
         // Modify receiver's id.
-        assertFails {
+        assertFailsWith<KeygenException> {
             for (i in parties) {
                 val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
+                val modifiedRound3Broadcasts = incomingRound3Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
-                    ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[i]!!.to,
-                    rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
+                val copyId = (i+2)%n + 1
+                modifiedRound3Broadcasts[modifiedId] = KeygenRound3Broadcast(
+                    ssid = incomingRound3Broadcasts[modifiedId]!!.ssid,
+                    from = incomingRound3Broadcasts[copyId]!!.from,
+                    to = copyId,
+                    schnorrProof = incomingRound3Broadcasts[modifiedId]!!.schnorrProof,
                 )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, incomingRound2Broadcasts, modifiedRound3Broadcasts)
             }
         }
 
-        // Modify rho_i.
-        assertFails {
+        assertFailsWith<KeygenException> {
             for (i in parties) {
                 val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
+                val modifiedRound3Broadcasts = incomingRound3Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
-                    ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[i]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
+                val copyId = (i+2)%n + 1
+                modifiedRound3Broadcasts[modifiedId] = KeygenRound3Broadcast(
+                    ssid = incomingRound3Broadcasts[modifiedId]!!.ssid,
+                    from = incomingRound3Broadcasts[copyId]!!.from,
+                    to = incomingRound3Broadcasts[modifiedId]!!.to,
+                    schnorrProof = incomingRound3Broadcasts[copyId]!!.schnorrProof,
                 )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
-            }
-        }
-
-        // Modify X_i.
-        assertFails {
-            for (i in parties) {
-                val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-                val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
-                    ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[i]!!.XShare,
-                    AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
-                )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
-            }
-        }
-
-        // Modify A_i.
-        assertFails {
-            for (i in parties) {
-                val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-                val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
-                    ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[i]!!.AShare,
-                    uShare = incomingRound2Broadcasts[modifiedId]!!.uShare
-                )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
-            }
-        }
-
-        // Modify u_i.
-        assertFails {
-            for (i in parties) {
-                val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-                val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
-                val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound2Broadcasts[modifiedId] = KeygenRound2Broadcast(
-                    ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound2Broadcasts[modifiedId]!!.from,
-                    to = incomingRound2Broadcasts[modifiedId]!!.to,
-                    rhoShare = incomingRound2Broadcasts[modifiedId]!!.rhoShare,
-                    XShare = incomingRound2Broadcasts[modifiedId]!!.XShare,
-                    AShare = incomingRound2Broadcasts[modifiedId]!!.AShare,
-                    uShare = incomingRound2Broadcasts[i]!!.uShare
-                )
-                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, modifiedRound2Broadcasts, incomingRound3Broadcasts)
+                val (_, _, _) = keygenSigners[i]!!.keygenOutput(parties, incomingRound2Broadcasts, modifiedRound3Broadcasts)
             }
         }
     }

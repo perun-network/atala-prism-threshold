@@ -1,12 +1,16 @@
 package zk
 
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.sampleL
 import perun_network.ecdsa_threshold.math.sampleLPrime
 import perun_network.ecdsa_threshold.math.sampleScalar
+import perun_network.ecdsa_threshold.paillier.*
+import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgProof
 import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPublic
@@ -98,4 +102,54 @@ class AffgTest {
         assertEquals(c, gammaS, "a•b should be equal to α + β")
     }
 
+
+    @Test
+    fun testAffgFails() {
+        @Test
+        fun `test affg proof fails with invalid parameters`() {
+            // Mocked invalid Paillier public and secret keys
+            val (paillierPublic, paillierSecret) =  paillierKeyGenMock()
+
+            // Mocked invalid Pedersen parameters
+            val pedersenParametersInvalid = PedersenParameters(
+                BigInteger("17"), // Arbitrary invalid values
+                BigInteger("23"),
+                BigInteger("100")
+            )
+
+            // Random invalid values for ciphertexts (not valid Paillier encrypted values)
+            val invalidCipherText = PaillierCipherText(BigInteger("999999999999999"))
+
+            // Mocked invalid elliptic curve point not on secp256k1 curve
+            val invalidPoint = Point(BigInteger("999999999"), BigInteger("123456789"))
+
+            // Construct public parameters with invalid data
+            val affgPublicInvalid = AffgPublic(
+                C = invalidCipherText,
+                D = invalidCipherText,
+                Y = invalidCipherText,
+                X = invalidPoint, // Invalid point
+                n0 = paillierPublic,
+                n1 = paillierPublic,
+                aux = pedersenParametersInvalid
+            )
+
+            // Create invalid private parameters
+            val affgPrivateInvalid = AffgPrivate(
+                x = BigInteger("999999999"),
+                y = BigInteger("123456789"),
+                rho = BigInteger("222222222"),
+                rhoY = BigInteger("333333333")
+            )
+
+            // Create invalid proof based on invalid parameters
+            val affgProofInvalid = AffgProof.newProof(42, affgPublicInvalid, affgPrivateInvalid)
+
+            // Verifying the proof should fail
+            val isProofValid = affgProofInvalid.verify(42, affgPublicInvalid)
+
+            // Assert that the proof validation returns false, meaning the proof fails
+            assertFalse(isProofValid)
+        }
+    }
 }

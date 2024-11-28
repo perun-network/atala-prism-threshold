@@ -217,7 +217,7 @@ fun newPoint() : Point {
  * @param bi The BigInteger to convert.
  * @return The resulting byte array.
  */
-fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
+private fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     val bytes = bi.toByteArray()
 
     return when {

@@ -5,6 +5,7 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class PointTest {
     private val P = BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
@@ -14,6 +15,32 @@ class PointTest {
         BigInteger("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16),
         BigInteger("483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8", 16)
     )
+
+    @Test
+    fun testPointOutOfBoundsX() {
+        // Test a point where x is out of bounds (greater than P)
+        val invalidX = P.add(BigInteger.ONE)
+        val validY = BigInteger.ONE // Choose a valid small value for y
+        try {
+            val point = Point(invalidX, validY)
+            fail("Expected IllegalArgumentException for x-coordinate out of bounds")
+        } catch (e: IllegalArgumentException) {
+            assertEquals("x-coordinate must be in range", e.message)
+        }
+    }
+
+    @Test
+    fun testPointOutOfBoundsY() {
+        // Test a point where y is out of bounds (greater than P)
+        val validX = BigInteger.ONE // Choose a valid small value for x
+        val invalidY = P.add(BigInteger.ONE)
+        try {
+            val point = Point(validX, invalidY)
+            fail("Expected IllegalArgumentException for y-coordinate out of bounds")
+        } catch (e: IllegalArgumentException) {
+            assertEquals("y-coordinate must be in range", e.message)
+        }
+    }
 
     @Test
     fun testIsOnCurve() {

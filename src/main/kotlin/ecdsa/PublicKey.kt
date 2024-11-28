@@ -28,16 +28,6 @@ class PublicKey(
     }
 
     /**
-     * Adds another [PublicKey] to this public key using elliptic curve point addition.
-     *
-     * @param other The public key to add.
-     * @return A new [PublicKey] representing the result of the addition.
-     */
-    fun add(other: PublicKey): PublicKey {
-        return PublicKey(Secp256k1.pubKeyTweakAdd(value, other.value))
-    }
-
-    /**
      * Checks equality between this [PublicKey] and another object.
      *
      * @param other The object to compare with.

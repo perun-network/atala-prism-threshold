@@ -24,4 +24,5 @@ class PublicKeyTest {
             PublicKey.newPublicKey(X.toByteArray())
         }
     }
+
 }

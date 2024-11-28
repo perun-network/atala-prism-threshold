@@ -13,10 +13,7 @@ import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.sign.combinePartialSignatures
 import perun_network.ecdsa_threshold.sign.presign.*
 import java.math.BigInteger
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFails
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 
 class PresignTest {
@@ -34,7 +31,6 @@ class PresignTest {
 
         // Determine signerIds
         val signerIds = randomSignerIDs(ids, t)
-        println("signerIds: $signerIds")
         val publicKey = publicKeyFromShares(signerIds, publicPrecomps)
         val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signerIds, secretPrecomps, publicPrecomps)
         assertEquals(publicKey, publicPoint.toPublicKey())
@@ -149,19 +145,19 @@ class PresignTest {
         mutableMapOf<Int, Point>()
         val presignRound2AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound2Broadcast>>()
 
-        assertFails {
+        assertFailsWith<NullPointerException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap().filterKeys { id -> id == modifiedId }
                 presignRound2AllBroadcasts[i] = signers[i]!!.presignRound2(signerIds, Ks, modifiedRound1Broadcasts)
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = generateSessionId(),
@@ -177,14 +173,15 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
-                    from = modifiedRound1Broadcasts[i]!!.from,
+                    from = modifiedRound1Broadcasts[copyId]!!.from,
                     to = modifiedRound1Broadcasts[modifiedId]!!.to,
                     K = modifiedRound1Broadcasts[modifiedId]!!.K,
                     G = modifiedRound1Broadcasts[modifiedId]!!.G,
@@ -196,15 +193,16 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
                     from = modifiedRound1Broadcasts[modifiedId]!!.from,
-                    to = modifiedRound1Broadcasts[i]!!.to,
+                    to = copyId,
                     K = modifiedRound1Broadcasts[modifiedId]!!.K,
                     G = modifiedRound1Broadcasts[modifiedId]!!.G,
                     elGamalPublic = modifiedRound1Broadcasts[modifiedId]!!.elGamalPublic,
@@ -215,16 +213,17 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
                     from = modifiedRound1Broadcasts[modifiedId]!!.from,
                     to = modifiedRound1Broadcasts[modifiedId]!!.to,
-                    K = modifiedRound1Broadcasts[i]!!.K,
+                    K = modifiedRound1Broadcasts[copyId]!!.K,
                     G = modifiedRound1Broadcasts[modifiedId]!!.G,
                     elGamalPublic = modifiedRound1Broadcasts[modifiedId]!!.elGamalPublic,
                     proof0 = modifiedRound1Broadcasts[modifiedId]!!.proof0,
@@ -234,17 +233,18 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
                     from = modifiedRound1Broadcasts[modifiedId]!!.from,
                     to = modifiedRound1Broadcasts[modifiedId]!!.to,
                     K = modifiedRound1Broadcasts[modifiedId]!!.K,
-                    G = modifiedRound1Broadcasts[i]!!.G,
+                    G = modifiedRound1Broadcasts[copyId]!!.G,
                     elGamalPublic = modifiedRound1Broadcasts[modifiedId]!!.elGamalPublic,
                     proof0 = modifiedRound1Broadcasts[modifiedId]!!.proof0,
                     proof1 = modifiedRound1Broadcasts[modifiedId]!!.proof1,
@@ -253,10 +253,11 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
@@ -264,7 +265,7 @@ class PresignTest {
                     to = modifiedRound1Broadcasts[modifiedId]!!.to,
                     K = modifiedRound1Broadcasts[modifiedId]!!.K,
                     G = modifiedRound1Broadcasts[modifiedId]!!.G,
-                    elGamalPublic = modifiedRound1Broadcasts[i]!!.elGamalPublic,
+                    elGamalPublic = modifiedRound1Broadcasts[copyId]!!.elGamalPublic,
                     proof0 = modifiedRound1Broadcasts[modifiedId]!!.proof0,
                     proof1 = modifiedRound1Broadcasts[modifiedId]!!.proof1,
                 )
@@ -272,10 +273,11 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
@@ -284,17 +286,18 @@ class PresignTest {
                     K = modifiedRound1Broadcasts[modifiedId]!!.K,
                     G = modifiedRound1Broadcasts[modifiedId]!!.G,
                     elGamalPublic = modifiedRound1Broadcasts[modifiedId]!!.elGamalPublic,
-                    proof0 = modifiedRound1Broadcasts[i]!!.proof0,
+                    proof0 = modifiedRound1Broadcasts[copyId]!!.proof0,
                     proof1 = modifiedRound1Broadcasts[modifiedId]!!.proof1,
                 )
                 presignRound2AllBroadcasts[i] = signers[i]!!.presignRound2(signerIds, Ks, modifiedRound1Broadcasts)
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound1Broadcasts = filterIncomingBroadcast(i, presignRound1AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound1Broadcasts = presignRound1Broadcasts.toMutableMap()
                 modifiedRound1Broadcasts[modifiedId] = PresignRound1Broadcast(
                     ssid = modifiedRound1Broadcasts[modifiedId]!!.ssid,
@@ -304,7 +307,7 @@ class PresignTest {
                     G = modifiedRound1Broadcasts[modifiedId]!!.G,
                     elGamalPublic = modifiedRound1Broadcasts[modifiedId]!!.elGamalPublic,
                     proof0 = modifiedRound1Broadcasts[modifiedId]!!.proof0,
-                    proof1 = modifiedRound1Broadcasts[i]!!.proof1,
+                    proof1 = modifiedRound1Broadcasts[copyId]!!.proof1,
                 )
                 presignRound2AllBroadcasts[i] = signers[i]!!.presignRound2(signerIds, Ks, modifiedRound1Broadcasts)
             }
@@ -363,7 +366,7 @@ class PresignTest {
         }
 
         // PRESIGN ROUND 3
-        assertFails {
+        assertFailsWith<PresignException> {
             val elGamal2 = elGamalPublics.toMap().toMutableMap()
             elGamal2[signerIds[0]] = elGamal2[signerIds.last()]!!
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
@@ -377,11 +380,11 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = generateSessionId(),
@@ -402,15 +405,16 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
-                    from = modifiedRound2Broadcasts[i]!!.from,
+                    from = modifiedRound2Broadcasts[copyId]!!.from,
                     to = modifiedRound2Broadcasts[modifiedId]!!.to,
                     bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
                     deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
@@ -427,16 +431,17 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
                     from = modifiedRound2Broadcasts[modifiedId]!!.from,
-                    to = modifiedRound2Broadcasts[i]!!.to,
+                    to = copyId,
                     bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
                     deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
                     deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
@@ -452,17 +457,18 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
                     from = modifiedRound2Broadcasts[modifiedId]!!.from,
                     to = modifiedRound2Broadcasts[modifiedId]!!.to,
-                    bigGammaShare = modifiedRound2Broadcasts[i]!!.bigGammaShare,
+                    bigGammaShare = modifiedRound2Broadcasts[copyId]!!.bigGammaShare,
                     deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
                     deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
                     deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
@@ -477,18 +483,19 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
                     from = modifiedRound2Broadcasts[modifiedId]!!.from,
                     to = modifiedRound2Broadcasts[modifiedId]!!.to,
                     bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
-                    deltaD = modifiedRound2Broadcasts[i]!!.deltaD,
+                    deltaD = modifiedRound2Broadcasts[copyId]!!.deltaD,
                     deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
                     deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
                     chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
@@ -502,11 +509,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
@@ -514,7 +522,7 @@ class PresignTest {
                     to = modifiedRound2Broadcasts[modifiedId]!!.to,
                     bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
                     deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
-                    deltaF = modifiedRound2Broadcasts[i]!!.deltaF,
+                    deltaF = modifiedRound2Broadcasts[copyId]!!.deltaF,
                     deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
                     chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
                     chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
@@ -527,11 +535,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
@@ -540,7 +549,7 @@ class PresignTest {
                     bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
                     deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
                     deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
-                    deltaProof = modifiedRound2Broadcasts[i]!!.deltaProof,
+                    deltaProof = modifiedRound2Broadcasts[copyId]!!.deltaProof,
                     chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
                     chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
                     chiProof = modifiedRound2Broadcasts[modifiedId]!!.chiProof,
@@ -552,11 +561,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
@@ -566,7 +576,7 @@ class PresignTest {
                     deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
                     deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
                     deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
-                    chiD = modifiedRound2Broadcasts[i]!!.chiD,
+                    chiD = modifiedRound2Broadcasts[copyId]!!.chiD,
                     chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
                     chiProof = modifiedRound2Broadcasts[modifiedId]!!.chiProof,
                     elogProof = modifiedRound2Broadcasts[modifiedId]!!.elogProof,
@@ -577,11 +587,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
@@ -592,7 +603,7 @@ class PresignTest {
                     deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
                     deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
                     chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
-                    chiF = modifiedRound2Broadcasts[i]!!.chiF,
+                    chiF = modifiedRound2Broadcasts[copyId]!!.chiF,
                     chiProof = modifiedRound2Broadcasts[modifiedId]!!.chiProof,
                     elogProof = modifiedRound2Broadcasts[modifiedId]!!.elogProof,
                     chiBeta = modifiedRound2Broadcasts[modifiedId]!!.chiBeta,
@@ -602,36 +613,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
-                val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
-                modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
-                    ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
-                    from = modifiedRound2Broadcasts[modifiedId]!!.from,
-                    to = modifiedRound2Broadcasts[modifiedId]!!.to,
-                    bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
-                    deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
-                    deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
-                    deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
-                    chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
-                    chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
-                    chiProof = modifiedRound2Broadcasts[i]!!.chiProof,
-                    elogProof = modifiedRound2Broadcasts[modifiedId]!!.elogProof,
-                    chiBeta = modifiedRound2Broadcasts[modifiedId]!!.chiBeta,
-                    deltaBeta = modifiedRound2Broadcasts[modifiedId]!!.deltaBeta,
-                )
-                presignRound3AllBroadcasts[i] = signers[i]!!.presignRound3(signerIds, bigGammaShares, elGamalPublics, modifiedRound2Broadcasts)
-            }
-        }
-
-        assertFails {
-            val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
-            for (i in signerIds) {
-                val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
@@ -643,8 +630,8 @@ class PresignTest {
                     deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
                     chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
                     chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
-                    chiProof = modifiedRound2Broadcasts[modifiedId]!!.chiProof,
-                    elogProof = modifiedRound2Broadcasts[i]!!.elogProof,
+                    chiProof = modifiedRound2Broadcasts[copyId]!!.chiProof,
+                    elogProof = modifiedRound2Broadcasts[modifiedId]!!.elogProof,
                     chiBeta = modifiedRound2Broadcasts[modifiedId]!!.chiBeta,
                     deltaBeta = modifiedRound2Broadcasts[modifiedId]!!.deltaBeta,
                 )
@@ -652,11 +639,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
             for (i in signerIds) {
                 val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
                 modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
                     ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
@@ -669,38 +657,14 @@ class PresignTest {
                     chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
                     chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
                     chiProof = modifiedRound2Broadcasts[modifiedId]!!.chiProof,
-                    elogProof = modifiedRound2Broadcasts[modifiedId]!!.elogProof,
-                    chiBeta = modifiedRound2Broadcasts[i]!!.chiBeta,
+                    elogProof = modifiedRound2Broadcasts[copyId]!!.elogProof,
+                    chiBeta = modifiedRound2Broadcasts[modifiedId]!!.chiBeta,
                     deltaBeta = modifiedRound2Broadcasts[modifiedId]!!.deltaBeta,
                 )
                 presignRound3AllBroadcasts[i] = signers[i]!!.presignRound3(signerIds, bigGammaShares, elGamalPublics, modifiedRound2Broadcasts)
             }
         }
 
-        assertFails {
-            val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
-            for (i in signerIds) {
-                val presignRound2Broadcasts = filterIncomingBroadcast(i, presignRound2AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
-                val modifiedRound2Broadcasts = presignRound2Broadcasts.toMutableMap()
-                modifiedRound2Broadcasts[modifiedId] = PresignRound2Broadcast(
-                    ssid = modifiedRound2Broadcasts[modifiedId]!!.ssid,
-                    from = modifiedRound2Broadcasts[modifiedId]!!.from,
-                    to = modifiedRound2Broadcasts[modifiedId]!!.to,
-                    bigGammaShare = modifiedRound2Broadcasts[modifiedId]!!.bigGammaShare,
-                    deltaD = modifiedRound2Broadcasts[modifiedId]!!.deltaD,
-                    deltaF = modifiedRound2Broadcasts[modifiedId]!!.deltaF,
-                    deltaProof = modifiedRound2Broadcasts[modifiedId]!!.deltaProof,
-                    chiD = modifiedRound2Broadcasts[modifiedId]!!.chiD,
-                    chiF = modifiedRound2Broadcasts[modifiedId]!!.chiF,
-                    chiProof = modifiedRound2Broadcasts[modifiedId]!!.chiProof,
-                    elogProof = modifiedRound2Broadcasts[modifiedId]!!.elogProof,
-                    chiBeta = modifiedRound2Broadcasts[modifiedId]!!.chiBeta,
-                    deltaBeta = modifiedRound2Broadcasts[i]!!.deltaBeta,
-                )
-                presignRound3AllBroadcasts[i] = signers[i]!!.presignRound3(signerIds, bigGammaShares, elGamalPublics, modifiedRound2Broadcasts)
-            }
-        }
     }
 
     @Test
@@ -755,7 +719,7 @@ class PresignTest {
         }
 
         // PRESIGN ROUND 3
-        assertFails {
+        assertFailsWith<PresignException> {
             val elGamal2 = elGamalPublics.toMap().toMutableMap()
             elGamal2[signerIds[0]] = elGamal2[signerIds.last()]!!
             val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
@@ -782,10 +746,10 @@ class PresignTest {
 
 
         // PROCESS PRESIGN OUTPUT
-        assertFails {
+        assertFailsWith<NullPointerException> {
             for (i in signerIds) {
                 val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
                 val modifiedRound3Broadcasts = presignRound3Broadcasts.toMutableMap().filterKeys{id -> id == modifiedId}
                 signers[i]!!.processPresignOutput(
                     signerIds,
@@ -797,11 +761,11 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
                 val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
                 modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
                     ssid = generateSessionId(),
                     from = modifiedRound3Broadcast[modifiedId]!!.from,
@@ -822,14 +786,14 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
                 val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
                 modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
                     ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
-                    from = modifiedRound3Broadcast[i]!!.from,
+                    from = modifiedRound3Broadcast[modifiedId]!!.from + 1,
                     to = modifiedRound3Broadcast[modifiedId]!!.to,
                     chiShare = modifiedRound3Broadcast[modifiedId]!!.chiShare,
                     deltaShare = modifiedRound3Broadcast[modifiedId]!!.deltaShare,
@@ -847,15 +811,16 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
                 val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
                     ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
                     from = modifiedRound3Broadcast[modifiedId]!!.from,
-                    to = modifiedRound3Broadcast[i]!!.to,
+                    to = modifiedRound3Broadcast[copyId]!!.to+5,
                     chiShare = modifiedRound3Broadcast[modifiedId]!!.chiShare,
                     deltaShare = modifiedRound3Broadcast[modifiedId]!!.deltaShare,
                     bigDeltaShare = modifiedRound3Broadcast[modifiedId]!!.bigDeltaShare,
@@ -872,111 +837,12 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             for (i in signerIds) {
                 val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
                 val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
-                    ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
-                    from = modifiedRound3Broadcast[modifiedId]!!.from,
-                    to = modifiedRound3Broadcast[modifiedId]!!.to,
-                    chiShare = modifiedRound3Broadcast[i]!!.chiShare,
-                    deltaShare = modifiedRound3Broadcast[modifiedId]!!.deltaShare,
-                    bigDeltaShare = modifiedRound3Broadcast[modifiedId]!!.bigDeltaShare,
-                    gamma = modifiedRound3Broadcast[modifiedId]!!.gamma,
-                    elogProof = modifiedRound3Broadcast[modifiedId]!!.elogProof
-                )
-                signers[i]!!.processPresignOutput(
-                    signerIds,
-                    modifiedRound3Broadcast,
-                    elGamalPublics,
-                    deltaShares,
-                    bigDeltaShares
-                )
-            }
-        }
-
-        assertFails {
-            for (i in signerIds) {
-                val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
-                val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
-                    ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
-                    from = modifiedRound3Broadcast[modifiedId]!!.from,
-                    to = modifiedRound3Broadcast[modifiedId]!!.to,
-                    chiShare = modifiedRound3Broadcast[modifiedId]!!.chiShare,
-                    deltaShare = modifiedRound3Broadcast[i]!!.deltaShare,
-                    bigDeltaShare = modifiedRound3Broadcast[modifiedId]!!.bigDeltaShare,
-                    gamma = modifiedRound3Broadcast[modifiedId]!!.gamma,
-                    elogProof = modifiedRound3Broadcast[modifiedId]!!.elogProof
-                )
-                signers[i]!!.processPresignOutput(
-                    signerIds,
-                    modifiedRound3Broadcast,
-                    elGamalPublics,
-                    deltaShares,
-                    bigDeltaShares
-                )
-            }
-        }
-
-        assertFails {
-            for (i in signerIds) {
-                val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
-                val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
-                    ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
-                    from = modifiedRound3Broadcast[modifiedId]!!.from,
-                    to = modifiedRound3Broadcast[modifiedId]!!.to,
-                    chiShare = modifiedRound3Broadcast[modifiedId]!!.chiShare,
-                    deltaShare = modifiedRound3Broadcast[modifiedId]!!.deltaShare,
-                    bigDeltaShare = modifiedRound3Broadcast[i]!!.bigDeltaShare,
-                    gamma = modifiedRound3Broadcast[modifiedId]!!.gamma,
-                    elogProof = modifiedRound3Broadcast[modifiedId]!!.elogProof
-                )
-                signers[i]!!.processPresignOutput(
-                    signerIds,
-                    modifiedRound3Broadcast,
-                    elGamalPublics,
-                    deltaShares,
-                    bigDeltaShares
-                )
-            }
-        }
-
-        assertFails {
-            for (i in signerIds) {
-                val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
-                val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
-                modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
-                    ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
-                    from = modifiedRound3Broadcast[modifiedId]!!.from,
-                    to = modifiedRound3Broadcast[modifiedId]!!.to,
-                    chiShare = modifiedRound3Broadcast[modifiedId]!!.chiShare,
-                    deltaShare = modifiedRound3Broadcast[modifiedId]!!.deltaShare,
-                    bigDeltaShare = modifiedRound3Broadcast[modifiedId]!!.bigDeltaShare,
-                    gamma = modifiedRound3Broadcast[i]!!.gamma,
-                    elogProof = modifiedRound3Broadcast[modifiedId]!!.elogProof
-                )
-                signers[i]!!.processPresignOutput(
-                    signerIds,
-                    modifiedRound3Broadcast,
-                    elGamalPublics,
-                    deltaShares,
-                    bigDeltaShares
-                )
-            }
-        }
-
-        assertFails {
-            for (i in signerIds) {
-                val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
-                val modifiedRound3Broadcast = presignRound3Broadcasts.toMutableMap()
-                val modifiedId = (i+1)%n + 1
+                val modifiedId = signerIds.get((signerIds.indexOf(i)+1)%signerIds.size)
+                val copyId = signerIds.get((signerIds.indexOf(i)+2)%signerIds.size)
                 modifiedRound3Broadcast[modifiedId] = PresignRound3Broadcast(
                     ssid = modifiedRound3Broadcast[modifiedId]!!.ssid,
                     from = modifiedRound3Broadcast[modifiedId]!!.from,
@@ -985,7 +851,7 @@ class PresignTest {
                     deltaShare = modifiedRound3Broadcast[modifiedId]!!.deltaShare,
                     bigDeltaShare = modifiedRound3Broadcast[modifiedId]!!.bigDeltaShare,
                     gamma = modifiedRound3Broadcast[modifiedId]!!.gamma,
-                    elogProof = modifiedRound3Broadcast[i]!!.elogProof
+                    elogProof = modifiedRound3Broadcast[copyId]!!.elogProof
                 )
                 signers[i]!!.processPresignOutput(
                     signerIds,
@@ -997,7 +863,7 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFailsWith<PresignException> {
             elGamalPublics[signerIds[0]] = elGamalPublics[signerIds.last()]!!
             for (i in signerIds) {
                 val presignRound3Broadcasts = filterIncomingBroadcast(i, presignRound3AllBroadcasts)
@@ -1026,7 +892,7 @@ class PresignTest {
             }
         }
 
-        assertFails {
+        assertFails{
             elGamalPublics[signerIds[0]] = elGamalPublics[signerIds.last()]!!
             for (i in signerIds) {
                 bigDeltaShares[i] = sampleScalar().actOnBase()
