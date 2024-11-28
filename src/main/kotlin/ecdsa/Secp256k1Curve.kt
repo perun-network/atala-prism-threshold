@@ -217,7 +217,7 @@ fun newPoint() : Point {
  * @param bi The BigInteger to convert.
  * @return The resulting byte array.
  */
-private fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
+internal fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     val bytes = bi.toByteArray()
 
     return when {
@@ -226,8 +226,7 @@ private fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
         // If it's smaller, pad with leading zeros
         bytes.size < 32 -> ByteArray(32) { i -> if (i < 32 - bytes.size) 0 else bytes[i - (32 - bytes.size)] }
         // If it's larger, truncate it to the first 32 bytes
-        bytes.size > 32 -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
-        else -> bytes
+        else -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
     }
 }
 

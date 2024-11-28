@@ -1,9 +1,11 @@
 package paillier
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.assertThrows
 import paillier.PaillierTestKeys.paillierPublic
 import paillier.PaillierTestKeys.paillierSecret
 import paillier.PaillierTestKeys.reinit
+import perun_network.ecdsa_threshold.math.BitsPaillier
 import perun_network.ecdsa_threshold.paillier.*
 import java.math.BigInteger
 import kotlin.test.Test
@@ -110,4 +112,81 @@ class PaillierTest {
         assertEquals(nonce, nonceActual)
     }
 
+    @Test
+    fun `validateN should accept valid modulus`() {
+        val validN = PRECOMPUTED_PRIMES[0].first.multiply(PRECOMPUTED_PRIMES[0].second) // p1 * q1
+        assertNull(validateN(validN))
+    }
+
+    @Test
+    fun `validateN should reject zero or negative modulus`() {
+        assertEquals("modulus N is nil", validateN(BigInteger.ZERO)?.message)
+        assertEquals("modulus N is nil", validateN(BigInteger.valueOf(-1))?.message)
+    }
+
+    @Test
+    fun `validateN should reject modulus with incorrect bit length`() {
+        val invalidN = BigInteger("1".repeat(BitsPaillier + 1), 2)
+        assertEquals("Expected bit length: $BitsPaillier, found: ${invalidN.bitLength()}", validateN(invalidN)?.message)
+    }
+
+    @Test
+    fun `validateN should reject even modulus`() {
+        val evenN = BigInteger.valueOf(16)
+        assertEquals("Modulus N is even", validateN(evenN)?.message)
+    }
+
+    @Test
+    fun `validatePrime should accept valid prime`() {
+        val validPrime = PRECOMPUTED_PRIMES[0].first
+        assertTrue(validatePrime(validPrime))
+    }
+
+    @Test
+    fun `validatePrime should reject prime of incorrect bit length`() {
+        val shortPrime = BigInteger.valueOf(23) // Too short
+        assertFailsWith<IllegalArgumentException> {
+            validatePrime(shortPrime)
+        }
+    }
+
+    @Test
+    fun `validatePrime should reject non-Blum primes`() {
+        val nonBlumPrime = BigInteger.valueOf(11) // 11 % 4 != 3
+        assertFailsWith<IllegalArgumentException> {
+            validatePrime(nonBlumPrime)
+        }
+    }
+
+    @Test
+    fun `validatePrime should reject non-safe primes`() {
+        val nonSafePrime = BigInteger("19") // Not a safe prime
+        assertFailsWith<IllegalArgumentException> {
+            validatePrime(nonSafePrime)
+        }
+    }
+
+    @Test
+    fun `newPaillierSecretFromPrimes should generate correct secret`() {
+        val p = PRECOMPUTED_PRIMES[0].first
+        val q = PRECOMPUTED_PRIMES[0].second
+        val secret = newPaillierSecretFromPrimes(p, q)
+
+        assertEquals(p, secret.p)
+        assertEquals(q, secret.q)
+        assertEquals(p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)), secret.phi)
+        assertTrue(secret.phiInv.multiply(secret.phi).mod(secret.publicKey.n) == BigInteger.ONE)
+        assertEquals(secret.publicKey.n, p.multiply(q))
+        assertEquals(secret.publicKey.nSquared, p.multiply(q).pow(2))
+    }
+
+    @Test
+    fun `newPaillierSecretFromPrimes should fail on invalid primes`() {
+        val invalidP = BigInteger("4") // Not prime
+        val q = PRECOMPUTED_PRIMES[0].second
+
+        assertThrows<IllegalArgumentException> {
+            newPaillierSecretFromPrimes(invalidP, q)
+        }
+    }
 }

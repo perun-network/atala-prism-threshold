@@ -155,7 +155,7 @@ class PaillierPublic (
  * @param n The modulus to validate.
  * @return An [Exception] if validation fails; otherwise, returns null.
  */
-fun validateN(n: BigInteger): Exception? {
+internal fun validateN(n: BigInteger): Exception? {
     if (n.signum() <= 0) return IllegalArgumentException("modulus N is nil")
     if (n.bitLength() != BitsPaillier) {
         return IllegalArgumentException("Expected bit length: $BitsPaillier, found: ${n.bitLength()}")
@@ -344,7 +344,7 @@ fun newPaillierSecretFromPrimes(p: BigInteger, q: BigInteger): PaillierSecret {
  * @return `true` if p is a suitable prime; `false` otherwise.
  * @throws IllegalArgumentException If the prime does not meet the validation criteria.
  */
-fun validatePrime(p: BigInteger): Boolean {
+internal fun validatePrime(p: BigInteger): Boolean {
     val bitsWant = BitsBlumPrime
 
     // Check bit lengths

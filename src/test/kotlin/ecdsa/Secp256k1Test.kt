@@ -118,4 +118,65 @@ class Secp256k1Test {
 
         assertTrue(signature.verifySecp256k1(hash, privateKey.publicKey()))
     }
+
+    @Test
+    fun `test big integer to byte array - exactly 32 bytes`() {
+        // Create a BigInteger that results in exactly 32 bytes
+        val bi = BigInteger("1234567890123456789012345678901234567890123456789012345678901234", 16)
+
+        // Convert to byte array
+        val byteArray = bigIntegerToByteArray(bi)
+
+        // Assert that the byte array is exactly 32 bytes
+        assertEquals(32, byteArray.size)
+        // Assert that the BigInteger can be recreated from the byte array
+        assertEquals(bi, BigInteger(1, byteArray))
+    }
+
+    @Test
+    fun `test big integer to byte array - less than 32 bytes`() {
+        // Create a BigInteger that is less than 32 bytes
+        val bi = BigInteger("1234567890", 16) // This should be much smaller than 32 bytes
+
+        // Convert to byte array
+        val byteArray = bigIntegerToByteArray(bi)
+
+        // Assert that the byte array is exactly 32 bytes
+        assertEquals(32, byteArray.size)
+        // Assert that the BigInteger can be recreated from the byte array, ignoring leading zeros
+        assertEquals(bi, BigInteger(1, byteArray))
+    }
+
+    @Test
+    fun `test big integer to byte array - more than 32 bytes`() {
+        // Create a BigInteger that is more than 32 bytes
+        val bi = BigInteger("1234567890123456789012345678901234567890123456789012345678901234567890", 16)
+
+        // Convert to byte array
+        val byteArray = bigIntegerToByteArray(bi)
+
+        // Assert that the byte array is exactly 32 bytes
+        assertEquals(32, byteArray.size)
+
+        // Assert that the BigInteger can be recreated from the byte array (most significant 32 bytes)
+        val truncatedBi = BigInteger(1, bi.toByteArray().copyOfRange(bi.toByteArray().size - 32, bi.toByteArray().size))
+        assertEquals(truncatedBi, BigInteger(1, byteArray))
+    }
+
+
+    @Test
+    fun `test big integer to byte array - zero value`() {
+        // Create a BigInteger with value 0
+        val bi = BigInteger.ZERO
+
+        // Convert to byte array
+        val byteArray = bigIntegerToByteArray(bi)
+
+        // Assert that the byte array is exactly 32 bytes and is all zeros
+        assertEquals(32, byteArray.size)
+        assertTrue(byteArray.all { it == 0.toByte() })
+
+        // Assert that the BigInteger can be recreated from the byte array
+        assertEquals(bi, BigInteger(byteArray))
+    }
 }
