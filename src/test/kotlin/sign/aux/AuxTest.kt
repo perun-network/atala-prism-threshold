@@ -460,7 +460,6 @@ class AuxTest {
                 val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
                 val modifiedRound2Broadcasts = incomingRound2Broadcasts.toMutableMap()
                 val modifiedId = (i+1)%n + 1
-                val copyId = (i+2)%n + 1
                 modifiedRound2Broadcasts[modifiedId] = AuxRound2Broadcast(
                     ssid = incomingRound2Broadcasts[modifiedId]!!.ssid,
                     from = incomingRound2Broadcasts[modifiedId]!!.to,
@@ -697,7 +696,7 @@ class AuxTest {
                         prmProof = incomingRound2Broadcasts[modifiedId]!!.prmProof,
                     )
                     val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
-                    val (_, publics) = auxSigners[i]!!.auxOutput(
+                    val (_, _) = auxSigners[i]!!.auxOutput(
                         parties,
                         modifiedRound2Broadcasts,
                         incomingRound3Broadcasts

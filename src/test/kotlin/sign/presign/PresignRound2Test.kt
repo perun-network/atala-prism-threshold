@@ -1,15 +1,10 @@
 package sign.presign
 
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.paillier.paillierKeyGen
-import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
-import perun_network.ecdsa_threshold.precomp.generateSessionId
 import perun_network.ecdsa_threshold.precomp.getSamplePrecomputations
-import perun_network.ecdsa_threshold.sign.presign.PresignRound1Broadcast
 import perun_network.ecdsa_threshold.sign.presign.PresignRound2Input
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class PresignRound2Test {
     @Test
@@ -19,7 +14,7 @@ class PresignRound2Test {
 
         val ssid = secretPrecomps[ids[0]]!!.ssid
         val gammaShare = sampleScalar()
-        val (G, gNonce) = publicPrecomps[ids[1]]!!.paillierPublic.encryptRandom(gammaShare.value)
+        val (_, gNonce) = publicPrecomps[ids[1]]!!.paillierPublic.encryptRandom(gammaShare.value)
 
         val secretPaillier = secretPrecomps[ids[0]]!!.paillierSecret
 

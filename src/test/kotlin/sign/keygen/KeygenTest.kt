@@ -6,7 +6,6 @@ import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
 class KeygenTest {

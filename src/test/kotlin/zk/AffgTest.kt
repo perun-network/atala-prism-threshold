@@ -105,10 +105,8 @@ class AffgTest {
 
     @Test
     fun testAffgFails() {
-        @Test
-        fun `test affg proof fails with invalid parameters`() {
             // Mocked invalid Paillier public and secret keys
-            val (paillierPublic, paillierSecret) =  paillierKeyGenMock()
+            val (paillierPublic, _) =  paillierKeyGenMock()
 
             // Mocked invalid Pedersen parameters
             val pedersenParametersInvalid = PedersenParameters(
@@ -151,5 +149,4 @@ class AffgTest {
             // Assert that the proof validation returns false, meaning the proof fails
             assertFalse(isProofValid)
         }
-    }
 }

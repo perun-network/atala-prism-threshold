@@ -69,7 +69,8 @@ class SecureRandomInputStreamTest {
         val buffer = ByteArray(10)
 
         assertFailsWith<IndexOutOfBoundsException> {
-            val bytesRead = secureStream.read(buffer, 0, 0) }
+            secureStream.read(buffer, 0, 0)
+        }
     }
 
     @Test
