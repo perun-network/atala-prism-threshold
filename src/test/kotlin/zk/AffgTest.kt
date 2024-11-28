@@ -54,7 +54,6 @@ class AffgTest {
 
         val affgProof = AffgProof.newProof(0, affgPublic, affgPrivate)
         assertTrue(affgProof.verify(0, affgPublic))
-
     }
 
     @Test

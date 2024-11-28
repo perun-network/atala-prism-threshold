@@ -160,7 +160,7 @@ data class Keygen (
                 throw KeygenException("broacasts missing key $j of signer $id")
             }
 
-            if (!keygenRound3Broadcasts[j]!!.ssid.contentEquals(ssid)) {
+            if (!keygenRound3Broadcasts[j]!!.ssid.contentEquals(ssid) || !keygenRound2Broadcasts[j]!!.ssid.contentEquals(ssid)) {
                 throw KeygenException("mismatch ssid for key $j of signer $id")
             }
 
