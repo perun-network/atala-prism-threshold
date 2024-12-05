@@ -194,7 +194,6 @@ fun scalePrecomputations(signers : List<Int>, precomps : Map<Int, SecretPrecompu
 : Triple<MutableMap<Int, SecretPrecomputation>, MutableMap<Int, PublicPrecomputation>, Point> {
     val lagrangeCoefficients = lagrange(signers)
 
-
     // Initialize a map to hold the scaled precomputations
     val scaledPrecomps = mutableMapOf<Int, SecretPrecomputation>()
     val scaledPublics = mutableMapOf<Int, PublicPrecomputation>()

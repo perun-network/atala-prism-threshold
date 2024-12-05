@@ -7,9 +7,9 @@ import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.tuple.Nonuple
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgProof
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPublic
 import java.math.BigInteger
 
 /**
@@ -28,7 +28,6 @@ data class ElGamalPublic(
     val B2: Point,
     val Y: Point
 )
-
 
 /**
  * Represents the secret parameters for ElGamal encryption.
@@ -115,7 +114,6 @@ class PresignRound1Input (
         val elGamalPublic = ElGamalPublic(A1, A2, B1, B2, Yi)
         val elGamalSecret = ElGamalSecret(ai, bi)
 
-
         for (j in signers) {
             if (id != j) {
                 // Compute ψ_0_j,i = M(prove, Πenc_j,(ssid, i),(Iε, Ki); (ki, ρi)) for every j 6= i.
@@ -130,7 +128,6 @@ class PresignRound1Input (
                     EncElgPublic(G, Yi, B1, B2, publicPrecomps[id]!!.paillierPublic, publicPrecomps[j]!!.aux),
                     EncElgPrivate(gammaShare.value, gNonce, yi, bi)
                 )
-
 
                 result[j] = PresignRound1Broadcast(
                     ssid = ssid,

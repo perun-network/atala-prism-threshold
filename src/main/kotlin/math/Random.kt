@@ -14,12 +14,9 @@ const val LPrime = 5 * SecParam     // = 1280
 const val Epsilon = 2 * SecParam     // = 512
 const val LPlusEpsilon = L + Epsilon      // = 768
 const val LPrimePlusEpsilon = LPrime + Epsilon // 1792
-
 const val BITS_INT_MOD_N = 8 * SecParam    // = 2048
-
 const val BitsBlumPrime = 4 * SecParam      // = 1024
 const val BitsPaillier = 2 * BitsBlumPrime // = 2048
-
 
 /**
  * Maximum number of iterations for random sampling.
@@ -56,8 +53,14 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
+fun sampleRID() : ByteArray {
+    val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
+    random.read(byteArray)   // Fill the array with random bytes
+    return byteArray
+}
+
 /**
- * Samples a random element from the group of integers modulo `n` that is co-prime to `n`.
+ * Samples a random element from the group of integers modulo `n` that is co-prime to `n` (u ∈ ℤₙˣ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -77,7 +80,7 @@ fun sampleModNStar(n: BigInteger): BigInteger {
 }
 
 /**
- * Samples a random element from the integers modulo `n`.
+ * Samples a random element from the integers modulo `n` (u ∈ ℤₙ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -90,7 +93,7 @@ fun sampleModN(n: BigInteger): BigInteger {
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
-        val candidate = BigInteger(1, buf)
+        val candidate = BigInteger(buf)
         if (candidate < n) return candidate
     }
     throw ERR_MAX_ITERATIONS
@@ -129,69 +132,6 @@ fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
 }
 
 /**
- * Computes the Jacobi symbol (x/y), which can be +1, -1, or 0.
- * @param x The numerator.
- * @param y The denominator (must be an odd integer).
- * @return The Jacobi symbol of (x/y).
- */
-internal fun jacobi(x: BigInteger, y: BigInteger): Int {
-    require(y > BigInteger.ZERO && y.and(BigInteger.ONE) == BigInteger.ONE) {
-        "The second argument (y) must be an odd integer greater than zero."
-    }
-
-    var a = x.abs()  // Use the absolute value of x
-    var b = y
-    var j = 1
-
-    // Adjust sign of b
-    if (b < BigInteger.ZERO) {
-        if (a < BigInteger.ZERO) {
-            j = -1
-        }
-        b = b.negate()
-    }
-
-    while (true) {
-        if (b == BigInteger.ONE) {
-            return j
-        }
-        if (a == BigInteger.ZERO) {
-            return 0
-        }
-
-        // a = a mod b
-        a = a.mod(b)
-        if (a == BigInteger.ZERO) {
-            return 0
-        }
-
-        // Handle factors of 2 in 'a'
-        val s = a.lowestSetBit // Number of trailing zero bits in 'a'
-        if (s % 2 != 0) {
-            val bMod8 = b.and(BigInteger.valueOf(7)) // b % 8
-            if (bMod8 == BigInteger.valueOf(3) || bMod8 == BigInteger.valueOf(5)) {
-                j = -j
-            }
-        }
-
-        // Divide a by 2^s
-        a = a.shiftRight(s)
-
-        // Swap numerator and denominator
-        if (b.and(BigInteger.valueOf(3)) == BigInteger.valueOf(3) &&
-            a.and(BigInteger.valueOf(3)) == BigInteger.valueOf(3)
-        ) {
-            j = -j
-        }
-
-        // Swap a and b
-        val temp = a
-        a = b
-        b = temp
-    }
-}
-
-/**
  * Generates the parameters for the Pedersen commitment.
  *
  * This function samples values for `s`, `t`, and `λ` such that:
@@ -202,8 +142,8 @@ internal fun jacobi(x: BigInteger, y: BigInteger): Int {
  * @return A Triple containing the values `(s, t, λ)`.
  */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
-    val lambda = sampleModN(phi)
-    val tau  = sampleModNStar(n)
+    val lambda = modN(phi)
+    val tau  = sampleModN(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)

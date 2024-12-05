@@ -39,7 +39,6 @@ fun generateSafeBlumPrime(bits: Int): BigInteger {
     return prime
 }
 
-
 /**
  * Generates the necessary integers for a Paillier key pair.
  * Returns a pair of safe Blum primes (p, q) such that both p and q are:

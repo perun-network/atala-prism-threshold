@@ -2,12 +2,12 @@ package perun_network.ecdsa_threshold.sign.keygen
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.newBasePoint
-import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.math.sampleRID
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.sch.*
-import java.math.BigInteger
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrCommitment
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPublic
 import java.security.MessageDigest
 
 /**
@@ -43,7 +43,6 @@ data class Keygen (
      */
     fun keygenRound1(parties: List<Int>) : Map<Int, KeygenRound1Broadcast> {
         val broadcasts = mutableMapOf<Int, KeygenRound1Broadcast>()
-
 
         // Sample x_i, X_i
         val xShare = sampleScalar()
@@ -222,7 +221,6 @@ data class Keygen (
         }
 
         // Output public point
-
         val publics = mutableMapOf<Int, Point>()
         var public = XShare!!
         publics[id] = public

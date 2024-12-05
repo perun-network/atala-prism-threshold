@@ -5,7 +5,6 @@ import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 import kotlin.random.Random
 
-
 // Precomputed safe Blum prime pairs
 val PRECOMPUTED_PRIMES: List<Pair<BigInteger, BigInteger>> = listOf(
     Pair(
@@ -122,7 +121,6 @@ class PaillierPublic (
         return (other is PaillierPublic) && n.compareTo(other.n) == 0
     }
 
-
     /**
      * Validates that the provided ciphertexts are in the correct range and are coprime to N².
      *
@@ -169,14 +167,13 @@ class PaillierPublic (
  */
 fun validateN(n: BigInteger): Exception? {
     if (n.signum() <= 0) return IllegalArgumentException("modulus N is nil")
-    if (n.bitLength() > BitsPaillier) {
+    if (n.bitLength() != BitsPaillier) {
         return IllegalArgumentException("Expected bit length: $BitsPaillier, found: ${n.bitLength()}")
     }
     if (!n.testBit(0)) return IllegalArgumentException("Modulus N is even")
 
     return null
 }
-
 
 /** Paillier's Secret Key **/
 // Define errors for prime validation
@@ -297,7 +294,6 @@ fun paillierKeyGenMock() : Pair<PaillierPublic, PaillierSecret> {
     return sk.publicKey to sk
 }
 
-
 /**
  * Generates a new SecretKey for the Paillier cryptosystem by generating suitable primes p and q.
  *
@@ -308,7 +304,6 @@ fun newPaillierSecret(): PaillierSecret {
     val (p, q) = generatePaillierBlumPrimes()
     return newPaillierSecretFromPrimes(p, q)
 }
-
 
 /**
  * Generates a new SecretKey from given prime factors p and q. (N = p*q)

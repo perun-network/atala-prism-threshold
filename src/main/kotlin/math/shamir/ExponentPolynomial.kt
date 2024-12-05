@@ -17,12 +17,6 @@ class ExponentPolynomial (
     val isConstant: Boolean,
     val coefficients: List<Point>
 ) {
-    /**
-     * Evaluates the polynomial at a given scalar `x` using Horner's method.
-     *
-     * @param x The scalar at which to evaluate the polynomial.
-     * @return The result as a Point on the elliptic curve.
-     */
     fun eval(x : Scalar) : Point {
         var result = newPoint()
 

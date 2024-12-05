@@ -151,7 +151,6 @@ class AffgProof(
             return false
         }
 
-
         val lhsEnc = n1.encryptWithNonce(z2, wY)
         val rhsEnc = (public.Y.modPowNSquared(n1, e)).modMulNSquared(n1, commitment.By)
 

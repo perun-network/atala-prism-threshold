@@ -74,7 +74,6 @@ class Signature (
         return Secp256k1.verify(secpSignature, hash, secpPublic)
     }
 
-
     /**
      * Verifies the signature using elliptic curve arithmetic based on the provided message hash and public point.
      *

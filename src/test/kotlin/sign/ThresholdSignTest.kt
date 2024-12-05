@@ -1,5 +1,6 @@
 package sign
 
+import mu.KotlinLogging
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
@@ -12,8 +13,7 @@ import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-
-
+val logger = KotlinLogging.logger {}
 
 class ThresholdSignTest {
     @Test
@@ -25,7 +25,7 @@ class ThresholdSignTest {
 
         // Generate Precomputations (Assuming the secret primes are precomputed).
         val (ids, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t) // Use generatePrecomputation instead to generate new safe primes.
-        println("Precomputation finished for $n signerIds with threshold $t")
+        logger.info {"Precomputation finished for $n signerIds with threshold $t"}
 
         // Message
         val message = "hello"
@@ -33,13 +33,13 @@ class ThresholdSignTest {
 
         // Determine signerIds
         val signerIds = randomSignerIDs(ids, t)
-        println("signerIds: $signerIds")
+        logger.info {"signerIds: $signerIds"}
         val publicKey = publicKeyFromShares(signerIds, publicPrecomps)
         val (scaledPrecomps, scaledPublics, publicPoint) = scalePrecomputations(signerIds, secretPrecomps, publicPrecomps)
         if (publicKey != publicPoint.toPublicKey()) {
             throw IllegalStateException("Inconsistent public Key")
         }
-        println("Scaled precomputations finished.\n")
+        logger.info {"Scaled precomputations finished.\n"}
 
         // Prepare the signers
         val signers = mutableMapOf<Int, Presigner>()
@@ -57,13 +57,12 @@ class ThresholdSignTest {
         val Ks = mutableMapOf<Int, PaillierCipherText>() // K_i of every party
         val elGamalPublics = mutableMapOf<Int, ElGamalPublic>()
 
-
         for (i in signerIds) {
             presignRound1AllBroadcasts[i] = signers[i]!!.presignRound1(signerIds)
             Ks[i] = signers[i]!!.K!!
             elGamalPublics[i] = signers[i]!!.elGamalPublic!!
         }
-        println("Finish Presign Round 1")
+        logger.info {"Finish Presign Round 1"}
 
         // PRESIGN ROUND 2
         val bigGammaShares = mutableMapOf<Int, Point>()
@@ -74,7 +73,7 @@ class ThresholdSignTest {
 
             bigGammaShares[i] = signers[i]!!.bigGammaShare!!
         }
-        println("Finish Presign Round 2.\n")
+        logger.info {"Finish Presign Round 2.\n"}
 
         // PRESIGN ROUND 3
         val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
@@ -86,7 +85,7 @@ class ThresholdSignTest {
             deltaShares[i] = signers[i]!!.deltaShare!!
             bigDeltaShares[i] = signers[i]!!.bigDeltaShare!!
         }
-        println("Finish Presign Round 3.\n")
+        logger.info {"Finish Presign Round 3.\n"}
 
         // PROCESS PRESIGN OUTPUTS
         for (i in signerIds) {
@@ -96,13 +95,12 @@ class ThresholdSignTest {
 
         // ** PARTIAL SIGNING **
         val partialSignatures = mutableListOf<PartialSignature>()
-        println("Partial signing the message: \"$message\"")
+        logger.info {"Partial signing the message: \"$message\""}
 
         for (i in signerIds) {
             partialSignatures.add(signers[i]!!.partialSignMessage(scaledPublics[i]!!.ssid, hash))
         }
-        println("Finish ECDSA Partial Signing.\n")
-
+        logger.info {"Finish ECDSA Partial Signing.\n"}
 
         // ** ECDSA SIGNING **
         val ecdsaSignature= combinePartialSignatures(signers[signerIds[0]]!!.bigR!!, partialSignatures, publicPoint, hash)

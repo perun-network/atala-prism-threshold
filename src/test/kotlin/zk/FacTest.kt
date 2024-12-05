@@ -1,12 +1,10 @@
 package zk
 
-import perun_network.ecdsa_threshold.math.samplePedersen
 import perun_network.ecdsa_threshold.math.sampleRID
-import perun_network.ecdsa_threshold.paillier.newPaillierSecret
 import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPublic
+import perun_network.ecdsa_threshold.zero_knowledge.FacPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.FacProof
+import perun_network.ecdsa_threshold.zero_knowledge.FacPublic
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
