@@ -6,7 +6,6 @@ import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.sign.presign.*
 import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
-import perun_network.ecdsa_threshold.zkproof.logstar.LogStarPublic
 import java.math.BigInteger
 
 /**
