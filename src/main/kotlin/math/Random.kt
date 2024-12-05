@@ -53,6 +53,13 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
+/**
+ * Generates a random identifier (RID) as a secure random byte array.
+ *
+ * The RID is a 256-bit (32-byte) cryptographically secure random value.
+ *
+ * @return A 32-byte array of secure random values.
+ */
 fun sampleRID() : ByteArray {
     val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
     random.read(byteArray)   // Fill the array with random bytes
@@ -93,7 +100,7 @@ fun sampleModN(n: BigInteger): BigInteger {
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
-        val candidate = BigInteger(buf)
+        val candidate = BigInteger(1, buf)
         if (candidate < n) return candidate
     }
     throw ERR_MAX_ITERATIONS
@@ -142,8 +149,8 @@ fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
  * @return A Triple containing the values `(s, t, λ)`.
  */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
-    val lambda = modN(phi)
-    val tau  = sampleModN(n)
+    val lambda = sampleModN(phi)
+    val tau  = sampleModNStar(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)

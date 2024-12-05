@@ -3,10 +3,10 @@ package zk
 import perun_network.ecdsa_threshold.ecdsa.newBasePoint
 import perun_network.ecdsa_threshold.math.sampleRID
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrCommitment
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPublic
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

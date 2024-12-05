@@ -3,7 +3,7 @@ package perun_network.ecdsa_threshold.sign.keygen
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.sign.Broadcast
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
 
 /**
  * Represents the broadcast message in the first round of the key generation process.
