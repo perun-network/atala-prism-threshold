@@ -2,10 +2,10 @@ package perun_network.ecdsa_threshold.sign
 
 import jdk.jfr.Threshold
 import perun_network.ecdsa_threshold.ecdsa.*
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
-import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
 import perun_network.ecdsa_threshold.math.shamir.lagrange
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.SecretPrecomputation
 import perun_network.ecdsa_threshold.sign.aux.Aux
 import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
@@ -17,7 +17,7 @@ import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
 import perun_network.ecdsa_threshold.sign.presign.*
 import java.math.BigInteger
 
-data class ThresholdSigner(
+data class Signer(
     val id : Int,
     val ssid: ByteArray,
     val threshold : Int,
@@ -35,7 +35,7 @@ data class ThresholdSigner(
     // PRESIGN
     var elGamalPublics: Map<Int, ElGamalPublic>? = null,
 
-) {
+    ) {
 
     fun keygenRound1(parties: List<Int>): Map<Int, KeygenRound1Broadcast> {
         if (keygen == null) {

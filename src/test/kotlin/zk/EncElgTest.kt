@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.math.sampleL
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgProof
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPublic
 import kotlin.test.assertTrue
 
 class EncElgTest {

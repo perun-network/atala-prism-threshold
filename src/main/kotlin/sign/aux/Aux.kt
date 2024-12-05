@@ -305,6 +305,7 @@ class Aux (
 
         val shamirPublicPolynomial = sum(shamirPolynomials)
         for (party in parties) {
+            publicECDSA[party] = shamirPublicPolynomial.eval(scalarFromInt(party))
         }
 
         if (previousShare != null && previousPublic != null) {

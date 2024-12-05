@@ -5,11 +5,10 @@ on:
 
   push:
     branches:
-      - main
-      - keygen
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build:

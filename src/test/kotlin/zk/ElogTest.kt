@@ -2,9 +2,9 @@ package zk
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.ElogProof
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
 import kotlin.test.Test
 
 class ElogTest {
