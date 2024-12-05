@@ -25,6 +25,10 @@ dependencies {
     implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:0.15.0")
 
     implementation("com.ionspin.kotlin:bignum:0.3.8")
+    // Add Kotlin Logging
+    implementation("io.github.microutils:kotlin-logging:3.0.5")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
+
 }
 
 tasks.test {

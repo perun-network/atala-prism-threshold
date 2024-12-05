@@ -1,14 +1,9 @@
-package perun_network.ecdsa_threshold.zero_knowledge.mod
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.math.jacobi
-import perun_network.ecdsa_threshold.math.sampleModN
 import perun_network.ecdsa_threshold.math.sampleQuadraticNonResidue
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PROOF_NUM
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPublic
 import java.math.BigInteger
 import java.security.MessageDigest
-import kotlin.experimental.and
 
 data class ModPublic (
     val n : BigInteger,

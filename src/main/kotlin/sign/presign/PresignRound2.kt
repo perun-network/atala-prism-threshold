@@ -7,10 +7,10 @@ import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.sign.Broadcast
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.ElogProof
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPublic
 import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
 import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
 import java.math.BigInteger

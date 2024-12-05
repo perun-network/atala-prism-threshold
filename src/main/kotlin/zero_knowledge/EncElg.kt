@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zero_knowledge.enc_elg
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar

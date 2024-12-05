@@ -1,19 +1,15 @@
 package perun_network.ecdsa_threshold.sign.aux
 
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.math.shamir.ExponentPolynomial
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import perun_network.ecdsa_threshold.sign.Broadcast
-import perun_network.ecdsa_threshold.sign.presign.ElGamalPublic
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModProof
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmProof
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.FacProof
+import perun_network.ecdsa_threshold.zero_knowledge.ModProof
+import perun_network.ecdsa_threshold.zero_knowledge.PrmProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
 
 data class AuxRound1Broadcast (
     override val ssid: ByteArray,

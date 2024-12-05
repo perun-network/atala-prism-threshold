@@ -4,7 +4,7 @@ import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
 import java.math.BigInteger
 
 /**

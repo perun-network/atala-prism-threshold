@@ -1,9 +1,12 @@
 package perun_network.ecdsa_threshold
 
+import mu.KotlinLogging
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.*
+import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
+import perun_network.ecdsa_threshold.keygen.generateSessionId
+import perun_network.ecdsa_threshold.keygen.publicKeyFromShares
 import perun_network.ecdsa_threshold.sign.ThresholdSigner
 import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
@@ -12,8 +15,12 @@ import perun_network.ecdsa_threshold.sign.combinePartialSignatures
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
-import perun_network.ecdsa_threshold.sign.presign.*
-import java.math.BigInteger
+import perun_network.ecdsa_threshold.sign.presign.PresignRound1Broadcast
+import perun_network.ecdsa_threshold.sign.presign.PresignRound2Broadcast
+import perun_network.ecdsa_threshold.sign.presign.PresignRound3Broadcast
+
+private val logger = KotlinLogging.logger {}
+
 
 /**
  * Main function to demonstrate the threshold ECDSA signing process.
@@ -34,61 +41,62 @@ fun main() {
             threshold = t,
         )
     }
+
     // KEY GENERATION
-    println("Key generation started for $n signers with threshold $t \n")
-    keygen(parties)
-    println("Key generation finished for $n signers with threshold $t \n")
+    logger.info {"Key generation started for $n signers with threshold $t \n"}
+    keyGen(parties)
+    logger.info {"Key generation finished for $n signers with threshold $t \n"}
 
     // AUXILIARX INFO
-    println("Begin auxiliary info protocol for parties: ${parties.keys} \n")
-    val publicPrecomps = aux(parties)
-    println("Finished auxiliary info protocol for parties: ${parties.keys} \n")
+    logger.info { "Begin auxiliary info protocol for parties: ${parties.keys} \n"}
+    val publicPrecomps = auxInfo(parties)
+    logger.info { "Finished auxiliary info protocol for parties: ${parties.keys} \n"}
+
+    // Calculate the public key.
+    val publicKey = publicKeyFromShares(parties.keys.toList(), publicPrecomps)
 
     // Determine signerIds
     val signers = randomSigners(parties, t)
     val signerIds = signers.keys.toList()
-    println("Randomly chosen signers: $signerIds")
-    val publicKey = publicKeyFromShares(signers.keys.toList(), publicPrecomps)
+    logger.info { "Randomly chosen signers: $signerIds" }
 
     // Scale Secret/Public Precomputations
     val (publicPoint, scaledPrecomps) =  scalePrecomputation(signers)
     if (publicKey != publicPoint.toPublicKey()) {
-        throw IllegalStateException("Inconsistent public Key")
+        logger.error { IllegalStateException("Inconsistent public Key") }
     }
-    println("Scaled precomputations finished.\n")
-
+    logger.info {"Scaled precomputations finished.\n"}
 
     // **PRESIGN**
-    println("Begin Presigning protocol for signers $signerIds.\n")
+    logger.info { "Begin Presigning protocol for signers $signerIds.\n" }
     val bigR = presign(signers)
-    println("Finished presigning protocol for signers $signerIds.\n")
+    logger.info { "Finished presigning protocol for signers $signerIds.\n" }
 
     // Message
     val message = "hello"
     val hash = SHA256().digest(message.toByteArray())
 
     // ** PARTIAL SIGNING **
-    println("Partial signing the message: \"$message\"")
+    logger.info {"Partial signing the message: \"$message\""}
     val partialSignatures = partialSignMessage(signers, hash)
-    println("Finish ECDSA Partial Signing.\n")
-
+    logger.info {"Finish ECDSA Partial Signing.\n"}
 
     // ** ECDSA SIGNING **
     val ecdsaSignature= combinePartialSignatures(bigR, partialSignatures, publicPoint, hash)
-    println("Finish Combining ECDSA Signature: ${ecdsaSignature.toSecp256k1Signature().toHexString().uppercase()}.\n")
+    logger.info {"Finish Combining ECDSA Signature: ${ecdsaSignature.toSecp256k1Signature().toHexString().uppercase()}.\n"}
 
     // ** ECDSA VERIFICATION ** //
 
     if (ecdsaSignature.verifySecp256k1(hash, publicKey)) {
-        println("ECDSA signature verified successfully.\n")
+        logger.info {"ECDSA signature verified successfully.\n"}
     } else {
-        println("failed to verify ecdsa signature.\n")
+        logger.info {"failed to verify ecdsa signature.\n"}
     }
 
     val endTime = System.currentTimeMillis() // End time in milliseconds
     val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
 
-    println("Execution time: $elapsedTime seconds")
+    logger.info {"Execution time: $elapsedTime seconds"}
 }
 
 /**
@@ -98,7 +106,7 @@ fun main() {
  * @param t The number of signerIds to randomly select.
  * @return A map containing t randomly selected signer IDs and their corresponding ThresholdSigners.
  */
-fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, ThresholdSigner> {
+private fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, ThresholdSigner> {
     require(t <= parties.size) { "t must be less than or equal to the number of parties." }
     require(t > 0) { "t must be greater than 0." }
 
@@ -130,35 +138,36 @@ private fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Poin
     return referencePoint to referencePrecomp
 }
 
-fun keygen(parties : Map<Int, ThresholdSigner>) {
+private fun keyGen(parties : Map<Int, ThresholdSigner>) {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
+
     // KEYGEN ROUND 1
-    println("KEYGEN ROUND 1 started.")
+    logger.info {"KEYGEN ROUND 1 started." }
     val keygenRound1AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound1Broadcast>>()
     for (i in partyIds) {
         keygenRound1AllBroadcasts[i] = parties[i]!!.keygenRound1(partyIds)
     }
-    println("KEYGEN ROUND 1 finished.\n")
+    logger.info {"KEYGEN ROUND 1 finished.\n" }
 
     // KEYGEN ROUND 2
-    println("KEYGEN ROUND 2 started.")
+    logger.info {"KEYGEN ROUND 2 started."}
     val keygenRound2AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound2Broadcast>>()
     for (i in partyIds) {
         keygenRound2AllBroadcasts[i] = parties[i]!!.keygenRound2(partyIds)
     }
-    println("KEYGEN ROUND 2 finished.\n")
+    logger.info {"KEYGEN ROUND 2 finished.\n"}
 
     // KEYGEN ROUND 3
-    println("KEYGEN ROUND 3 started.")
+    logger.info {"KEYGEN ROUND 3 started."}
     val keygenRound3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
     for (i in partyIds) {
         keygenRound3AllBroadcasts[i] = parties[i]!!.keygenRound3(partyIds, keygenRound1AllBroadcasts, keygenRound2AllBroadcasts)
     }
-    println("KEYGEN ROUND 3 finished.\n")
+    logger.info {"KEYGEN ROUND 3 finished.\n"}
 
     // KEYGEN OUTPUT
-    println("PROCESS KEYGEN OUTPUT.")
+    logger.info {"PROCESS KEYGEN OUTPUT."}
     val publicPoints = mutableMapOf<Int, Point>()
     for (i in partyIds) {
         publicPoints[i] = parties[i]!!.keygenOutput(partyIds, keygenRound2AllBroadcasts, keygenRound3AllBroadcasts)
@@ -166,8 +175,7 @@ fun keygen(parties : Map<Int, ThresholdSigner>) {
 
     val endTime = System.currentTimeMillis() // End time in milliseconds
     val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
-    println("KEYGEN FINISHED after $elapsedTime seconds.\n")
-
+    logger.info {"KEYGEN FINISHED after $elapsedTime seconds.\n"}
 
     // Check all public Points
     val publicPoint = publicPoints[partyIds[0]]!!
@@ -176,36 +184,36 @@ fun keygen(parties : Map<Int, ThresholdSigner>) {
     }
 }
 
-fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
+private fun auxInfo(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
 
     // AUX ROUND 1
-    println("AUX ROUND 1 started.")
+    logger.info {"AUX ROUND 1 started."}
     val auxRound1AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound1Broadcast>>()
     for (i in partyIds) {
         auxRound1AllBroadcasts[i] = parties[i]!!.auxRound1(partyIds)
     }
-    println("AUX ROUND 1 finished.\n")
+    logger.info {"AUX ROUND 1 finished.\n"}
 
     // AUX ROUND 2
-    println("AUX ROUND 2 started.")
+    logger.info {"AUX ROUND 2 started."}
     val auxRound2AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound2Broadcast>>()
     for (i in partyIds) {
         auxRound2AllBroadcasts[i] = parties[i]!!.auxRound2(partyIds)
     }
-    println("AUX ROUND 2 finished.\n")
+    logger.info {"AUX ROUND 2 finished.\n"}
 
     // AUX ROUND 3
-    println("AUX ROUND 3 started.")
+    logger.info {"AUX ROUND 3 started."}
     val auxRound3AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound3Broadcast>>()
     for (i in partyIds) {
         auxRound3AllBroadcasts[i] = parties[i]!!.auxRound3(partyIds, auxRound1AllBroadcasts, auxRound2AllBroadcasts)
     }
-    println("AUX ROUND 3 finished.\n")
+    logger.info {"AUX ROUND 3 finished.\n"}
 
     // AUX OUTPUT
-    println("PROCESS AUX OUTPUT.")
+    logger.info {"PROCESS AUX OUTPUT."}
     val publicPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
     for (i in partyIds) {
         publicPrecomps[i] = parties[i]!!.auxOutput(partyIds, auxRound2AllBroadcasts, auxRound3AllBroadcasts)
@@ -213,7 +221,7 @@ fun aux(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
 
     val endTime = System.currentTimeMillis() // End time in milliseconds
     val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
-    println("AUX FINISHED after $elapsedTime seconds.\n")
+    logger.info {"AUX FINISHED after $elapsedTime seconds.\n"}
 
     // Check all public Points
     val publicPrecomp = publicPrecomps[partyIds[0]]!!
@@ -228,31 +236,31 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     val signerIds = signers.keys.toList()
 
     // PRESIGN ROUND 1
-    println("PRESIGN ROUND1 started.")
+    logger.info {"PRESIGN ROUND1 started."}
     val presignRound1AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound1Broadcast>>()
     for (i in signerIds) {
         presignRound1AllBroadcasts[i] = signers[i]!!.presignRound1(signerIds)
     }
-    println("PRESIGN ROUND 1 finished.\n")
+    logger.info {"PRESIGN ROUND 1 finished.\n"}
 
     // PRESIGN ROUND 2
-    println("PRESIGN ROUND 2 started.")
+    logger.info {"PRESIGN ROUND 2 started."}
     val presignRound2AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound2Broadcast>>()
     for (i in signerIds) {
         presignRound2AllBroadcasts[i] = signers[i]!!.presignRound2(signerIds, presignRound1AllBroadcasts)
     }
-    println("PRESIGN ROUND 2 finished.\n")
+    logger.info {"PRESIGN ROUND 2 finished.\n"}
 
     // PRESIGN ROUND 3
-    println("PRESIGN ROUND 3 started.")
+    logger.info {"PRESIGN ROUND 3 started."}
     val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
     for (i in signerIds) {
         presignRound3AllBroadcasts[i] = signers[i]!!.presignRound3(signerIds, presignRound2AllBroadcasts)
     }
-    println("PRESIGN ROUND 3 finished.\n")
+    logger.info {"PRESIGN ROUND 3 finished.\n"}
 
     // PRESIGN OUTPUT
-    println("Process PRESIGN output.")
+    logger.info {"Process PRESIGN output."}
     val bigRs = mutableMapOf<Int, Point>()
     for (i in signerIds) {
         bigRs[i] = signers[i]!!.presignOutput(signerIds, presignRound3AllBroadcasts)
@@ -265,7 +273,7 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     }
     val endTime = System.currentTimeMillis() // End time in milliseconds
     val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
-    println("PRESIGN finished after $elapsedTime seconds.\n")
+    logger.info {"PRESIGN finished after $elapsedTime seconds.\n"}
     return referenceBigR
 }
 

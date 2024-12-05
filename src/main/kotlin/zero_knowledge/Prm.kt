@@ -1,16 +1,10 @@
-package perun_network.ecdsa_threshold.zero_knowledge.prm
+package perun_network.ecdsa_threshold.zero_knowledge
 
-import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.isValidModN
 import perun_network.ecdsa_threshold.math.sampleModN
-import perun_network.ecdsa_threshold.math.sampleModNStar
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
 import java.math.BigInteger
 import java.security.MessageDigest
-import kotlin.experimental.and
 
 /**
  * [PROOF_NUM] is the standard numbers of challenges and proofs.
@@ -39,7 +33,7 @@ data class PrmProof (
         val t = public.aux.t
 
         val one = BigInteger.ONE
-        for (i in 0..PROOF_NUM-1) {
+        for (i in 0..PROOF_NUM -1) {
             var rhs = BigInteger.ZERO
             val z = Zs[i]
             val a = As[i]
@@ -78,7 +72,7 @@ data class PrmProof (
             val AList = mutableListOf<BigInteger>()
             val ZList = mutableListOf<BigInteger>()
 
-            for (i in 0..PROOF_NUM-1) {
+            for (i in 0..PROOF_NUM -1) {
                 val a = sampleModN(private.phi)
                 val A = public.aux.t.modPow(a, public.aux.n)
 
@@ -91,7 +85,7 @@ data class PrmProof (
                 throw exc
             }
 
-            for (i in 0..PROOF_NUM-1) {
+            for (i in 0..PROOF_NUM -1) {
                 var z = aList[i]
 
 

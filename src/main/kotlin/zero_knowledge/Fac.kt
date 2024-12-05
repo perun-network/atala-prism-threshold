@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zero_knowledge.fac
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.math.*
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
@@ -109,7 +109,7 @@ data class FacProof(
     }
 }
 
-fun challenge(id: Int, rid: ByteArray , publicKey: FacPublic, commitment: FacCommitment): BigInteger {
+fun challenge(id: Int, rid: ByteArray, publicKey: FacPublic, commitment: FacCommitment): BigInteger {
     // Initialize a MessageDigest for SHA-256
     val hash = MessageDigest.getInstance("SHA-256")
     hash.update(id.toByte())

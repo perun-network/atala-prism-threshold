@@ -7,9 +7,9 @@ import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.tuple.Nonuple
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgProof
-import perun_network.ecdsa_threshold.zero_knowledge.enc_elg.EncElgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgProof
+import perun_network.ecdsa_threshold.zero_knowledge.EncElgPublic
 import java.math.BigInteger
 
 /**

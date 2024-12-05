@@ -3,7 +3,6 @@ package perun_network.ecdsa_threshold.sign.aux
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.Scalar.Companion.scalarFromInt
-import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
 import perun_network.ecdsa_threshold.math.SEC_BYTES
@@ -16,19 +15,19 @@ import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPublic
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModProof
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModPublic
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmProof
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPublic
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
+import perun_network.ecdsa_threshold.zero_knowledge.FacPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.FacProof
+import perun_network.ecdsa_threshold.zero_knowledge.FacPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ModPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.ModProof
+import perun_network.ecdsa_threshold.zero_knowledge.ModPublic
+import perun_network.ecdsa_threshold.zero_knowledge.PrmPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.PrmProof
+import perun_network.ecdsa_threshold.zero_knowledge.PrmPublic
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrCommitment
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPublic
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -215,7 +214,8 @@ class Aux (
             if (j != id) {
                 // Prove that the factors of N are relatively large
                 val facProof = FacProof.newProof(id, rid, FacPublic(paillierPublic!!.n, round2Broadcasts[j]!!.pedersenPublic),
-                    FacPrivate(paillierSecret!!.p, paillierSecret!!.q))
+                    FacPrivate(paillierSecret!!.p, paillierSecret!!.q)
+                )
 
                 // compute fᵢ(j)
                 val share =  selfPolynomial!!.eval(Scalar.scalarFromInt(j))
