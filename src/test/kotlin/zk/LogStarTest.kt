@@ -38,7 +38,6 @@ class LogStarTest {
         val verifier = ZK.pedersenParams
         val prover = ZK.proverPaillierPublic
 
-
         val gammaShares = mutableMapOf<Int, Scalar>()
         for (i in 0 until 5) {
             gammaShares[i] = sampleScalar()

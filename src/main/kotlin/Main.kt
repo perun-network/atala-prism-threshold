@@ -1,5 +1,6 @@
 package perun_network.ecdsa_threshold
 
+import mu.KotlinLogging
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
@@ -14,7 +15,11 @@ import perun_network.ecdsa_threshold.sign.combinePartialSignatures
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound1Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound2Broadcast
 import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
-import perun_network.ecdsa_threshold.sign.presign.*
+import perun_network.ecdsa_threshold.sign.presign.PresignRound1Broadcast
+import perun_network.ecdsa_threshold.sign.presign.PresignRound2Broadcast
+import perun_network.ecdsa_threshold.sign.presign.PresignRound3Broadcast
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Main function to demonstrate the threshold ECDSA signing process.
@@ -58,6 +63,15 @@ fun main() {
     }
     println("Scaled precomputations finished.\n")
 
+    // Prepare the signers
+    val signers = mutableMapOf<Int, ThresholdSigner>()
+    for (i in signerIds) {
+        signers[i] = ThresholdSigner(
+            id = i,
+            private = scaledPrecomps[i]!!,
+            publicPrecomps = scaledPublics
+        )
+    }
 
     // **PRESIGN**
     println("Begin Presigning protocol for signers $signerIds.\n")

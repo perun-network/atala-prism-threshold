@@ -3,10 +3,7 @@ package zk
 import org.junit.jupiter.api.Assertions.*
 import perun_network.ecdsa_threshold.math.sampleQuadraticNonResidue
 import perun_network.ecdsa_threshold.math.sampleRID
-import perun_network.ecdsa_threshold.paillier.paillierKeyGen
-import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
-import perun_network.ecdsa_threshold.zero_knowledge.mod.*
-import perun_network.ecdsa_threshold.zero_knowledge.mod.makeQuadraticResidue
+import perun_network.ecdsa_threshold.zero_knowledge.*
 import java.math.BigInteger
 import kotlin.test.Test
 

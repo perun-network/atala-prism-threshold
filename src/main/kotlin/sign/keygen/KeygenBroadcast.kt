@@ -3,7 +3,7 @@ package perun_network.ecdsa_threshold.sign.keygen
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.sign.Broadcast
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
 
 data class KeygenRound1Broadcast (
     override val ssid: ByteArray,
@@ -11,7 +11,6 @@ data class KeygenRound1Broadcast (
     override val to: Int,
     val VShare: ByteArray
 ) : Broadcast(ssid, from, to)
-
 
 data class KeygenRound2Broadcast (
     override val ssid: ByteArray,

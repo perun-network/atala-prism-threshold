@@ -6,9 +6,9 @@ import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.tuple.Quintuple
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.ElogProof
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
 import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPublic
 import java.math.BigInteger
 
@@ -97,7 +97,6 @@ class PresignRound3Input(
                 chiShareAlphas[j] = secretPaillier.decrypt(presignRound2Broadcasts[j]!!.chiD)
             }
         }
-
 
         // Γ = ∑ⱼ Γⱼ
         var bigGamma = newPoint()
@@ -190,7 +189,6 @@ class PresignRound3Input(
         if (j == id || presignRound2Broadcast.from != j || id != presignRound2Broadcast.to ) {
             throw PresignException("invalid id from ${presignRound2Broadcast.from} to ${presignRound2Broadcast.to} ")
         }
-
 
         // Verify M(vrfy, Πaff-g_i ,(ssid, j),(Iε,Jε, Di,j , Ki, Fj,i, Γj ), ψi,j ) = 1.
         val deltaPublic = AffgPublic(

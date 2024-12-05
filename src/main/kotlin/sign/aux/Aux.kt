@@ -14,21 +14,20 @@ import perun_network.ecdsa_threshold.math.shamir.sum
 import perun_network.ecdsa_threshold.paillier.PaillierPublic
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
-import perun_network.ecdsa_threshold.paillier.validateN
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacProof
-import perun_network.ecdsa_threshold.zero_knowledge.fac.FacPublic
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModProof
-import perun_network.ecdsa_threshold.zero_knowledge.mod.ModPublic
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmProof
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPublic
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
+import perun_network.ecdsa_threshold.zero_knowledge.FacPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.FacProof
+import perun_network.ecdsa_threshold.zero_knowledge.FacPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ModPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.ModProof
+import perun_network.ecdsa_threshold.zero_knowledge.ModPublic
+import perun_network.ecdsa_threshold.zero_knowledge.PrmPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.PrmProof
+import perun_network.ecdsa_threshold.zero_knowledge.PrmPublic
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrCommitment
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPublic
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -55,10 +54,8 @@ class Aux (
 
     private var schnorrCommitments: Map<Int, SchnorrCommitment>? = null,
     var As : Map<Int, Point>? = null
-
-
-
     ) {
+
     fun auxRound1(parties: List<Int>) : Map<Int, AuxRound1Broadcast> {
         // sample Paillier and Pedersen
         val (paillierPublic, paillierSecret) = paillierKeyGenMock()
@@ -71,8 +68,7 @@ class Aux (
         val polynomial = newPolynomial(threshold)
 
         val ePoly = polynomial.exponentPolynomial()
-        val selfShare = polynomial.eval(scalarFromInt(id))
-
+        val selfShare = polynomial.eval(Scalar.scalarFromInt(id))
 
         // Schnorr Commitment
         val schnorrCommitments = mutableMapOf<Int, SchnorrCommitment>()
@@ -81,7 +77,6 @@ class Aux (
             schnorrCommitments[j] = SchnorrCommitment.newCommitment()
             As[j] = schnorrCommitments[j]!!.A
         }
-
 
         // Sample u_i, rid_i
         val rid = sampleRID()
@@ -100,7 +95,6 @@ class Aux (
         this.prmProof = prmProof
         this.schnorrCommitments = schnorrCommitments
         this.As = As
-
 
         val broadcasts = mutableMapOf<Int, AuxRound1Broadcast>()
         for (i in parties) {
@@ -166,15 +160,9 @@ class Aux (
                     throw AuxException("receiver's id mismatch for key $party of signer $id")
                 }
 
-                // Check RID lengths.
+                // Check RID lengths
                 if (round2Broadcast.uShare.size != SEC_BYTES || round2Broadcast.rid.size != SEC_BYTES) {
                     throw AuxException("invalid rid length of broadcast from $party to $id")
-                }
-
-                // Check Pedersen Public.
-                val exc = validateN(round2Broadcast.pedersenPublic.n)
-                if (exc != null) {
-                    throw AuxException("invalid pedersen parameters from $party to $id: ${exc.message}")
                 }
 
                 // Verify ZK-PRM Proof
@@ -190,7 +178,6 @@ class Aux (
                 if (!round1Broadcast.VHash.contentEquals(hash)) {
                     throw AuxException("vHash mismatch for key $party of signer $id")
                 }
-
             }
         }
 
@@ -209,7 +196,7 @@ class Aux (
         // Prove Schnorr's commitment consistency.
         val schProofs = mutableMapOf<Int, SchnorrProof>()
         for (j in parties) {
-            val jScalar = scalarFromInt(j)
+            val jScalar = Scalar.scalarFromInt(j)
             val x_j = selfPolynomial!!.eval(jScalar)
             val X_j = x_j.actOnBase()
 
@@ -221,13 +208,13 @@ class Aux (
             if (j != id) {
                 // Prove that the factors of N are relatively large
                 val facProof = FacProof.newProof(id, rid, FacPublic(paillierPublic!!.n, round2Broadcasts[j]!!.pedersenPublic),
-                    FacPrivate(paillierSecret!!.p, paillierSecret!!.q))
+                    FacPrivate(paillierSecret!!.p, paillierSecret!!.q)
+                )
 
                 // compute fᵢ(j)
-                val share =  selfPolynomial!!.eval(scalarFromInt(j))
+                val share =  selfPolynomial!!.eval(Scalar.scalarFromInt(j))
                 // Encrypt share
                 val (C,_) = round2Broadcasts[j]!!.paillierPublic.encryptRandom(share.value)
-
 
                 broadcasts[j] = AuxRound3Broadcast(
                     ssid = ssid,
@@ -248,7 +235,7 @@ class Aux (
         parties: List<Int>,
         round2Broadcasts: Map<Int, AuxRound2Broadcast>,
         round3Broadcasts: Map<Int, AuxRound3Broadcast>
-        ) : Pair<SecretPrecomputation, Map<Int, PublicPrecomputation>> {
+        ) : Pair<SecretPrecomputation, Map<Int,PublicPrecomputation>> {
         val shareReceiveds = mutableMapOf<Int, Scalar>()
 
         // Verify round3 Broadcasts
@@ -264,7 +251,7 @@ class Aux (
                 throw AuxException("mismatch ssid for key $party of signer $id")
             }
 
-            if (round2Broadcast.from != party || round3Broadcast.from != party) {
+            if (round2Broadcast.from != party || round3Broadcast!!.from != party) {
                 throw AuxException("sender's id mismatch for key $party of signer $id")
             }
 
@@ -279,7 +266,7 @@ class Aux (
 
             // Decrypt share and verify with polynomial
             val decryptedShare = Scalar.scalarFromBigInteger(paillierSecret!!.decrypt(round3Broadcast.CShare))
-            val expectedPublicShare = round2Broadcast.ePolyShare.eval(scalarFromInt(id))
+            val expectedPublicShare = round2Broadcast.ePolyShare.eval(Scalar.scalarFromInt(id))
             // X == Fⱼ(i)
             if (expectedPublicShare != decryptedShare.actOnBase()) {
                 throw AuxException("failed to validate ECDSA Share of $party with signer $id")
@@ -318,7 +305,6 @@ class Aux (
 
         val shamirPublicPolynomial = sum(shamirPolynomials)
         for (party in parties) {
-            publicECDSA[party] = shamirPublicPolynomial.eval(scalarFromInt(party))
         }
 
         if (previousShare != null && previousPublic != null) {
@@ -327,7 +313,6 @@ class Aux (
                 publicECDSA[party] = publicECDSA[party]!!.add(previousPublic[party]!!)
             }
         }
-
 
         // Compute Precomp
         val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
@@ -349,7 +334,6 @@ class Aux (
                     aux = round2Broadcasts[party]!!.pedersenPublic
                 )
             }
-
         }
 
         // SecretPrecomputation
@@ -362,7 +346,6 @@ class Aux (
         )
 
         return secretPrecomp to publicPrecomps
-
     }
 }
 
@@ -383,7 +366,6 @@ private fun hash(ssid: ByteArray, id: Int, epoly: ExponentPolynomial, As: Map<In
     // Compute and return the hash
     return digest.digest()
 }
-
 
 private fun xorByteArrays(a: ByteArray, b: ByteArray): ByteArray {
     require(a.size == b.size) { "Byte arrays must have the same length" }

@@ -20,7 +20,6 @@ class Secp256k1Test {
         assertArrayEquals(secpBase, acinqBase)
     }
 
-
     @Test
     fun testPointAddition() {
         val point1 = newBasePoint()
@@ -29,7 +28,6 @@ class Secp256k1Test {
         // Expected point addition result from acinq-secp256k1
         val p1 = Secp256k1.pubkeyParse(Hex.decode("0479BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8".lowercase()))
         val p2 = Secp256k1.pubkeyParse(Hex.decode("0479BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8".lowercase()))
-
 
         val sumAcinq = Secp256k1.pubKeyCombine(arrayOf(p1, p2))
 
@@ -47,7 +45,6 @@ class Secp256k1Test {
         val scalar = Scalar( BigInteger(tweak))
         // Expected scalar multiplication result from acinq-secp256k1
         val base = Hex.decode("0479BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8".lowercase())
-
 
         val resultAcinq = Secp256k1.pubKeyTweakMul(base, scalar.value.toByteArray())
 

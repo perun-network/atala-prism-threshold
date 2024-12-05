@@ -4,10 +4,10 @@ import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.math.sampleRID
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrCommitment
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrProof
-import perun_network.ecdsa_threshold.zero_knowledge.sch.SchnorrPublic
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrCommitment
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
+import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPublic
 import java.security.MessageDigest
 
 data class Keygen (
@@ -28,7 +28,6 @@ data class Keygen (
 ) {
     fun keygenRound1(parties: List<Int>) : Map<Int, KeygenRound1Broadcast> {
         val broadcasts = mutableMapOf<Int, KeygenRound1Broadcast>()
-
 
         // Sample x_i, X_i
         val xShare = sampleScalar()
@@ -160,7 +159,7 @@ data class Keygen (
                 throw KeygenException("broacasts missing key $j of signer $id")
             }
 
-            if (!keygenRound3Broadcasts[j]!!.ssid.contentEquals(ssid) || !keygenRound2Broadcasts[j]!!.ssid.contentEquals(ssid)) {
+            if (!keygenRound3Broadcasts[j]!!.ssid.contentEquals(ssid)) {
                 throw KeygenException("mismatch ssid for key $j of signer $id")
             }
 
@@ -182,7 +181,6 @@ data class Keygen (
         }
 
         // Output public point
-
         val publics = mutableMapOf<Int, Point>()
         var public = XShare!!
         publics[id] = public
@@ -195,7 +193,6 @@ data class Keygen (
         return Triple(this.xShare!!, publics,  public)
     }
 }
-
 
 private fun hash(ssid: ByteArray, id: Int, rhoShare: Scalar, publicShare: Point, A: Point, uShare: ByteArray) : ByteArray {
     // Initialize a MessageDigest for SHA-256

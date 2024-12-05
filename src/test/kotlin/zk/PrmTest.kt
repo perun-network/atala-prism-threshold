@@ -1,11 +1,10 @@
 package zk
 
 import org.junit.jupiter.api.Assertions.assertTrue
-import perun_network.ecdsa_threshold.paillier.paillierKeyGen
 import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmProof
-import perun_network.ecdsa_threshold.zero_knowledge.prm.PrmPublic
+import perun_network.ecdsa_threshold.zero_knowledge.PrmPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.PrmProof
+import perun_network.ecdsa_threshold.zero_knowledge.PrmPublic
 import kotlin.test.Test
 
 class PrmTest {

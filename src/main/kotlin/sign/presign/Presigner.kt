@@ -4,7 +4,7 @@ import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
 import perun_network.ecdsa_threshold.precomp.SecretPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
 import java.math.BigInteger
 
 /**
@@ -309,7 +309,6 @@ class Presigner (
         if (!private.ssid.contentEquals(ssid)) {
             throw PresignException("unknown ssid $ssid")
         }
-
 
         val rX = bigR!!.xScalar()
         val sigmaShare = rX.multiply(chiShare!!).add(Scalar.scalarFromByteArray(hash).multiply(kShare!!))
