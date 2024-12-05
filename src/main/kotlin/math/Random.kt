@@ -57,20 +57,7 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
 }
 
 /**
- * Generates a random identifier (RID) as a secure random byte array.
- *
- * The RID is a 256-bit (32-byte) cryptographically secure random value.
- *
- * @return A 32-byte array of secure random values.
- */
-fun sampleRID() : ByteArray {
-    val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
-    random.read(byteArray)   // Fill the array with random bytes
-    return byteArray
-}
-
-/**
- * Samples a random element from the group of integers modulo `n` that is co-prime to `n` (u ∈ ℤₙˣ).
+ * Samples a random element from the group of integers modulo `n` that is co-prime to `n`.
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -90,7 +77,7 @@ fun sampleModNStar(n: BigInteger): BigInteger {
 }
 
 /**
- * Samples a random element from the integers modulo `n` (u ∈ ℤₙ).
+ * Samples a random element from the integers modulo `n`.
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
