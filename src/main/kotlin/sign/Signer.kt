@@ -17,7 +17,6 @@ import perun_network.ecdsa_threshold.sign.keygen.KeygenRound3Broadcast
 import perun_network.ecdsa_threshold.sign.presign.*
 import java.math.BigInteger
 
-
 data class ThresholdSigner(
     val id : Int,
     val ssid: ByteArray,
@@ -32,7 +31,6 @@ data class ThresholdSigner(
     // KEYGEN
     var xShare : Scalar? = null,
     var XShares: Map<Int, Point>? = null,
-
 
     // PRESIGN
     var elGamalPublics: Map<Int, ElGamalPublic>? = null,
@@ -177,7 +175,6 @@ data class ThresholdSigner(
         this.secretPrecomp = scaledSecret
         this.publicPrecomps = scaledPublics
 
-
         var public = newPoint()
         for (j in signers) {
             public = public.add(scaledPublics[j]!!.publicEcdsa)
@@ -295,7 +292,6 @@ data class ThresholdSigner(
         return incomingBroadcasts
     }
 }
-
 
 /**
  * Combines partial signatures to create the final ECDSA signature.

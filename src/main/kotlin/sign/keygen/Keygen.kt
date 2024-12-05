@@ -29,7 +29,6 @@ data class Keygen (
     fun keygenRound1(parties: List<Int>) : Map<Int, KeygenRound1Broadcast> {
         val broadcasts = mutableMapOf<Int, KeygenRound1Broadcast>()
 
-
         // Sample x_i, X_i
         val xShare = sampleScalar()
         val publicShare = xShare.actOnBase()
@@ -182,7 +181,6 @@ data class Keygen (
         }
 
         // Output public point
-
         val publics = mutableMapOf<Int, Point>()
         var public = XShare!!
         publics[id] = public
@@ -195,7 +193,6 @@ data class Keygen (
         return Triple(this.xShare!!, publics,  public)
     }
 }
-
 
 private fun hash(ssid: ByteArray, id: Int, rhoShare: Scalar, publicShare: Point, A: Point, uShare: ByteArray) : ByteArray {
     // Initialize a MessageDigest for SHA-256

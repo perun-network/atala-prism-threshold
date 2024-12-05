@@ -54,10 +54,8 @@ class Aux (
 
     private var schnorrCommitments: Map<Int, SchnorrCommitment>? = null,
     var As : Map<Int, Point>? = null
-
-
-
     ) {
+
     fun auxRound1(parties: List<Int>) : Map<Int, AuxRound1Broadcast> {
         // sample Paillier and Pedersen
         val (paillierPublic, paillierSecret) = paillierKeyGenMock()
@@ -72,7 +70,6 @@ class Aux (
         val ePoly = polynomial.exponentPolynomial()
         val selfShare = polynomial.eval(Scalar.scalarFromInt(id))
 
-
         // Schnorr Commitment
         val schnorrCommitments = mutableMapOf<Int, SchnorrCommitment>()
         val As = mutableMapOf<Int, Point>()
@@ -80,7 +77,6 @@ class Aux (
             schnorrCommitments[j] = SchnorrCommitment.newCommitment()
             As[j] = schnorrCommitments[j]!!.A
         }
-
 
         // Sample u_i, rid_i
         val rid = sampleRID()
@@ -99,7 +95,6 @@ class Aux (
         this.prmProof = prmProof
         this.schnorrCommitments = schnorrCommitments
         this.As = As
-
 
         val broadcasts = mutableMapOf<Int, AuxRound1Broadcast>()
         for (i in parties) {
@@ -183,7 +178,6 @@ class Aux (
                 if (!round1Broadcast.VHash.contentEquals(hash)) {
                     throw AuxException("vHash mismatch for key $party of signer $id")
                 }
-
             }
         }
 
@@ -221,7 +215,6 @@ class Aux (
                 val share =  selfPolynomial!!.eval(Scalar.scalarFromInt(j))
                 // Encrypt share
                 val (C,_) = round2Broadcasts[j]!!.paillierPublic.encryptRandom(share.value)
-
 
                 broadcasts[j] = AuxRound3Broadcast(
                     ssid = ssid,
@@ -322,7 +315,6 @@ class Aux (
             }
         }
 
-
         // Compute Precomp
         val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
         for (party in parties) {
@@ -343,7 +335,6 @@ class Aux (
                     aux = round2Broadcasts[party]!!.pedersenPublic
                 )
             }
-
         }
 
         // SecretPrecomputation
@@ -356,7 +347,6 @@ class Aux (
         )
 
         return secretPrecomp to publicPrecomps
-
     }
 }
 
@@ -377,7 +367,6 @@ private fun hash(ssid: ByteArray, id: Int, epoly: ExponentPolynomial, As: Map<In
     // Compute and return the hash
     return digest.digest()
 }
-
 
 private fun xorByteArrays(a: ByteArray, b: ByteArray): ByteArray {
     require(a.size == b.size) { "Byte arrays must have the same length" }

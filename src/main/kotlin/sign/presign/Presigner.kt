@@ -310,7 +310,6 @@ class Presigner (
             throw PresignException("unknown ssid $ssid")
         }
 
-
         val rX = bigR!!.xScalar()
         val sigmaShare = rX.multiply(chiShare!!).add(Scalar.scalarFromByteArray(hash).multiply(kShare!!))
         return PartialSignature(

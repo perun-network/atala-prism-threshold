@@ -98,7 +98,6 @@ class PresignRound3Input(
             }
         }
 
-
         // Γ = ∑ⱼ Γⱼ
         var bigGamma = newPoint()
         for ((_, bigGammaShare) in bigGammaShares) {
@@ -190,7 +189,6 @@ class PresignRound3Input(
         if (j == id || presignRound2Broadcast.from != j || id != presignRound2Broadcast.to ) {
             throw PresignException("invalid id from ${presignRound2Broadcast.from} to ${presignRound2Broadcast.to} ")
         }
-
 
         // Verify M(vrfy, Πaff-g_i ,(ssid, j),(Iε,Jε, Di,j , Ki, Fj,i, Γj ), ψi,j ) = 1.
         val deltaPublic = AffgPublic(

@@ -56,7 +56,6 @@ data class Point(
         require(y >= BigInteger.ZERO && y < P) { "y-coordinate must be in range" }
     }
 
-
     /**
      * Returns the x-coordinate of this point as a Scalar.
      *
@@ -313,7 +312,6 @@ data class Scalar (
             return Scalar(value.toBigInteger().mod(N))
         }
 
-
         /**
          * Creates a scalar from a byte array.
          *
@@ -369,7 +367,6 @@ data class Scalar (
         val scalarBytes = bigIntegerToByteArray(value)
         return PrivateKey.newPrivateKey(scalarBytes)
     }
-
 
     /**
      * Converts the scalar to a byte array.

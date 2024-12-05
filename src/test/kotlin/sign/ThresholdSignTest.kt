@@ -57,7 +57,6 @@ class ThresholdSignTest {
         val Ks = mutableMapOf<Int, PaillierCipherText>() // K_i of every party
         val elGamalPublics = mutableMapOf<Int, ElGamalPublic>()
 
-
         for (i in signerIds) {
             presignRound1AllBroadcasts[i] = signers[i]!!.presignRound1(signerIds)
             Ks[i] = signers[i]!!.K!!
@@ -102,7 +101,6 @@ class ThresholdSignTest {
             partialSignatures.add(signers[i]!!.partialSignMessage(scaledPublics[i]!!.ssid, hash))
         }
         logger.info {"Finish ECDSA Partial Signing.\n"}
-
 
         // ** ECDSA SIGNING **
         val ecdsaSignature= combinePartialSignatures(signers[signerIds[0]]!!.bigR!!, partialSignatures, publicPoint, hash)

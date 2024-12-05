@@ -88,7 +88,6 @@ data class PrmProof (
             for (i in 0..PROOF_NUM -1) {
                 var z = aList[i]
 
-
                 if (eList[i]) {
                     z = (z.add(private.lambda)).mod(private.phi)
                 }
@@ -137,5 +136,3 @@ private fun challenge(
         Pair(emptyList(), e)
     }
 }
-
-

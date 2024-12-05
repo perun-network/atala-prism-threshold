@@ -21,7 +21,6 @@ import perun_network.ecdsa_threshold.sign.presign.PresignRound3Broadcast
 
 private val logger = KotlinLogging.logger {}
 
-
 /**
  * Main function to demonstrate the threshold ECDSA signing process.
  */

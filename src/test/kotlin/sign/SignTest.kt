@@ -28,7 +28,6 @@ class SignTest {
         assertTrue(parsedSignature.verifySecp256k1(hash, privateKey.publicKey()))
     }
 
-
     @Test
     fun testCustomSignature() {
         val message = "Hello".toByteArray()
