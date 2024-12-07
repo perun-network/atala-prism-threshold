@@ -3,10 +3,9 @@ package zk
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import perun_network.ecdsa_threshold.math.sampleL
-import perun_network.ecdsa_threshold.math.sampleLN
-import perun_network.ecdsa_threshold.zkproof.enc.EncPrivate
-import perun_network.ecdsa_threshold.zkproof.enc.EncProof
-import perun_network.ecdsa_threshold.zkproof.enc.EncPublic
+import perun_network.ecdsa_threshold.zero_knowledge.EncPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.EncProof
+import perun_network.ecdsa_threshold.zero_knowledge.EncPublic
 
 class EncTest {
     @Test
