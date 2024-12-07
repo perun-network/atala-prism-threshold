@@ -33,6 +33,7 @@ class ModTest {
     @Test
     fun testSet4thRoot() {
         val p = 311.toBigInteger()
+
         val q = 331.toBigInteger()
 
         val pHalf = (p - BigInteger.ONE) / BigInteger.TWO

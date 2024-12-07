@@ -27,7 +27,6 @@ class SchrTest {
         val proof = SchnorrProof.newProof(0, rid , schnorrPublic, schnorrPrivate)
         assertTrue(proof.verify(0, rid, schnorrPublic), "Proof verification failed")
 
-
         val proof2 = SchnorrProof.newProofWithCommitment(0, rid, schnorrPublic, schnorrPrivate, schnorrCommitment)
         assertTrue(proof2.verify(0, rid, schnorrPublic), "Proof with commitment verification failed")
     }

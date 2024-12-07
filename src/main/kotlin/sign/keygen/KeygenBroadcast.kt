@@ -12,7 +12,6 @@ data class KeygenRound1Broadcast (
     val VShare: ByteArray
 ) : Broadcast(ssid, from, to)
 
-
 data class KeygenRound2Broadcast (
     override val ssid: ByteArray,
     override val from: Int,

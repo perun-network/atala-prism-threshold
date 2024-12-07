@@ -58,7 +58,6 @@ data class ModProof(
         return responses.zip(ys).all { (response, y) -> response.verify(n, w, y) }
     }
 
-
     companion object {
         internal fun newProof(id: Int, rid: ByteArray, public: ModPublic, private: ModPrivate): ModProof {
             val n = public.n
@@ -145,7 +144,6 @@ private fun challenge(id: Int, rid: ByteArray, n: BigInteger, w: BigInteger): Li
     digest.update(rid)
     digest.update(n.toByteArray())
     digest.update(w.toByteArray())
-
 
     val tmpBytes = digest.digest()
 

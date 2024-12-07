@@ -98,20 +98,33 @@ class PresignRound2Input (
             ElogPrivate(gammaShare, bi)
         )
 
-
         for (j in signers) {
             if (j != id) {
                 // deltaBeta = βi,j
                 // compute DeltaD = Dᵢⱼ
                 // compute DeltaF = Fᵢⱼ
                 // compute deltaProof = ψj,i
-                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGMaterials(id, gammaShare.value, bigGammaShare, ks[j]!!.clone(), secretPaillier, publicPrecomps[j]!!.paillierPublic, publicPrecomps[j]!!.aux)
+                val (deltaBeta, deltaD, deltaF, deltaProof) = produceAffGMaterials(
+                    id,
+                    gammaShare.value,
+                    bigGammaShare,
+                    ks[j]!!.clone(),
+                    secretPaillier,
+                    publicPrecomps[j]!!.paillierPublic,
+                    publicPrecomps[j]!!.aux)
+
                 // chiBeta = β^i,j
                 // compute chiD = D^ᵢⱼ
                 // compute chiF = F^ᵢⱼ
                 // compute chiProof = ψ^j,i
-                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(id, secretECDSA.value, publicPrecomps[id]!!.publicEcdsa, ks[j]!!.clone(), secretPaillier, publicPrecomps[j]!!.paillierPublic, publicPrecomps[j]!!.aux)
-
+                val (chiBeta, chiD, chiF, chiProof) = produceAffGMaterials(
+                    id,
+                    secretECDSA.value,
+                    publicPrecomps[id]!!.publicEcdsa,
+                    ks[j]!!.clone(),
+                    secretPaillier,
+                    publicPrecomps[j]!!.paillierPublic,
+                    publicPrecomps[j]!!.aux)
 
                 val presignOutput2 = PresignRound2Broadcast(
                     ssid = ssid,
