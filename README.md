@@ -16,6 +16,7 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Test](#test)
 - [Code Structure](#code-structure)
 - [Copyright](#copyright)
 
@@ -77,6 +78,48 @@ The main entry point for the threshold signing process is located in the `main` 
 - Adjust the number of signers (`n`) and the threshold (`t`) as needed.
 
 The application will output the execution time and confirm if the ECDSA signature was generated and verified successfully.
+
+## Test
+This section describes the testing strategy and tools used to maintain code quality and reliability.
+
+### Testing Frameworks and Tools
+- **Framework**: The project uses [JUnit 5](https://junit.org/junit5/) for unit and integration testing.
+- **Build Tool Integration**: Tests are executed using Gradle's test task.
+
+### Unit Tests and Integration Tests.
+    - Test individual components (e.g., classes, functions) in isolation.
+    - Validate interactions between components.
+    - Located in `src/test/kotlin`.
+
+### Running Tests
+To execute tests locally:
+
+- **Run all tests**:
+    ```bash
+    ./gradlew test
+    ```
+- **Run a specific test class:
+    ```bash
+    ./gradlew test --tests <class_name>
+    ```
+### Test Coverage Report
+The project uses [JaCoCo](https://www.eclemma.org/jacoco/) to measure test coverage.
+
+1. Generate Coverage Report: Run the following command to generate the coverage report:
+    ```bash
+    ./gradlew jacocoTestReport
+    ```
+2. View the Report: The HTML report is available at:
+    ```bash
+    build/reports/jacoco/test/html/index.html
+    ```
+   or online at 
+[Test Report](https://perun-network.github.io/ecdsa-threshold/)
+
+3. Coverage Standards:
+   - Instruction coverage: 90% or higher.
+   - Branches coverage: 80% or higher
+   - Critical areas must be thoroughly covered.
 
 ## Code Structure
 - **`src`**: Contains all source code.
