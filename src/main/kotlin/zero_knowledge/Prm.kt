@@ -34,7 +34,7 @@ data class PrmProof (
 
         val one = BigInteger.ONE
         for (i in 0..PROOF_NUM -1) {
-            var rhs = BigInteger.ZERO
+            var rhs: BigInteger
             val z = Zs[i]
             val a = As[i]
 

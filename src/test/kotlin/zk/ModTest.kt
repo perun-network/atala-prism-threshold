@@ -3,11 +3,7 @@ package zk
 import org.junit.jupiter.api.Assertions.*
 import perun_network.ecdsa_threshold.math.sampleQuadraticNonResidue
 import perun_network.ecdsa_threshold.math.sampleRID
-import perun_network.ecdsa_threshold.paillier.paillierKeyGen
-import perun_network.ecdsa_threshold.paillier.paillierKeyGenMock
 import perun_network.ecdsa_threshold.zero_knowledge.*
-import perun_network.ecdsa_threshold.zero_knowledge.fourthRootExponent
-import perun_network.ecdsa_threshold.zero_knowledge.makeQuadraticResidue
 import java.math.BigInteger
 import kotlin.test.Test
 
@@ -17,8 +13,8 @@ class ModTest {
         ZK.initialize()
         val zkSecret = ZK.proverPaillierSecret // Initialize with proper Paillier key
         val zkPublic = zkSecret.publicKey
-        val public = _root_ide_package_.perun_network.ecdsa_threshold.zero_knowledge.ModPublic(zkPublic.n)
-        val private = _root_ide_package_.perun_network.ecdsa_threshold.zero_knowledge.ModPrivate(
+        val public = ModPublic(zkPublic.n)
+        val private = ModPrivate(
             p = zkSecret.p,
             q = zkSecret.q,
             phi = zkSecret.phi
@@ -26,7 +22,7 @@ class ModTest {
 
         val rid = sampleRID()
 
-        val proof = _root_ide_package_.perun_network.ecdsa_threshold.zero_knowledge.ModProof.newProof(0, rid, public, private)
+        val proof = ModProof.newProof(0, rid, public, private)
         assertTrue(proof.verify(0, rid, public))
     }
 
@@ -46,7 +42,7 @@ class ModTest {
         val nCRT = p.multiply(q)
         val (a, b, x) = makeQuadraticResidue(y, w, pHalf, qHalf, n, p, q)
 
-        val e = _root_ide_package_.perun_network.ecdsa_threshold.zero_knowledge.fourthRootExponent(phi)
+        val e = fourthRootExponent(phi)
         var root = x.modPow(e, nCRT)
 
         if (b) {
