@@ -59,6 +59,7 @@ data class PrmProof (
         val t = public.aux.t
 
         val one = BigInteger.ONE
+
         for (i in 0..PROOF_NUM-1) {
             var rhs: BigInteger
             val z = Zs[i]

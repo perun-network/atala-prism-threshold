@@ -21,8 +21,6 @@ class ThresholdSignTest {
         val n = 5 // Number of total parties.
         val t = 3 // Threshold of minimum required signers.
 
-        val startTime = System.currentTimeMillis() // capture the start time
-
         // Generate Precomputations (Assuming the secret primes are precomputed).
         val (ids, secretPrecomps, publicPrecomps) = getSamplePrecomputations(n, t) // Use generatePrecomputation instead to generate new safe primes.
         logger.info {"Precomputation finished for $n signerIds with threshold $t"}

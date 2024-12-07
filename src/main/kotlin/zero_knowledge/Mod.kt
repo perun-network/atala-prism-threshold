@@ -97,7 +97,6 @@ data class ModProof(
         return responses.zip(ys).all { (response, y) -> response.verify(n, w, y) }
     }
 
-
     companion object {
         /**
          * Constructs a new ZK proof.
@@ -209,7 +208,6 @@ private fun challenge(id: Int, rid: ByteArray, n: BigInteger, w: BigInteger): Li
     digest.update(rid)
     digest.update(n.toByteArray())
     digest.update(w.toByteArray())
-
 
     val tmpBytes = digest.digest()
 

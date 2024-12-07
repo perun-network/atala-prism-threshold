@@ -98,8 +98,7 @@ class Aux (
         val polynomial = newPolynomial(threshold)
 
         val ePoly = polynomial.exponentPolynomial()
-        val selfShare = polynomial.eval(Scalar.scalarFromInt(id))
-
+        val selfShare = polynomial.eval(scalarFromInt(id))
 
         // Schnorr Commitment
         val schnorrCommitments = mutableMapOf<Int, SchnorrCommitment>()
@@ -108,7 +107,6 @@ class Aux (
             schnorrCommitments[j] = SchnorrCommitment.newCommitment()
             As[j] = schnorrCommitments[j]!!.A
         }
-
 
         // Sample u_i, rid_i
         val rid = sampleRID()
@@ -127,7 +125,6 @@ class Aux (
         this.prmProof = prmProof
         this.schnorrCommitments = schnorrCommitments
         this.As = As
-
 
         val broadcasts = mutableMapOf<Int, AuxRound1Broadcast>()
         for (i in parties) {
@@ -228,7 +225,6 @@ class Aux (
                 if (!round1Broadcast.VHash.contentEquals(hash)) {
                     throw AuxException("vHash mismatch for key $party of signer $id")
                 }
-
             }
         }
 
@@ -247,7 +243,7 @@ class Aux (
         // Prove Schnorr's commitment consistency.
         val schProofs = mutableMapOf<Int, SchnorrProof>()
         for (j in parties) {
-            val jScalar = Scalar.scalarFromInt(j)
+            val jScalar = scalarFromInt(j)
             val x_j = selfPolynomial!!.eval(jScalar)
             val X_j = x_j.actOnBase()
 
@@ -263,10 +259,9 @@ class Aux (
                 )
 
                 // compute fᵢ(j)
-                val share =  selfPolynomial!!.eval(Scalar.scalarFromInt(j))
+                val share =  selfPolynomial!!.eval(scalarFromInt(j))
                 // Encrypt share
                 val (C,_) = round2Broadcasts[j]!!.paillierPublic.encryptRandom(share.value)
-
 
                 broadcasts[j] = AuxRound3Broadcast(
                     ssid = ssid,
@@ -312,7 +307,7 @@ class Aux (
                 throw AuxException("mismatch ssid for key $party of signer $id")
             }
 
-            if (round2Broadcast.from != party || round3Broadcast!!.from != party) {
+            if (round2Broadcast.from != party || round3Broadcast.from != party) {
                 throw AuxException("sender's id mismatch for key $party of signer $id")
             }
 
@@ -327,7 +322,7 @@ class Aux (
 
             // Decrypt share and verify with polynomial
             val decryptedShare = Scalar.scalarFromBigInteger(paillierSecret!!.decrypt(round3Broadcast.CShare))
-            val expectedPublicShare = round2Broadcast.ePolyShare.eval(Scalar.scalarFromInt(id))
+            val expectedPublicShare = round2Broadcast.ePolyShare.eval(scalarFromInt(id))
             // X == Fⱼ(i)
             if (expectedPublicShare != decryptedShare.actOnBase()) {
                 throw AuxException("failed to validate ECDSA Share of $party with signer $id")
@@ -366,7 +361,7 @@ class Aux (
 
         val shamirPublicPolynomial = sum(shamirPolynomials)
         for (party in parties) {
-            publicECDSA[party] = shamirPublicPolynomial.eval(Scalar.scalarFromInt(party))
+            publicECDSA[party] = shamirPublicPolynomial.eval(scalarFromInt(party))
         }
 
         if (previousShare != null && previousPublic != null) {
@@ -375,7 +370,6 @@ class Aux (
                 publicECDSA[party] = publicECDSA[party]!!.add(previousPublic[party]!!)
             }
         }
-
 
         // Compute Precomp
         val publicPrecomps = mutableMapOf<Int, PublicPrecomputation>()
@@ -397,7 +391,6 @@ class Aux (
                     aux = round2Broadcasts[party]!!.pedersenPublic
                 )
             }
-
         }
 
         // SecretPrecomputation
@@ -410,7 +403,6 @@ class Aux (
         )
 
         return secretPrecomp to publicPrecomps
-
     }
 }
 
