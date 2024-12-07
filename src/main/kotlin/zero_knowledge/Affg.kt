@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zero_knowledge.affg
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.Point

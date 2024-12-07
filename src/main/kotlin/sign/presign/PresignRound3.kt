@@ -9,7 +9,7 @@ import perun_network.ecdsa_threshold.tuple.Quintuple
 import perun_network.ecdsa_threshold.zero_knowledge.ElogPrivate
 import perun_network.ecdsa_threshold.zero_knowledge.ElogProof
 import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
-import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.AffgPublic
 import java.math.BigInteger
 
 /**

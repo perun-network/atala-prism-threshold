@@ -7,9 +7,9 @@ import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.sampleL
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zero_knowledge.logstar.LogStarPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.logstar.LogStarProof
-import perun_network.ecdsa_threshold.zero_knowledge.logstar.LogStarPublic
+import perun_network.ecdsa_threshold.zero_knowledge.LogStarPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.LogStarProof
+import perun_network.ecdsa_threshold.zero_knowledge.LogStarPublic
 import kotlin.test.Test
 
 class LogStarTest {

@@ -11,10 +11,10 @@ import perun_network.ecdsa_threshold.math.sampleLPrime
 import perun_network.ecdsa_threshold.math.sampleScalar
 import perun_network.ecdsa_threshold.paillier.*
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
-import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgProof
-import perun_network.ecdsa_threshold.zero_knowledge.affg.AffgPublic
-import perun_network.ecdsa_threshold.zero_knowledge.affg.produceAffGMaterials
+import perun_network.ecdsa_threshold.zero_knowledge.AffgPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.AffgProof
+import perun_network.ecdsa_threshold.zero_knowledge.AffgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.produceAffGMaterials
 import java.math.BigInteger
 import kotlin.test.assertEquals
 
@@ -58,6 +58,7 @@ class AffgTest {
 
         val affgProof = AffgProof.newProof(0, affgPublic, affgPrivate)
         assertTrue(affgProof.verify(0, affgPublic))
+
     }
 
     @Test
