@@ -57,7 +57,6 @@ fun main() {
     val signers = randomSigners(parties, t)
     val signerIds = signers.keys.toList()
     logger.info {"Randomly chosen signers: $signerIds" }
-    val publicKey = publicKeyFromShares(signers.keys.toList(), publicPrecomps)
 
     // Scale Secret/Public Precomputations
     val (publicPoint, _) =  scalePrecomputation(signers)
@@ -138,7 +137,7 @@ private fun scalePrecomputation(signers : Map<Int, Signer>) : Pair<Point, Map<In
 }
 
 
-private fun keygen(parties : Map<Int, Signer>) {
+private fun keyGen(parties : Map<Int, Signer>) {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
     // KEYGEN ROUND 1
@@ -183,7 +182,7 @@ private fun keygen(parties : Map<Int, Signer>) {
     }
 }
 
-private fun aux(parties: Map<Int, Signer>) : Map<Int, PublicPrecomputation> {
+private fun auxInfo(parties: Map<Int, Signer>) : Map<Int, PublicPrecomputation> {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
 
@@ -235,7 +234,7 @@ private fun aux(parties: Map<Int, Signer>) : Map<Int, PublicPrecomputation> {
     return publicPrecomp
 }
 
-private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
+private fun presign(signers: Map<Int, Signer>) : Point {
     val startTime = System.currentTimeMillis() // capture the start time
     val signerIds = signers.keys.toList()
 
