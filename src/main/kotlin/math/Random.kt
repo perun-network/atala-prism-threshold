@@ -139,7 +139,6 @@ fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
     throw IllegalStateException("Exceeded maximum iterations to find a QNR")
 }
 
-
 /**
  * Generates the parameters for the Pedersen commitment.
  *
@@ -186,8 +185,6 @@ fun sampleScalar(): Scalar {
         }
     }
 }
-
-
 
 /**
  * Generates a random integer with the given number of bits, potentially negated.
@@ -272,7 +269,6 @@ fun sampleLEpsN2(): BigInteger = sampleNeg(random, LPlusEpsilon + (2* BITS_INT_M
  * @return A randomly generated BigInteger in the range ±2^(l+ε)•√N.
  */
 fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_MOD_N/2))
-
 
 /**
  * A secure random input stream that reads bytes from a SecureRandom source.

@@ -68,7 +68,7 @@ class Aux (
         val polynomial = newPolynomial(threshold)
 
         val ePoly = polynomial.exponentPolynomial()
-        val selfShare = polynomial.eval(Scalar.scalarFromInt(id))
+        val selfShare = polynomial.eval(scalarFromInt(id))
 
         // Schnorr Commitment
         val schnorrCommitments = mutableMapOf<Int, SchnorrCommitment>()
@@ -196,7 +196,7 @@ class Aux (
         // Prove Schnorr's commitment consistency.
         val schProofs = mutableMapOf<Int, SchnorrProof>()
         for (j in parties) {
-            val jScalar = Scalar.scalarFromInt(j)
+            val jScalar = scalarFromInt(j)
             val x_j = selfPolynomial!!.eval(jScalar)
             val X_j = x_j.actOnBase()
 
@@ -212,7 +212,7 @@ class Aux (
                 )
 
                 // compute fᵢ(j)
-                val share =  selfPolynomial!!.eval(Scalar.scalarFromInt(j))
+                val share =  selfPolynomial!!.eval(scalarFromInt(j))
                 // Encrypt share
                 val (C,_) = round2Broadcasts[j]!!.paillierPublic.encryptRandom(share.value)
 
@@ -251,7 +251,7 @@ class Aux (
                 throw AuxException("mismatch ssid for key $party of signer $id")
             }
 
-            if (round2Broadcast.from != party || round3Broadcast!!.from != party) {
+            if (round2Broadcast.from != party || round3Broadcast.from != party) {
                 throw AuxException("sender's id mismatch for key $party of signer $id")
             }
 
@@ -266,7 +266,7 @@ class Aux (
 
             // Decrypt share and verify with polynomial
             val decryptedShare = Scalar.scalarFromBigInteger(paillierSecret!!.decrypt(round3Broadcast.CShare))
-            val expectedPublicShare = round2Broadcast.ePolyShare.eval(Scalar.scalarFromInt(id))
+            val expectedPublicShare = round2Broadcast.ePolyShare.eval(scalarFromInt(id))
             // X == Fⱼ(i)
             if (expectedPublicShare != decryptedShare.actOnBase()) {
                 throw AuxException("failed to validate ECDSA Share of $party with signer $id")

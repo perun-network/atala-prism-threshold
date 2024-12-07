@@ -49,7 +49,7 @@ class LogStarTest {
         }
 
         var bigGamma = newPoint()
-        for ((i, bigGammaShare) in bigGammaShares) {
+        for ((_, bigGammaShare) in bigGammaShares) {
             bigGamma = bigGamma.add(bigGammaShare)
         }
 

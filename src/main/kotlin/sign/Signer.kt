@@ -1,6 +1,5 @@
 package perun_network.ecdsa_threshold.sign
 
-import jdk.jfr.Threshold
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.shamir.lagrange
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
@@ -109,8 +108,6 @@ data class Signer(
         return aux!!.auxRound2(parties)
     }
 
-
-
     fun auxRound3(parties: List<Int>,
                   auxRound1Broadcasts : Map<Int, Map<Int, AuxRound1Broadcast>>,
                   auxRound2Broadcasts : Map<Int, Map<Int, AuxRound2Broadcast>>
@@ -146,7 +143,6 @@ data class Signer(
     fun scalePrecomputations(signers: List<Int>) : Pair<Map<Int, PublicPrecomputation>, Point> {
         val lagrangeCoefficients = lagrange(signers)
         // Initialize a map to hold the scaled precomputations
-        val scaledPrecomps = mutableMapOf<Int, SecretPrecomputation>()
         val scaledPublics = mutableMapOf<Int, PublicPrecomputation>()
 
         val scaledEcdsaShare = lagrangeCoefficients[id]!!.multiply(this.secretPrecomp!!.ecdsaShare)
