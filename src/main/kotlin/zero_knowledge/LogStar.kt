@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.logstar
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.*

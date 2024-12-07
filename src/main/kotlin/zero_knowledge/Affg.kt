@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.affg
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.Point
@@ -331,7 +331,7 @@ fun produceAffGMaterials(
             x = senderSecretShare,
             y = y,
             rho = rho,
-            rhoY= rhoY
+            rhoY = rhoY
         )
     )
     val beta = y.negate()
