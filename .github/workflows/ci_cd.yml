@@ -1,5 +1,4 @@
-name: THRESHOLD ECDSA KOTLIN CI/CD WORKFLOW
-
+name: CI
 on:
   workflow_dispatch:
 
@@ -9,6 +8,7 @@ on:
   pull_request:
     branches:
       - master
+      - feature/keygen_aux
 
 jobs:
   build:
