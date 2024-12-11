@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.affg
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.Point
@@ -151,7 +151,6 @@ class AffgProof(
             return false
         }
 
-
         val lhsEnc = n1.encryptWithNonce(z2, wY)
         val rhsEnc = (public.Y.modPowNSquared(n1, e)).modMulNSquared(n1, commitment.By)
 
@@ -214,8 +213,8 @@ class AffgProof(
             val beta = sampleLPrimeEps() // β ← ±2^(l'+ε)
 
             // r ← Z∗N0 , ry ← Z∗N1
-            val r = sampleModN(n0)
-            val ry = sampleModN(n1)
+            val r = sampleModNStar(n0)
+            val ry = sampleModNStar(n1)
 
             // γ ← ±2^l+ε· N, m ˆ ← ±2^l· N
             val gamma = sampleLEpsN()
@@ -332,7 +331,7 @@ fun produceAffGMaterials(
             x = senderSecretShare,
             y = y,
             rho = rho,
-            rhoY= rhoY
+            rhoY = rhoY
         )
     )
     val beta = y.negate()

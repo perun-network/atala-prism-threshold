@@ -4,11 +4,12 @@ import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
+import perun_network.ecdsa_threshold.sign.Broadcast
 import perun_network.ecdsa_threshold.tuple.Quintuple
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPrivate
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogProof
-import perun_network.ecdsa_threshold.zero_knowledge.elog.ElogPublic
-import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.ElogProof
+import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
+import perun_network.ecdsa_threshold.zero_knowledge.AffgPublic
 import java.math.BigInteger
 
 /**
@@ -24,15 +25,15 @@ import java.math.BigInteger
  * @property elogProof The elog proof associated with the presigning process.
  */
 data class PresignRound3Broadcast (
-    val ssid: ByteArray,
-    val from : Int,
-    val to: Int,
+    override val ssid: ByteArray,
+    override val from : Int,
+    override val to: Int,
     val chiShare : BigInteger,
     val deltaShare : BigInteger,
     val bigDeltaShare : Point,
     val gamma : Point,
     val elogProof: ElogProof
-)
+) : Broadcast(ssid, from, to)
 
 /**
  * Represents the input for the third round of the presigning process.
@@ -80,7 +81,7 @@ class PresignRound3Input(
         A2: Point,
         Yi: Point,
         a: Scalar,
-        presignRound2Broadcasts: Map<Int, Map<Int, PresignRound2Broadcast>>
+        presignRound2Broadcasts:  Map<Int, PresignRound2Broadcast>
     ) : Quintuple<Map<Int, PresignRound3Broadcast>, BigInteger, BigInteger, Point, Point>{
         val  result = mutableMapOf<Int, PresignRound3Broadcast>()
         val deltaShareAlphas= mutableMapOf<Int, BigInteger>() // DeltaShareAlpha[j] = αᵢⱼ
@@ -89,13 +90,13 @@ class PresignRound3Input(
         val chiShareBetas= mutableMapOf<Int, BigInteger>()   // ChiShareBeta[j] = β̂^ᵢⱼ
         for (j in signers) {
             if (j != id) {
-                deltaShareBetas[j] = presignRound2Broadcasts[j]!![id]!!.deltaBeta
-                chiShareBetas[j] = presignRound2Broadcasts[j]!![id]!!.chiBeta
-                deltaShareAlphas[j] = secretPaillier.decrypt(presignRound2Broadcasts[j]!![id]!!.deltaD)
-                chiShareAlphas[j] = secretPaillier.decrypt(presignRound2Broadcasts[j]!![id]!!.chiD)
+                deltaShareBetas[j] = presignRound2Broadcasts[j]!!.deltaBeta
+                chiShareBetas[j] = presignRound2Broadcasts[j]!!.chiBeta
+                deltaShareAlphas[j] = secretPaillier.decrypt(presignRound2Broadcasts[j]!!.deltaD)
+                chiShareAlphas[j] = secretPaillier.decrypt(presignRound2Broadcasts[j]!!.chiD)
+                chiShareAlphas[j] = secretPaillier.decrypt(presignRound2Broadcasts[j]!!.chiD)
             }
         }
-
 
         // Γ = ∑ⱼ Γⱼ
         var bigGamma = newPoint()
@@ -188,7 +189,6 @@ class PresignRound3Input(
         if (j == id || presignRound2Broadcast.from != j || id != presignRound2Broadcast.to ) {
             throw PresignException("invalid id from ${presignRound2Broadcast.from} to ${presignRound2Broadcast.to} ")
         }
-
 
         // Verify M(vrfy, Πaff-g_i ,(ssid, j),(Iε,Jε, Di,j , Ki, Fj,i, Γj ), ψi,j ) = 1.
         val deltaPublic = AffgPublic(

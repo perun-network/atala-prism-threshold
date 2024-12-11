@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.logstar
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.*
@@ -90,7 +90,7 @@ class LogStarProof(
             val n = public.n0.n
 
             val alpha = sampleLEps()
-            val r = sampleModN(n)
+            val r = sampleModNStar(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 

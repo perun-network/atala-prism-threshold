@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.enc
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*
@@ -84,7 +84,7 @@ data class EncProof(
             val n = public.n0.n
 
             val alpha = sampleLEps()
-            val r = sampleModN(n)
+            val r = sampleModNStar(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 

@@ -2,6 +2,7 @@ package perun_network.ecdsa_threshold.math.shamir
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
+import perun_network.ecdsa_threshold.ecdsa.newPoint
 import perun_network.ecdsa_threshold.math.shamir.Polynomial.Companion.newPolynomial
 import perun_network.ecdsa_threshold.math.sampleScalar
 import java.math.BigInteger
@@ -23,11 +24,10 @@ class Polynomial (
          * @param degree The degree of the polynomial.
          * @return A polynomial with randomly sampled coefficients.
          */
-        fun newPolynomial(degree: Int) : Polynomial {
+        fun newPolynomial(degree: Int, constant : Scalar = sampleScalar()) : Polynomial {
             val coefficients = mutableListOf<Scalar>()
 
             // sample a0
-            val constant = sampleScalar()
             coefficients.add(constant)
 
             for (i in 1..degree) {
@@ -50,6 +50,21 @@ class Polynomial (
             result = result.multiply(x).add(coefficients[i])
         }
         return result
+    }
+
+    fun exponentPolynomial(): ExponentPolynomial {
+        val coefficients = mutableListOf<Point>()
+        val isConstant = this.coefficients[0].isZero()
+
+        for (i in 0..<this.coefficients.size) {
+            if (i == 0 && isConstant) {
+                continue
+            }
+
+            coefficients.add(this.coefficients[i].actOnBase())
+        }
+
+        return ExponentPolynomial(isConstant, coefficients)
     }
 }
 

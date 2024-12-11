@@ -8,17 +8,15 @@ import java.security.SecureRandom
 
 // Security parameter definition
 const val SecParam = 256
+const val SEC_BYTES = SecParam / 8
 const val L = 1 * SecParam     // = 256
 const val LPrime = 5 * SecParam     // = 1280
 const val Epsilon = 2 * SecParam     // = 512
 const val LPlusEpsilon = L + Epsilon      // = 768
 const val LPrimePlusEpsilon = LPrime + Epsilon // 1792
-
-const val BitsIntModN = 8 * SecParam    // = 2048
-
+const val BITS_INT_MOD_N = 8 * SecParam    // = 2048
 const val BitsBlumPrime = 4 * SecParam      // = 1024
 const val BitsPaillier = 2 * BitsBlumPrime // = 2048
-
 
 /**
  * Maximum number of iterations for random sampling.
@@ -55,8 +53,14 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
+fun sampleRID() : ByteArray {
+    val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
+    random.read(byteArray)   // Fill the array with random bytes
+    return byteArray
+}
+
 /**
- * Samples a random element from the group of integers modulo `n` that is co-prime to `n`.
+ * Samples a random element from the group of integers modulo `n` that is co-prime to `n` (u ∈ ℤₙˣ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -64,7 +68,7 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
  * @return A random BigInteger in ℤₙ that is co-prime to `n`.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-fun sampleModN(n: BigInteger): BigInteger {
+fun sampleModNStar(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
@@ -76,7 +80,7 @@ fun sampleModN(n: BigInteger): BigInteger {
 }
 
 /**
- * Samples a random element from the integers modulo `n`.
+ * Samples a random element from the integers modulo `n` (u ∈ ℤₙ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -84,15 +88,30 @@ fun sampleModN(n: BigInteger): BigInteger {
  * @return A random BigInteger in ℤₙ.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-private fun modN(n: BigInteger): BigInteger {
+fun sampleModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
     val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
-        val candidate = BigInteger(buf)
+        val candidate = BigInteger(1, buf)
         if (candidate < n) return candidate
     }
     throw ERR_MAX_ITERATIONS
+}
+
+fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
+    val buffer = ByteArray(BITS_INT_MOD_N / 8)
+    repeat(MAX_ITERATIONS) {
+        // Generate a random number modulo n
+        random.read(buffer)
+        val candidate = BigInteger(1, buffer).mod(n)
+
+        // Check if it's a quadratic non-residue
+        if (jacobi(candidate, n) == -1) {
+            return candidate
+        }
+    }
+    throw IllegalStateException("Exceeded maximum iterations to find a QNR")
 }
 
 /**
@@ -106,8 +125,8 @@ private fun modN(n: BigInteger): BigInteger {
  * @return A Triple containing the values `(s, t, λ)`.
  */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
-    val lambda = modN(phi)
-    val tau  = sampleModN(n)
+    val lambda = sampleModN(phi)
+    val tau  = sampleModNStar(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)
@@ -141,8 +160,6 @@ fun sampleScalar(): Scalar {
         }
     }
 }
-
-
 
 /**
  * Generates a random integer with the given number of bits, potentially negated.
@@ -192,15 +209,20 @@ fun sampleLPrimeEps(): BigInteger = sampleNeg(random, LPrimePlusEpsilon)
  *
  * @return A randomly generated BigInteger within the specified range.
  */
-fun sampleLN(): BigInteger = sampleNeg(random, L + BitsIntModN)
+fun sampleLN(): BigInteger = sampleNeg(random, L + BITS_INT_MOD_N)
+
+fun sampleLN2(): BigInteger = sampleNeg(random, L + (2* BITS_INT_MOD_N))
 
 /**
  * Samples a random integer in the range ±2^(l+ε)•N.
  *
  * @return A randomly generated BigInteger within the specified range.
  */
-fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BitsIntModN)
+fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BITS_INT_MOD_N)
 
+fun sampleLEpsN2(): BigInteger = sampleNeg(random, LPlusEpsilon + (2* BITS_INT_MOD_N))
+
+fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_MOD_N/2))
 
 /**
  * A secure random input stream that reads bytes from a SecureRandom source.

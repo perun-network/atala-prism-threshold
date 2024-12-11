@@ -7,10 +7,10 @@ import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.sampleL
 import perun_network.ecdsa_threshold.math.sampleLPrime
 import perun_network.ecdsa_threshold.math.sampleScalar
-import perun_network.ecdsa_threshold.zkproof.affg.AffgPrivate
-import perun_network.ecdsa_threshold.zkproof.affg.AffgProof
-import perun_network.ecdsa_threshold.zkproof.affg.AffgPublic
-import perun_network.ecdsa_threshold.zkproof.affg.produceAffGMaterials
+import perun_network.ecdsa_threshold.zero_knowledge.AffgPrivate
+import perun_network.ecdsa_threshold.zero_knowledge.AffgProof
+import perun_network.ecdsa_threshold.zero_knowledge.AffgPublic
+import perun_network.ecdsa_threshold.zero_knowledge.produceAffGMaterials
 import java.math.BigInteger
 import kotlin.test.assertEquals
 
@@ -32,7 +32,7 @@ class AffgTest {
         val (Y, rhoY) = prover.encryptRandom(y)
 
         val Cx = C.clone().modPowNSquared(verifierPaillier, x)
-        var (Dtmp, rho) = verifierPaillier.encryptRandom(y)
+        val (Dtmp, rho) = verifierPaillier.encryptRandom(y)
         val D = Dtmp.modMulNSquared(verifierPaillier, Cx)
 
         val affgPublic = AffgPublic(
