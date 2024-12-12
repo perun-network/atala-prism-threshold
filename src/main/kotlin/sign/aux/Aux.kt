@@ -47,7 +47,7 @@ import java.security.MessageDigest
  * @param rid The random identifier of the current iteration of precomputations.
  * @param uShare The u_i value used in the Aux-Info protocol.
  * @param paillierSecret The Paillier secret key for encryption.
- * @param paillierPublic The Paillier public key for encryption.
+ * @param paillierPublic The Paillier public key for decryption.
  * @param pedersenLambda The lambda value for the Pedersen commitment.
  * @param pedersenPublic The public parameters for the Pedersen commitment.
  * @param prmProof The proof for the Pedersen commitment.

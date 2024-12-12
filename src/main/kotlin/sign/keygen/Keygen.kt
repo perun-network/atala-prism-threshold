@@ -12,7 +12,7 @@ import java.security.MessageDigest
 
 /**
  * Keygen is used to generate the public and private keys for a threshold ECDSA signature
- * scheme through multiple rounds of communication between parties. The process involves sampling shares,
+ * scheme through multiple rounds of communication between parties in a decentralized manner. The process involves sampling shares,
  * creating commitments, verifying proofs, and computing final keys.
  *
  * @property ssid The unique session identifier for the protocol.

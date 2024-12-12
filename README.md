@@ -22,10 +22,9 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 
 ## Features
 
-- Threshold ECDSA signing, where a subset of signers can generate a valid signature.
-- Zero-knowledge proofs for enhanced security and privacy during the signing process.
-- Support for multi-party computations, ensuring that no single party has complete control over the signing process.
-- Integration with Paillier and Pedersen cryptographic schemes for secure data encryption and commitment.
+- Threshold ECDSA signing with preprocessing, where subsets of t signers can create signatures in one round.
+- Implementation of the Paillier encryption scheme and Pedersen commitments.
+- Zero-knowledge proofs to prove the validity of computations along the execution of the protocol.
 - The protocol can be integrated to [Apollo](https://github.com/hyperledger/identus-apollo) to be used in crypto services and the threshold Signature can be translated to Apollo's ECDSA Secp256k1 implementation.
 
 ## Architecture
@@ -33,13 +32,13 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 The project is structured into several packages:
 
 - **`ecdsa`**: Core ECDSA functionalities and mathematical operations.
-- **`precomp`**: Centralised key generation and precomputation.
+- **`precomp`**: Centralized key generation and precomputation.
 - **`math`**: Mathematical operations and utilities used throughout the signing process.
 - **`paillier`**: Implementation of the Paillier cryptosystem for encryption.
 - **`pedersen`**: Pedersen commitment scheme with parameter generation.
 - **`sign`**: Signing process management and partial signature combination.
   - **`keygen`**: 3-round Key generation protocol.
-  - **`keygen`**: 3-round auxiliary-info generation/refresh protocol.
+  - **`aux`**: 3-round key refresh/auxiliary-info protocol.
   - **`presign`**: 3-round presigning protocol.
 - **`zero_knowledge`**: Zero-knowledge proof implementations.
 
@@ -125,7 +124,7 @@ The project uses [JaCoCo](https://www.eclemma.org/jacoco/) to measure test cover
 - **`src`**: Contains all source code.
   - **`main`**: Contains main functionality.
     - **`ecdsa`**: Core functionalities.
-    - **`precomp`**: Key generation and precomputation.
+    - **`precomp`**: Centralized key generation and precomputation.
     - **`math`**: Mathematical operations and utilities.
     - **`paillier`**: Paillier cryptosystem implementation.
     - **`pedersen`**: Pedersen commitment management.
