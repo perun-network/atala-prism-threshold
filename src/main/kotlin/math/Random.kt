@@ -53,7 +53,6 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
     throw ERR_MAX_ITERATIONS
 }
 
-
 /**
  * Generates a random identifier (RID) as a secure random byte array.
  *

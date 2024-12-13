@@ -174,6 +174,7 @@ class AuxTest {
             round3AllBroadcasts[i] = auxSigners[i]!!.auxRound3(parties, incomingRound1Broadcasts, incomingRound2Broadcasts)
         }
 
+        // Remove a round 2 broadcast entry.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -182,6 +183,7 @@ class AuxTest {
             }
         }
 
+        // Modify ssid.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -204,7 +206,7 @@ class AuxTest {
             }
         }
 
-
+        // Modify sender's id.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -227,6 +229,7 @@ class AuxTest {
             }
         }
 
+        // Modify receiver's id.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -249,7 +252,7 @@ class AuxTest {
             }
         }
 
-        // Modify paillier Publics
+        // Modify Paillier's Public.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -273,7 +276,7 @@ class AuxTest {
             }
         }
 
-        // Modify Pedersen Publics
+        // Modify Pedersen Public.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -297,7 +300,7 @@ class AuxTest {
             }
         }
 
-        // Modify As
+        // Modify As.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -321,7 +324,7 @@ class AuxTest {
             }
         }
 
-        // Modify prmProof
+        // Modify prmProof.
         assertFailsWith<AuxException> {
             for (i in parties) {
                 val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -344,7 +347,7 @@ class AuxTest {
                 round3AllBroadcasts[i] = auxSigners[i]!!.auxRound3(parties, incomingRound1Broadcasts, modifiedRound2Broadcasts)
             }
 
-            // Modify ePolyShare
+            // Modify ePolyShare.
             assertFailsWith<AuxException> {
                 for (i in parties) {
                     val incomingRound1Broadcasts = filterIncomingBroadcast(i, round1AllBroadcasts)
@@ -410,7 +413,7 @@ class AuxTest {
         }
 
         // AUX OUTPUT
-
+        // Remove an entry from Broadcasts.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -425,6 +428,7 @@ class AuxTest {
             }
         }
 
+        // Modify ssid.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -453,7 +457,7 @@ class AuxTest {
             }
         }
 
-
+        // Modify sender's id.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -482,6 +486,7 @@ class AuxTest {
             }
         }
 
+        // Modify receiver's id.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -510,7 +515,7 @@ class AuxTest {
             }
         }
 
-        // Modify paillier Publics
+        // Modify Paillier's Public.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -540,7 +545,7 @@ class AuxTest {
             }
         }
 
-        // Modify Pedersen Publics
+        // Modify Pedersen Publics.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -570,6 +575,7 @@ class AuxTest {
             }
         }
 
+        // Modify ModProof.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -597,6 +603,7 @@ class AuxTest {
             }
         }
 
+        // Modify FacProof.
         assertFailsWith<AuxException> {
                 for (i in parties) {
                     val incomingRound2Broadcasts = filterIncomingBroadcast(i, round2AllBroadcasts)
@@ -622,6 +629,7 @@ class AuxTest {
                 }
         }
 
+        // Modify Schnorr's Proof.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {
@@ -649,6 +657,7 @@ class AuxTest {
             }
         }
 
+        // Modify C_i.
         assertFailsWith<AuxException> {
             val allPublics = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
             for (i in parties) {

@@ -361,6 +361,7 @@ class KeygenTest {
             }
         }
 
+        // Modify Schnorr's Proof
         assertFailsWith<KeygenException> {
             for (i in parties) {
                 val incomingRound3Broadcasts = filterIncomingBroadcast(i, round3AllBroadcasts)
@@ -370,7 +371,7 @@ class KeygenTest {
                 val copyId = (i+2)%n + 1
                 modifiedRound3Broadcasts[modifiedId] = KeygenRound3Broadcast(
                     ssid = incomingRound3Broadcasts[modifiedId]!!.ssid,
-                    from = incomingRound3Broadcasts[copyId]!!.from,
+                    from = incomingRound3Broadcasts[modifiedId]!!.from,
                     to = incomingRound3Broadcasts[modifiedId]!!.to,
                     schnorrProof = incomingRound3Broadcasts[copyId]!!.schnorrProof,
                 )

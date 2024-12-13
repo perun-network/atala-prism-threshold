@@ -284,7 +284,7 @@ class Presigner (
         // Δ == [δ]G
         val deltaComputed = delta.actOnBase()
         if (deltaComputed != bigDelta) {
-            throw Exception("computed Δ is inconsistent with [δ]G")
+            throw PresignException("computed Δ is inconsistent with [δ]G")
         }
 
         // R = Γ^δ−1
