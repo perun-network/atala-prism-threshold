@@ -55,6 +55,11 @@ data class PedersenParameters(
         return lhs == rhs
     }
 
+    /**
+     * Serializes the Pedersen parameters to a byte array.
+     *
+     * @return The serialized byte array representation.
+     */
     fun toByteArray(): ByteArray {
         // Convert each BigInteger to its byte array representation
         val nBytes = n.toByteArray()

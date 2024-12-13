@@ -115,4 +115,15 @@ class PrivateKey (
     fun toByteArray() : ByteArray {
         return value
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is PrivateKey) {
+            return false
+        }
+        return this.value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int {
+        return value.contentHashCode()
+    }
 }

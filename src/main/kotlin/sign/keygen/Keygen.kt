@@ -10,6 +10,14 @@ import perun_network.ecdsa_threshold.zero_knowledge.SchnorrProof
 import perun_network.ecdsa_threshold.zero_knowledge.SchnorrPublic
 import java.security.MessageDigest
 
+/**
+ * Keygen is used to generate the public and private keys for a threshold ECDSA signature
+ * scheme through multiple rounds of communication between parties in a decentralized manner. The process involves sampling shares,
+ * creating commitments, verifying proofs, and computing final keys.
+ *
+ * @property ssid The unique session identifier for the protocol.
+ * @property id The identifier of the current party (signer) in the protocol.
+ */
 data class Keygen (
     val ssid: ByteArray,
     val id: Int,
@@ -26,6 +34,13 @@ data class Keygen (
     // KEYGEN ROUND 3
     private var rho : Scalar? = null,
 ) {
+    /**
+     * Initiates the first round of key generation, which involves sampling a private share and generating
+     * corresponding public commitments.
+     *
+     * @param parties A list of party identifiers (signers) in the protocol.
+     * @return A map of `KeygenRound1Broadcast` messages to be sent to other parties.
+     */
     fun keygenRound1(parties: List<Int>) : Map<Int, KeygenRound1Broadcast> {
         val broadcasts = mutableMapOf<Int, KeygenRound1Broadcast>()
 
@@ -62,6 +77,12 @@ data class Keygen (
         return broadcasts
     }
 
+    /**
+     * Initiates the second round of key generation, sending necessary shares and commitments to other parties.
+     *
+     * @param parties A list of party identifiers (signers) in the protocol.
+     * @return A map of `KeygenRound2Broadcast` messages to be sent to other parties.
+     */
     fun keygenRound2(
         parties: List<Int>,
     ) : Map<Int, KeygenRound2Broadcast> {
@@ -83,6 +104,16 @@ data class Keygen (
         return broadcasts
     }
 
+    /**
+     * Initiates the third round of key generation, which involves computing and verifying the Schnorr proof
+     * and aggregating the shares to generate the final public key.
+     *
+     * @param parties A list of party identifiers (signers) in the protocol.
+     * @param keygenRound1Broadcasts A map of `KeygenRound1Broadcast` messages from the first round.
+     * @param keygenRound2Broadcasts A map of `KeygenRound2Broadcast` messages from the second round.
+     * @return A map of `KeygenRound3Broadcast` messages to be sent to other parties.
+     * @throws KeygenException if any of the broadcasts are invalid or mismatched.
+     */
     fun keygenRound3(
         parties: List<Int>,
         keygenRound1Broadcasts: Map<Int, KeygenRound1Broadcast>,
@@ -146,6 +177,15 @@ data class Keygen (
         return broadcasts
     }
 
+    /**
+     * Finalizes the key generation process, verifying the third round broadcasts and computing the final public key.
+     *
+     * @param parties A list of party identifiers (signers) in the protocol.
+     * @param keygenRound2Broadcasts A map of `KeygenRound2Broadcast` messages from the second round.
+     * @param keygenRound3Broadcasts A map of `KeygenRound3Broadcast` messages from the third round.
+     * @return A `Triple` containing the private share, the public shares from all parties, and the aggregated public key.
+     * @throws KeygenException if any of the broadcasts are invalid or mismatched.
+     */
     fun keygenOutput(
         parties: List<Int>,
         keygenRound2Broadcasts: Map<Int, KeygenRound2Broadcast>,
@@ -194,6 +234,17 @@ data class Keygen (
     }
 }
 
+/**
+ * Computes the hash based on multiple inputs using SHA-256.
+ *
+ * @param ssid The session identifier.
+ * @param id The identifier of the current party.
+ * @param rhoShare The scalar share for ρ.
+ * @param publicShare The public share corresponding to the private share.
+ * @param A The point associated with the Schnorr commitment.
+ * @param uShare A random value for the protocol.
+ * @return The computed hash value.
+ */
 private fun hash(ssid: ByteArray, id: Int, rhoShare: Scalar, publicShare: Point, A: Point, uShare: ByteArray) : ByteArray {
     // Initialize a MessageDigest for SHA-256
     val digest = MessageDigest.getInstance("SHA-256")

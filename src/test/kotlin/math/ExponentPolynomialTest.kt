@@ -9,7 +9,7 @@ import perun_network.ecdsa_threshold.math.shamir.sum
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ExponenPolynomialTest {
+class ExponentPolynomialTest {
     @Test
     fun testExponentEvaluate() {
         var lhs: Point
