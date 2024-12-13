@@ -2,10 +2,7 @@ package perun_network.ecdsa_threshold.math.shamir
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
-import perun_network.ecdsa_threshold.ecdsa.newPoint
-import perun_network.ecdsa_threshold.math.shamir.Polynomial.Companion.newPolynomial
 import perun_network.ecdsa_threshold.math.sampleScalar
-import java.math.BigInteger
 
 /**
  * Polynomial represents a function f(X) = a₀ + a₁⋅X + … + aₜ⋅Xᵗ.
@@ -52,6 +49,12 @@ class Polynomial (
         return result
     }
 
+    /**
+     * Converts this polynomial into an exponent polynomial.
+     * Each coefficient is treated as a scalar acting on the curve base point.
+     *
+     * @return The corresponding ExponentPolynomial.
+     */
     fun exponentPolynomial(): ExponentPolynomial {
         val coefficients = mutableListOf<Point>()
         val isConstant = this.coefficients[0].isZero()

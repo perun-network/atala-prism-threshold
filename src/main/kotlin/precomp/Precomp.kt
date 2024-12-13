@@ -45,6 +45,12 @@ class PublicPrecomputation (
     val paillierPublic : PaillierPublic,
     val aux: PedersenParameters
 ) {
+    /**
+     * Checks equality between this [PublicPrecomputation] and another object.
+     *
+     * @param other The object to compare with.
+     * @return `true` if the other object is a [PublicPrecomputation] with the same byte array, otherwise `false`.
+     */
     override fun equals(other: Any?): Boolean {
         if (other !is PublicPrecomputation) return false
         return id == other.id
