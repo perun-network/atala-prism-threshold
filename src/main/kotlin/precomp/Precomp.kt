@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.keygen
+package perun_network.ecdsa_threshold.precomp
 
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.PublicKey

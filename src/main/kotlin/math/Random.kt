@@ -274,7 +274,7 @@ fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_
  *
  * @param secureRandom The SecureRandom instance used for generating random bytes.
  */
-private class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
+internal class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
 
     /**
      * Reads a single byte from the input stream.

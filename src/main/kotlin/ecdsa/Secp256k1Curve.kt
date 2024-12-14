@@ -197,19 +197,6 @@ data class Point(
 }
 
 /**
- * Converts a byte array into a Point on the secp256k1 curve.
- *
- * @param bytes The byte array to convert.
- * @return The resulting Point.
- */
-fun byteArrayToPoint(bytes: ByteArray): Point {
-    require(bytes.size == 65)
-    val x = BigInteger(bytes.copyOfRange(1, 33)).mod(P)
-    val y = BigInteger(bytes.copyOfRange(33, bytes.size)).mod(P)
-    return Point(x, y)
-}
-
-/**
  * Creates a new base point (G) on the secp256k1 curve.
  *
  * @return The base point (G).
@@ -236,7 +223,7 @@ fun newPoint() : Point {
  * @param bi The BigInteger to convert.
  * @return The resulting byte array.
  */
-fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
+internal fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     val bytes = bi.toByteArray()
 
     return when {
@@ -245,8 +232,7 @@ fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
         // If it's smaller, pad with leading zeros
         bytes.size < 32 -> ByteArray(32) { i -> if (i < 32 - bytes.size) 0 else bytes[i - (32 - bytes.size)] }
         // If it's larger, truncate it to the first 32 bytes
-        bytes.size > 32 -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
-        else -> bytes
+        else -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
     }
 }
 

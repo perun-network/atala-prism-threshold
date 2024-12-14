@@ -4,10 +4,10 @@ import mu.KotlinLogging
 import org.kotlincrypto.hash.sha2.SHA256
 import perun_network.ecdsa_threshold.ecdsa.PartialSignature
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
-import perun_network.ecdsa_threshold.keygen.generateSessionId
-import perun_network.ecdsa_threshold.keygen.publicKeyFromShares
-import perun_network.ecdsa_threshold.sign.ThresholdSigner
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.generateSessionId
+import perun_network.ecdsa_threshold.precomp.publicKeyFromShares
+import perun_network.ecdsa_threshold.sign.Signer
 import perun_network.ecdsa_threshold.sign.aux.AuxRound1Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound2Broadcast
 import perun_network.ecdsa_threshold.sign.aux.AuxRound3Broadcast
@@ -32,15 +32,14 @@ fun main() {
     val startTime = System.currentTimeMillis() // capture the start time
 
     val ssid = generateSessionId()
-    val parties = mutableMapOf<Int, ThresholdSigner>()
+    val parties = mutableMapOf<Int, Signer>()
     for (i in 1..n) {
-        parties[i] = ThresholdSigner(
+        parties[i] = Signer(
             id = i,
             ssid = ssid,
             threshold = t,
         )
     }
-
     // KEY GENERATION
     logger.info {"Key generation started for $n signers with threshold $t "}
     keyGen(parties)
@@ -57,12 +56,12 @@ fun main() {
     // Determine signerIds
     val signers = randomSigners(parties, t)
     val signerIds = signers.keys.toList()
-    logger.info { "Randomly chosen signers: $signerIds" }
+    logger.info {"Randomly chosen signers: $signerIds" }
 
     // Scale Secret/Public Precomputations
-    val (publicPoint, scaledPrecomps) =  scalePrecomputation(signers)
+    val (publicPoint, _) =  scalePrecomputation(signers)
     if (publicKey != publicPoint.toPublicKey()) {
-        logger.error { IllegalStateException("Inconsistent public Key") }
+        throw IllegalStateException("Inconsistent public Key")
     }
     logger.info {"Scaled precomputations finished."}
 
@@ -76,7 +75,7 @@ fun main() {
     val hash = SHA256().digest(message.toByteArray())
 
     // ** PARTIAL SIGNING **
-    logger.info {"Partial signing the message: \"$message\""}
+    logger.info {"Partial signing the message: \"$message\"" }
     val partialSignatures = partialSignMessage(signers, hash)
     logger.info {"Finish ECDSA Partial Signing."}
 
@@ -95,7 +94,7 @@ fun main() {
     val endTime = System.currentTimeMillis() // End time in milliseconds
     val elapsedTime = (endTime - startTime) / 1000.0 // Convert milliseconds to seconds
 
-    logger.info {"Execution time: $elapsedTime seconds"}
+    logger.info {"Execution time: $elapsedTime seconds" }
 }
 
 /**
@@ -105,7 +104,7 @@ fun main() {
  * @param t The number of signerIds to randomly select.
  * @return A map containing t randomly selected signer IDs and their corresponding ThresholdSigners.
  */
-private fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, ThresholdSigner> {
+fun randomSigners(parties: Map<Int, Signer>, t: Int): Map<Int, Signer> {
     require(t <= parties.size) { "t must be less than or equal to the number of parties." }
     require(t > 0) { "t must be greater than 0." }
 
@@ -118,7 +117,7 @@ private fun randomSigners(parties: Map<Int, ThresholdSigner>, t: Int): Map<Int, 
     return parties.filterKeys { it in signerIds }
 }
 
-private fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Point, Map<Int, PublicPrecomputation>> {
+private fun scalePrecomputation(signers : Map<Int, Signer>) : Pair<Point, Map<Int, PublicPrecomputation>> {
     val publicPoints = mutableMapOf<Int, Point>()
     val publicAllPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
     for (i in signers.keys.toList()) {
@@ -137,10 +136,10 @@ private fun scalePrecomputation(signers : Map<Int, ThresholdSigner>) : Pair<Poin
     return referencePoint to referencePrecomp
 }
 
-private fun keyGen(parties : Map<Int, ThresholdSigner>) {
+
+private fun keyGen(parties : Map<Int, Signer>) {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
-
     // KEYGEN ROUND 1
     logger.info {"KEYGEN ROUND 1 started." }
     val keygenRound1AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound1Broadcast>>()
@@ -150,15 +149,15 @@ private fun keyGen(parties : Map<Int, ThresholdSigner>) {
     logger.info {"KEYGEN ROUND 1 finished." }
 
     // KEYGEN ROUND 2
-    logger.info {"KEYGEN ROUND 2 started."}
+    logger.info {"KEYGEN ROUND 2 started." }
     val keygenRound2AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound2Broadcast>>()
     for (i in partyIds) {
         keygenRound2AllBroadcasts[i] = parties[i]!!.keygenRound2(partyIds)
     }
-    logger.info {"KEYGEN ROUND 2 finished."}
+    logger.info {"KEYGEN ROUND 2 finished." }
 
     // KEYGEN ROUND 3
-    logger.info {"KEYGEN ROUND 3 started."}
+    logger.info {"KEYGEN ROUND 3 started." }
     val keygenRound3AllBroadcasts = mutableMapOf<Int, Map<Int, KeygenRound3Broadcast>>()
     for (i in partyIds) {
         keygenRound3AllBroadcasts[i] = parties[i]!!.keygenRound3(partyIds, keygenRound1AllBroadcasts, keygenRound2AllBroadcasts)
@@ -166,7 +165,7 @@ private fun keyGen(parties : Map<Int, ThresholdSigner>) {
     logger.info {"KEYGEN ROUND 3 finished."}
 
     // KEYGEN OUTPUT
-    logger.info {"PROCESS KEYGEN OUTPUT."}
+    logger.info {"PROCESS KEYGEN OUTPUT." }
     val publicPoints = mutableMapOf<Int, Point>()
     for (i in partyIds) {
         publicPoints[i] = parties[i]!!.keygenOutput(partyIds, keygenRound2AllBroadcasts, keygenRound3AllBroadcasts)
@@ -183,12 +182,12 @@ private fun keyGen(parties : Map<Int, ThresholdSigner>) {
     }
 }
 
-private fun auxInfo(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomputation> {
+private fun auxInfo(parties: Map<Int, Signer>) : Map<Int, PublicPrecomputation> {
     val startTime = System.currentTimeMillis() // capture the start time
     val partyIds = parties.keys.toList()
 
     // AUX ROUND 1
-    logger.info {"AUX ROUND 1 started."}
+    logger.info {"AUX ROUND 1 started." }
     val auxRound1AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound1Broadcast>>()
     for (i in partyIds) {
         auxRound1AllBroadcasts[i] = parties[i]!!.auxRound1(partyIds)
@@ -196,7 +195,7 @@ private fun auxInfo(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomp
     logger.info {"AUX ROUND 1 finished."}
 
     // AUX ROUND 2
-    logger.info {"AUX ROUND 2 started."}
+    logger.info {"AUX ROUND 2 started." }
     val auxRound2AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound2Broadcast>>()
     for (i in partyIds) {
         auxRound2AllBroadcasts[i] = parties[i]!!.auxRound2(partyIds)
@@ -204,7 +203,7 @@ private fun auxInfo(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomp
     logger.info {"AUX ROUND 2 finished."}
 
     // AUX ROUND 3
-    logger.info {"AUX ROUND 3 started."}
+    logger.info {"AUX ROUND 3 started." }
     val auxRound3AllBroadcasts = mutableMapOf<Int, Map<Int, AuxRound3Broadcast>>()
     for (i in partyIds) {
         auxRound3AllBroadcasts[i] = parties[i]!!.auxRound3(partyIds, auxRound1AllBroadcasts, auxRound2AllBroadcasts)
@@ -212,7 +211,7 @@ private fun auxInfo(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomp
     logger.info {"AUX ROUND 3 finished."}
 
     // AUX OUTPUT
-    logger.info {"PROCESS AUX OUTPUT."}
+    logger.info {"PROCESS AUX OUTPUT." }
     val publicPrecomps = mutableMapOf<Int, Map<Int, PublicPrecomputation>>()
     for (i in partyIds) {
         publicPrecomps[i] = parties[i]!!.auxOutput(partyIds, auxRound2AllBroadcasts, auxRound3AllBroadcasts)
@@ -224,16 +223,23 @@ private fun auxInfo(parties: Map<Int, ThresholdSigner>) : Map<Int, PublicPrecomp
 
     // Check all public Points
     val publicPrecomp = publicPrecomps[partyIds[0]]!!
+    for (i in partyIds) {
+        for (j in partyIds) {
+            if (publicPrecomps[i]!![j]!! != publicPrecomp[j]) {
+                throw IllegalStateException("Inconsistent public precomputations of index $j from party $i.")
+            }
+        }
+    }
 
     return publicPrecomp
 }
 
-private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
+private fun presign(signers: Map<Int, Signer>) : Point {
     val startTime = System.currentTimeMillis() // capture the start time
     val signerIds = signers.keys.toList()
 
     // PRESIGN ROUND 1
-    logger.info {"PRESIGN ROUND1 started."}
+    logger.info {"PRESIGN ROUND1 started." }
     val presignRound1AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound1Broadcast>>()
     for (i in signerIds) {
         presignRound1AllBroadcasts[i] = signers[i]!!.presignRound1(signerIds)
@@ -241,7 +247,7 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     logger.info {"PRESIGN ROUND 1 finished."}
 
     // PRESIGN ROUND 2
-    logger.info {"PRESIGN ROUND 2 started."}
+    logger.info {"PRESIGN ROUND 2 started." }
     val presignRound2AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound2Broadcast>>()
     for (i in signerIds) {
         presignRound2AllBroadcasts[i] = signers[i]!!.presignRound2(signerIds, presignRound1AllBroadcasts)
@@ -249,7 +255,7 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     logger.info {"PRESIGN ROUND 2 finished."}
 
     // PRESIGN ROUND 3
-    logger.info {"PRESIGN ROUND 3 started."}
+    logger.info {"PRESIGN ROUND 3 started." }
     val presignRound3AllBroadcasts = mutableMapOf<Int, Map<Int, PresignRound3Broadcast>>()
     for (i in signerIds) {
         presignRound3AllBroadcasts[i] = signers[i]!!.presignRound3(signerIds, presignRound2AllBroadcasts)
@@ -257,7 +263,7 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     logger.info {"PRESIGN ROUND 3 finished."}
 
     // PRESIGN OUTPUT
-    logger.info {"Process PRESIGN output."}
+    logger.info {"Process PRESIGN output." }
     val bigRs = mutableMapOf<Int, Point>()
     for (i in signerIds) {
         bigRs[i] = signers[i]!!.presignOutput(signerIds, presignRound3AllBroadcasts)
@@ -274,7 +280,7 @@ private fun presign(signers: Map<Int, ThresholdSigner>) : Point {
     return referenceBigR
 }
 
-fun partialSignMessage(signers: Map<Int, ThresholdSigner>, hash: ByteArray) : List<PartialSignature> {
+private fun partialSignMessage(signers: Map<Int, Signer>, hash: ByteArray) : List<PartialSignature> {
     val partialSignatures = mutableListOf<PartialSignature>()
 
     for (i in signers.keys.toList()) {
@@ -283,3 +289,6 @@ fun partialSignMessage(signers: Map<Int, ThresholdSigner>, hash: ByteArray) : Li
 
     return partialSignatures
 }
+
+
+

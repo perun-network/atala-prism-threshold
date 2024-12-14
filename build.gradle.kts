@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20-RC2"
+    id("jacoco")
 }
 
 group = "perun_network.ecdsa_threshold"
@@ -10,6 +11,7 @@ repositories {
     mavenCentral()
     maven("https://jitpack.io")
 }
+
 
 dependencies {
     // define the BOM and its version
@@ -36,4 +38,25 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(11)
+}
+
+
+jacoco {
+    toolVersion = "0.8.10" // Adjust to the latest JaCoCo version
+}
+
+tasks.jacocoTestReport {
+    reports {
+        csv.required.set(true)
+        xml.required.set(true) // Generate XML report
+        html.required.set(true) // Generate HTML report
+    }
+    classDirectories.setFrom(files(classDirectories.files.map {
+        fileTree(it) {
+            setExcludes(listOf(
+                "**/MainKt.class",
+                "perun_network/ecdsa_threshold/tuple/*",
+            ))
+        }
+    }))
 }

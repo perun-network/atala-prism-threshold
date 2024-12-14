@@ -1,7 +1,7 @@
 package perun_network.ecdsa_threshold.sign.presign
 
 import perun_network.ecdsa_threshold.ecdsa.*
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.paillier.PaillierSecret
 import perun_network.ecdsa_threshold.sign.Broadcast

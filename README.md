@@ -2,6 +2,7 @@
 
 [![Test Coverage](https://github.com/perun-network/ecdsa-threshold/blob/gh-pages/badges/jacoco.svg?raw=true)](https://perun-network.github.io/ecdsa-threshold/)
 [![CI](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml/badge.svg?branch=keygen)](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (October 21, 2024) that achieves non-interactive signing using 3 preprocessing rounds.
 We provide an implementation of the protocol in Kotlin using the secp256k1 elliptic curve.
@@ -128,21 +129,25 @@ The project uses [JaCoCo](https://www.eclemma.org/jacoco/) to measure test cover
     - **`math`**: Mathematical operations and utilities.
     - **`paillier`**: Paillier cryptosystem implementation.
     - **`pedersen`**: Pedersen commitment management.
-    - **`presign`**: Presigning process management.
     - **`sign`**: Signing process management.
-    - **`zkproof`**: Zero-knowledge proof implementations.
+      - **`keygen`**: Keygen process management.
+      - **`aux`**: Aux-Info process management.
+      - **`presign`**: Presigning process management. 
+    - **`zero_knowledge`**: Zero-knowledge proof implementations.
     
   - **`test`**: Contains functionality test.
     - **`ecdsa`**: Contains unit test for the Secp256k1 ECDSA signatures. 
+    - **`math`**: Contains unit test for the `math` classes.
+    - **`paillier`**: Contains unit test for the Paillier encryption scheme.
+    - **`precomp`**: Contains unit test for the `precomputation` classes.
     - **`sign`**: Contains unit test for the signing of Threshold ECDSA.
     - **`zk`**: Contains unit test for zero-knowledge implementations.
 
 ## Limitations
 The current implementation is currently lacking some intended features:
 
-- Distributed key generation protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (Version October 21, 2024) have not been fully implemented. (Currently centralized)
-- Missing key refresh and adversary identification protocols.
 - Main currently using precomputed secret primes to generate precomputations. This is to speed up the process. It is expected to have an accelerated prime generator incorporated in the precomputation phase. 
+- Parallelization of Broadcast communication.
 
 --- 
 ## Copyright

@@ -1,8 +1,8 @@
 package perun_network.ecdsa_threshold.sign.presign
 
 import perun_network.ecdsa_threshold.ecdsa.*
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
-import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.SecretPrecomputation
 import perun_network.ecdsa_threshold.paillier.PaillierCipherText
 import perun_network.ecdsa_threshold.zero_knowledge.ElogPublic
 import java.math.BigInteger
@@ -284,7 +284,7 @@ class Presigner (
         // Δ == [δ]G
         val deltaComputed = delta.actOnBase()
         if (deltaComputed != bigDelta) {
-            throw Exception("computed Δ is inconsistent with [δ]G")
+            throw PresignException("computed Δ is inconsistent with [δ]G")
         }
 
         // R = Γ^δ−1

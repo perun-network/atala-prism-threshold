@@ -3,8 +3,8 @@ package perun_network.ecdsa_threshold.sign.aux
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.Scalar
 import perun_network.ecdsa_threshold.ecdsa.Scalar.Companion.scalarFromInt
-import perun_network.ecdsa_threshold.keygen.PublicPrecomputation
-import perun_network.ecdsa_threshold.keygen.SecretPrecomputation
+import perun_network.ecdsa_threshold.precomp.PublicPrecomputation
+import perun_network.ecdsa_threshold.precomp.SecretPrecomputation
 import perun_network.ecdsa_threshold.math.SEC_BYTES
 import perun_network.ecdsa_threshold.math.sampleRID
 import perun_network.ecdsa_threshold.math.shamir.ExponentPolynomial

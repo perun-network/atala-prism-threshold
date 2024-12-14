@@ -59,20 +59,8 @@ val PRECOMPUTED_PRIMES: List<Pair<BigInteger, BigInteger>> = listOf(
 class PaillierPublic (
     val n: BigInteger,
     val nSquared: BigInteger,
-    private val nPlusOne: BigInteger
+    val nPlusOne: BigInteger
 ) {
-    companion object {
-        /**
-         * Creates a new instance of [PaillierPublic] using the specified modulus n.
-         *
-         * @param n The modulus to be used for the public key.
-         * @return A new instance of [PaillierPublic].
-         */
-        fun newPublicKey(n: BigInteger): PaillierPublic {
-            return PaillierPublic(n, n.multiply(n), n.add(BigInteger.ONE))
-        }
-    }
-
     /**
      * Encrypts a message using a randomly generated nonce.
      *
@@ -165,9 +153,9 @@ class PaillierPublic (
  * @param n The modulus to validate.
  * @return An [Exception] if validation fails; otherwise, returns null.
  */
-fun validateN(n: BigInteger): Exception? {
+internal fun validateN(n: BigInteger): Exception? {
     if (n.signum() <= 0) return IllegalArgumentException("modulus N is nil")
-    if (n.bitLength() != BitsPaillier) {
+    if (n.bitLength() > BitsPaillier) {
         return IllegalArgumentException("Expected bit length: $BitsPaillier, found: ${n.bitLength()}")
     }
     if (!n.testBit(0)) return IllegalArgumentException("Modulus N is even")
@@ -251,10 +239,11 @@ data class PaillierSecret(
 
         // x = C(N+1)⁻ᵐ (mod N)
         val n = publicKey.n
-        val x = publicKey.n.modPow(mNeg, n).multiply(ct.c).mod(n)
+        var x = publicKey.nPlusOne.modPow(mNeg, publicKey.n)
+        x = x.multiply(ct.c).mod(publicKey.n)
 
         // r = xⁿ⁻¹ (mod N)
-        val nInverse = phi.modInverse(n)
+        val nInverse = n.modInverse(phi)
         val r = x.modPow(nInverse, n)
 
         return m to r
@@ -350,7 +339,7 @@ fun newPaillierSecretFromPrimes(p: BigInteger, q: BigInteger): PaillierSecret {
  * @return `true` if p is a suitable prime; `false` otherwise.
  * @throws IllegalArgumentException If the prime does not meet the validation criteria.
  */
-fun validatePrime(p: BigInteger): Boolean {
+internal fun validatePrime(p: BigInteger): Boolean {
     val bitsWant = BitsBlumPrime
 
     // Check bit lengths

@@ -1,0 +1,62 @@
+name: CI
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - feature/keygen_aux
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up JDK for Kotlin
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 11
+
+      # Step 3: Cache Gradle dependencies
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Step 4: Build the project
+      - name: Build project
+        run: ./gradlew build
+
+      # Step 5: Run tests with code coverage verification
+      - name: Run tests and verify coverage
+        run: ./gradlew test
+
+      # Step 6: Generate code coverage report
+      - name: Generate code coverage report
+        run: ./gradlew jacocoTestReport
+
+      # Step 7: Upload code coverage report as artifact
+      - name: Generate Coverage Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+            jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
+            badges-directory: build/reports/jacoco/test/html/badges
+
+      - name: Publish coverage report to GitHub Pages
+        # if: ${{ github.ref == 'refs/heads/master' }}
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+            folder: build/reports/jacoco/test/html

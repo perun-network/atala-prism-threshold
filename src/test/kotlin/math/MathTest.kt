@@ -1,6 +1,7 @@
 package math
 
 import org.junit.jupiter.api.Assertions.*
+import perun_network.ecdsa_threshold.math.isValidModN
 import perun_network.ecdsa_threshold.math.jacobi
 import perun_network.ecdsa_threshold.math.mustReadBits
 import java.io.ByteArrayInputStream
@@ -58,5 +59,47 @@ class MathTest {
         assertThrows(IllegalArgumentException::class.java) {
             jacobi(BigInteger.valueOf(5), BigInteger.valueOf(4)) // y is even
         }
+    }
+
+    @Test
+    fun `test valid integers that are co-prime to N`() {
+        val N = BigInteger("10")
+        val validInts = arrayOf(BigInteger("1"), BigInteger("3"), BigInteger("7"), BigInteger("9"))
+        assertTrue(isValidModN(N, *validInts))
+    }
+
+    @Test
+    fun `test integers outside valid range`() {
+        val N = BigInteger("10")
+        val invalidInts = arrayOf(BigInteger("0"), BigInteger("10"), BigInteger("11"))
+        assertFalse(isValidModN(N, *invalidInts))
+    }
+
+    @Test
+    fun `test integers not co-prime to N`() {
+        val N = BigInteger("10")
+        val nonCoprimeInts = arrayOf(BigInteger("2"), BigInteger("5"), BigInteger("8"))
+        assertFalse(isValidModN(N, *nonCoprimeInts))
+    }
+
+    @Test
+    fun `test null integer`() {
+        val N = BigInteger("10")
+        val intsWithNull = arrayOf(BigInteger("1"), null, BigInteger("7"))
+        assertFalse(isValidModN(N, *intsWithNull))
+    }
+
+    @Test
+    fun `test negative integer`() {
+        val N = BigInteger("10")
+        val negativeInts = arrayOf(BigInteger("-3"), BigInteger("1"))
+        assertFalse(isValidModN(N, *negativeInts))
+    }
+
+    @Test
+    fun `test edge case with N as 1`() {
+        val N = BigInteger("1")
+        val anyInts = arrayOf(BigInteger("1"), BigInteger("0"))
+        assertFalse(isValidModN(N, *anyInts))
     }
 }

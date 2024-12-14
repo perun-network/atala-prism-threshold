@@ -71,7 +71,10 @@ class SignTest {
         val sigmaShares = mutableMapOf<Int, PartialSignature>()
         for ((id, preSignature) in presigs) {
             assertEquals(R, preSignature.R)
-            sigmaShares[id] = preSignature.signPartial(hash)
+            val partialSig = preSignature.signPartial(hash)
+            assertEquals(partialSig.ssid, hash)
+            assertEquals(partialSig.id, 0)
+            sigmaShares[id] =partialSig
         }
         for ((_, preSignature) in presigs) {
             val signature = preSignature.signature(sigmaShares)

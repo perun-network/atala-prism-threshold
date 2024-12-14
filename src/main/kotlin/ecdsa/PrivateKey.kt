@@ -39,15 +39,6 @@ class PrivateKey (
             }
             return PrivateKey(data)
         }
-
-        /**
-         * Returns a private key that is initialized to zero.
-         *
-         * @return A zeroed private key.
-         */
-        fun zeroPrivateKey(): PrivateKey {
-            return Scalar.zero().toPrivateKey()
-        }
     }
 
     /**
@@ -121,9 +112,5 @@ class PrivateKey (
             return false
         }
         return this.value.contentEquals(other.value)
-    }
-
-    override fun hashCode(): Int {
-        return value.contentHashCode()
     }
 }
