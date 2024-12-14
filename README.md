@@ -4,11 +4,12 @@
 [![CI](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml/badge.svg?branch=keygen)](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (October 21, 2024) that achieves non-interactive signing using 3 preprocessing rounds.
+This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (2021) that achieves non-interactive signing using 3 preprocessing rounds. 
+It further provides malicious security and identifiable aborts.
+
 We provide an implementation of the protocol in Kotlin using the secp256k1 elliptic curve.
 
-The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wiki](https://github.com/perun-network/atala-prism-threshold/wiki/Threshold-ECDSA-Signatures-for-Atala-PRISM-Report).
-
+The report on threshold ECDSA signatures for Atala PRISM and the project timeline can be found in the [Wiki](https://github.com/perun-network/atala-prism-threshold/wiki/Threshold-ECDSA-Signatures-for-Atala-PRISM-Report).
 
 ## Table of Contents
 
@@ -19,6 +20,7 @@ The report on threshold ECDSA signatures for Atala PRISM can be found in the [Wi
 - [Usage](#usage)
 - [Test](#test)
 - [Code Structure](#code-structure)
+- [Limitations](#limitations)
 - [Copyright](#copyright)
 
 ## Features
@@ -53,7 +55,7 @@ The project is structured into several packages:
 
 1. **Clone the Repository**:
     ```bash
-       git clone https://github.com/perun-network/ecdsa-threshold.git
+       git clone https://github.com/perun-network/atala-prism-threshold.git
     ```
 
 2. **Navigate to the Project Directory**:
@@ -149,7 +151,20 @@ The current implementation is currently lacking some intended features:
 - Main currently using precomputed secret primes to generate precomputations. This is to speed up the process. It is expected to have an accelerated prime generator incorporated in the precomputation phase. 
 - Parallelization of Broadcast communication.
 
---- 
+---
 ## Copyright
 Copyright 2024 PolyCrypt GmbH. \
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 Use of the source code is governed by the Apache 2.0 license that can be found in the [LICENSE](LICENSE) file.
