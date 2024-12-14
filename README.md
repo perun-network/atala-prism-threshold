@@ -1,7 +1,7 @@
 # Threshold ECDSA Signature
 
-[![Test Coverage](https://github.com/perun-network/ecdsa-threshold/blob/gh-pages/badges/jacoco.svg?raw=true)](https://perun-network.github.io/ecdsa-threshold/)
-[![CI](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml/badge.svg?branch=keygen)](https://github.com/perun-network/ecdsa-threshold/actions/workflows/ci_cd.yml)
+[![Test Coverage](https://github.com/perun-network/atala-prism-threshold/blob/gh-pages/badges/jacoco.svg?raw=true)](https://perun-network.github.io/atala-prism-threshold/)
+[![CI](https://github.com/perun-network/atala-prism-threshold/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/perun-network/atala-prism-threshold/actions/workflows/ci_cd.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This project implements the threshold ECDSA protocol by [Canetti et al.](https://eprint.iacr.org/2021/060) (2021) that achieves non-interactive signing using 3 preprocessing rounds. 
@@ -60,7 +60,7 @@ The project is structured into several packages:
 
 2. **Navigate to the Project Directory**:
     ```bash
-    cd ecdsa-threshold
+    cd atala-prism-threshold
     ```
 
 3. **Build the Project**:
