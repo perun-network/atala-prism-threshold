@@ -7,8 +7,6 @@ import java.math.BigInteger
  *
  * @property c The ciphertext value represented as a [BigInteger].
  *
- * @constructor Creates a new instance of [PaillierCipherText] with the given ciphertext value.
- *
  * @param c The ciphertext value.
  */
 class PaillierCipherText (

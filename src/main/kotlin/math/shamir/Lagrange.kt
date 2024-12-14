@@ -24,7 +24,7 @@ fun lagrange(signers : List<Int>) : Map<Int, Scalar> {
  * @param signers A list of signer IDs.
  * @return The Lagrange coefficient for signer `j`.
  */
-fun lagrangeOf(j : Int, signers: List<Int>) : Scalar {
+private fun lagrangeOf(j : Int, signers: List<Int>) : Scalar {
     var result = Scalar(BigInteger.ONE)
     val x_j = Scalar.scalarFromInt(j)
     // denominator

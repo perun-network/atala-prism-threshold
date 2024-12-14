@@ -9,12 +9,6 @@ import java.math.BigInteger
  * @property n The modulus used for calculations in the commitment scheme.
  * @property s The first base used for the commitment.
  * @property t The second base used for the commitment.
- *
- * @constructor Creates an instance of [PedersenParameters].
- *
- * @param n The modulus.
- * @param s The first base.
- * @param t The second base.
  */
 data class PedersenParameters(
     val n: BigInteger, // Modulus
@@ -59,5 +53,29 @@ data class PedersenParameters(
         val te = T.modPow(e, n) // Tᵉ (mod N)
         val rhs = te.multiply(S).mod(n) // rhs = S⋅Tᵉ (mod N)
         return lhs == rhs
+    }
+
+    /**
+     * Serializes the Pedersen parameters to a byte array.
+     *
+     * @return The serialized byte array representation.
+     */
+    fun toByteArray(): ByteArray {
+        // Convert each BigInteger to its byte array representation
+        val nBytes = n.toByteArray()
+        val sBytes = s.toByteArray()
+        val tBytes = t.toByteArray()
+
+        // Helper function to convert an integer size to a 4-byte array
+        fun Int.toByteArray(): ByteArray = byteArrayOf(
+            (this shr 24).toByte(),
+            (this shr 16).toByte(),
+            (this shr 8).toByte(),
+            this.toByte()
+        )
+
+        // Combine the lengths and the actual byte arrays
+        return nBytes.size.toByteArray() + nBytes + sBytes.size.toByteArray() + sBytes +
+                tBytes.size.toByteArray() + tBytes
     }
 }

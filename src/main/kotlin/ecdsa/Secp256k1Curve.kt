@@ -56,7 +56,6 @@ data class Point(
         require(y >= BigInteger.ZERO && y < P) { "y-coordinate must be in range" }
     }
 
-
     /**
      * Returns the x-coordinate of this point as a Scalar.
      *
@@ -93,6 +92,12 @@ data class Point(
             System.arraycopy(yBytes, 0, this, 33, 32)
         }
         return PublicKey.newPublicKey(data)
+    }
+
+    fun toByteArray() : ByteArray {
+        val xBytes = bigIntegerToByteArray(x)
+        val yBytes = bigIntegerToByteArray(y)
+        return xBytes + yBytes
     }
 
     /**
@@ -160,6 +165,13 @@ data class Point(
         return this.x == BigInteger.ZERO || this.y == BigInteger.ZERO
     }
 
+
+    /**
+     * Checks equality between this [Point] and another object.
+     *
+     * @param other The object to compare with.
+     * @return `true` if the other object is a [Point] with the same coordinates, otherwise `false`.
+     */
     override fun equals(other: Any?): Boolean {
         return (other is Point) && (x == other.x && y == other.y)
     }
@@ -182,19 +194,6 @@ data class Point(
         return leftSide == rightSide
     }
 
-}
-
-/**
- * Converts a byte array into a Point on the secp256k1 curve.
- *
- * @param bytes The byte array to convert.
- * @return The resulting Point.
- */
-fun byteArrayToPoint(bytes: ByteArray): Point {
-    require(bytes.size == 65)
-    val x = BigInteger(bytes.copyOfRange(1, 33)).mod(P)
-    val y = BigInteger(bytes.copyOfRange(33, bytes.size)).mod(P)
-    return Point(x, y)
 }
 
 /**
@@ -224,7 +223,7 @@ fun newPoint() : Point {
  * @param bi The BigInteger to convert.
  * @return The resulting byte array.
  */
-fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
+internal fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
     val bytes = bi.toByteArray()
 
     return when {
@@ -233,8 +232,7 @@ fun bigIntegerToByteArray(bi: BigInteger): ByteArray {
         // If it's smaller, pad with leading zeros
         bytes.size < 32 -> ByteArray(32) { i -> if (i < 32 - bytes.size) 0 else bytes[i - (32 - bytes.size)] }
         // If it's larger, truncate it to the first 32 bytes
-        bytes.size > 32 -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
-        else -> bytes
+        else -> bytes.copyOfRange(bytes.size - 32, bytes.size)  // Handle cases where sign bit causes extra byte
     }
 }
 
@@ -288,6 +286,16 @@ data class Scalar (
         }
 
         /**
+         * Creates a scalar from a BigInteger value.
+         *
+         * @param value The integer value.
+         * @return The corresponding scalar.
+         */
+        fun scalarFromBigInteger(value: BigInteger): Scalar {
+            return Scalar(value.mod(N))
+        }
+
+        /**
          * Creates a scalar from an integer value.
          *
          * @param value The integer value.
@@ -296,7 +304,6 @@ data class Scalar (
         fun scalarFromInt(value : Int) : Scalar {
             return Scalar(value.toBigInteger().mod(N))
         }
-
 
         /**
          * Creates a scalar from a byte array.
@@ -323,26 +330,6 @@ data class Scalar (
         return value == BigInteger.ZERO
     }
 
-    /**
-     * Checks if the scalar is high (greater than the curve order divided by 2).
-     *
-     * @return True if the scalar is high, otherwise false.
-     */
-    fun isHigh(): Boolean {
-        return value > N.divide(BigInteger.valueOf(2))
-    }
-
-    /**
-     * Normalizes the scalar to ensure it's below the midpoint of the curve order.
-     *
-     * @return The normalized scalar.
-     */
-    fun normalize() : Scalar {
-        if (isHigh()) {
-            return Scalar(N-value)
-        }
-        return this
-    }
 
     /**
      * Converts the scalar to a private key.
@@ -353,7 +340,6 @@ data class Scalar (
         val scalarBytes = bigIntegerToByteArray(value)
         return PrivateKey.newPrivateKey(scalarBytes)
     }
-
 
     /**
      * Converts the scalar to a byte array.

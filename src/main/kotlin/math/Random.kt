@@ -6,6 +6,18 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.security.SecureRandom
 
+// Security parameter definition
+const val SecParam = 256
+const val SEC_BYTES = SecParam / 8
+const val L = 1 * SecParam     // = 256
+const val LPrime = 5 * SecParam     // = 1280
+const val Epsilon = 2 * SecParam     // = 512
+const val LPlusEpsilon = L + Epsilon      // = 768
+const val LPrimePlusEpsilon = LPrime + Epsilon // 1792
+const val BITS_INT_MOD_N = 8 * SecParam    // = 2048
+const val BitsBlumPrime = 4 * SecParam      // = 1024
+const val BitsPaillier = 2 * BitsBlumPrime // = 2048
+
 /**
  * Maximum number of iterations for random sampling.
  */
@@ -14,7 +26,7 @@ const val MAX_ITERATIONS = 255
 /**
  * Secure random input stream for generating random bytes.
  */
-val random = SecureRandomInputStream(SecureRandom.getInstanceStrong())
+private val random = SecureRandomInputStream(SecureRandom.getInstanceStrong())
 
 /**
  * Exception thrown when the maximum number of iterations is reached without a successful sample.
@@ -42,7 +54,20 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
 }
 
 /**
- * Samples a random element from the group of integers modulo `n` that is co-prime to `n`.
+ * Generates a random identifier (RID) as a secure random byte array.
+ *
+ * The RID is a 256-bit (32-byte) cryptographically secure random value.
+ *
+ * @return A 32-byte array of secure random values.
+ */
+fun sampleRID() : ByteArray {
+    val byteArray = ByteArray(SEC_BYTES) // Create a 32-byte array
+    random.read(byteArray)   // Fill the array with random bytes
+    return byteArray
+}
+
+/**
+ * Samples a random element from the group of integers modulo `n` that is co-prime to `n` (u ∈ ℤₙˣ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -50,9 +75,9 @@ fun mustReadBits(inputStream: InputStream , buffer: ByteArray) {
  * @return A random BigInteger in ℤₙ that is co-prime to `n`.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-fun sampleUnitModN(n: BigInteger): BigInteger {
+fun sampleModNStar(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
-    val buf = ByteArray((bitLength + 7) / 8)
+    val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
         val candidate = BigInteger(buf)
@@ -62,7 +87,7 @@ fun sampleUnitModN(n: BigInteger): BigInteger {
 }
 
 /**
- * Samples a random element from the integers modulo `n`.
+ * Samples a random element from the integers modulo `n` (u ∈ ℤₙ).
  *
  * This function will attempt to generate a valid candidate up to [MAX_ITERATIONS] times.
  *
@@ -70,35 +95,67 @@ fun sampleUnitModN(n: BigInteger): BigInteger {
  * @return A random BigInteger in ℤₙ.
  * @throws IllegalStateException if the maximum number of iterations is reached without finding a valid candidate.
  */
-fun modN(n: BigInteger): BigInteger {
+fun sampleModN(n: BigInteger): BigInteger {
     val bitLength = n.bitLength()
-    val buf = ByteArray((bitLength + 7) / 8)
+    val buf = ByteArray((bitLength + 7) / 8) // guarantees the correct buffer size in bytes.
     repeat(MAX_ITERATIONS) {
         random.read(buf)
-        val candidate = BigInteger(buf)
+        val candidate = BigInteger(1, buf)
         if (candidate < n) return candidate
     }
     throw ERR_MAX_ITERATIONS
 }
 
 /**
+ * Samples a quadratic non-residue modulo `n`.
+ *
+ * This function generates a random integer modulo `n` and checks if it is a
+ * quadratic non-residue (QNR) using the Jacobi symbol. It repeats the process
+ * up to [MAX_ITERATIONS] times until a valid QNR is found.
+ *
+ * A quadratic non-residue `x` modulo `n` satisfies the condition that the
+ * Jacobi symbol `(x/n)` is -1, indicating that `x` is not a square in the
+ * group of integers modulo `n`.
+ *
+ * @param n The modulus for which a quadratic non-residue is sampled.
+ *          It is expected to be a positive integer.
+ * @return A randomly sampled quadratic non-residue modulo `n`.
+ * @throws IllegalStateException if no quadratic non-residue is found
+ *         within [MAX_ITERATIONS].
+ */
+fun sampleQuadraticNonResidue(n: BigInteger): BigInteger {
+    val buffer = ByteArray(BITS_INT_MOD_N / 8)
+    repeat(MAX_ITERATIONS) {
+        // Generate a random number modulo n
+        random.read(buffer)
+        val candidate = BigInteger(1, buffer).mod(n)
+
+        // Check if it's a quadratic non-residue
+        if (jacobi(candidate, n) == -1) {
+            return candidate
+        }
+    }
+    throw IllegalStateException("Exceeded maximum iterations to find a QNR")
+}
+
+/**
  * Generates the parameters for the Pedersen commitment.
  *
  * This function samples values for `s`, `t`, and `λ` such that:
- * - `s = tˡ` where `t = τ² mod N`
+ * - `s = t^λ` where `t = τ² mod N`
  *
  * @param phi The value used in the computation of `s`.
  * @param n The modulus used for sampling.
  * @return A Triple containing the values `(s, t, λ)`.
  */
 fun samplePedersen(phi: BigInteger, n : BigInteger) : Triple<BigInteger, BigInteger, BigInteger> {
-    val lambda = modN(phi)
-    val tau  = sampleUnitModN(n)
+    val lambda = sampleModN(phi)
+    val tau  = sampleModNStar(n)
 
     // t = τ² mod N
     val t = tau.mod(n).multiply(tau.mod(n)).mod(n)
 
-    // s = tˡ mod N
+    // s = t^λ mod N
     val s = t.modPow(lambda, n)
     return Triple(s, t, lambda)
 }
@@ -129,11 +186,95 @@ fun sampleScalar(): Scalar {
 }
 
 /**
+ * Generates a random integer with the given number of bits, potentially negated.
+ *
+ * @param inputStream The input stream to read random bytes from.
+ * @param bits The number of bits for the random integer.
+ * @return A randomly generated BigInteger, which may be negative.
+ */
+fun sampleNeg(inputStream: InputStream, bits: Int): BigInteger {
+    val buf = ByteArray(bits / 8 + 1)
+    mustReadBits(inputStream, buf)
+    val neg = buf[0].toInt() and 1
+    val out = BigInteger(1, buf.copyOfRange(1, buf.size))
+    return if (neg == 1) -out else out
+}
+
+/**
+ * Samples a random integer L in the range ±2^l.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleL() : BigInteger = sampleNeg(random, L)
+
+/**
+ * Samples a random integer in the range ±2^l'.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLPrime(): BigInteger = sampleNeg(random,LPrime)
+
+/**
+ * Samples a random integer in the range ±2^(l+ε).
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLEps(): BigInteger = sampleNeg(random, LPlusEpsilon)
+
+/**
+ * Samples a random integer in the range ±2^(l'+ε).
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLPrimeEps(): BigInteger = sampleNeg(random, LPrimePlusEpsilon)
+
+/**
+ * Samples a random integer in the range ±2^l•N, where N is the size of a Paillier modulus.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLN(): BigInteger = sampleNeg(random, L + BITS_INT_MOD_N)
+
+/**
+ * Samples a random integer in the range ±2^l•2N, where N is the size of a Paillier modulus.
+ *
+ * The sampled integer is uniformly distributed in the range [-2^l•2N, 2^l•2N].
+ *
+ * @return A randomly generated BigInteger in the range ±2^l•2N.
+ */
+fun sampleLN2(): BigInteger = sampleNeg(random, L + (2* BITS_INT_MOD_N))
+
+/**
+ * Samples a random integer in the range ±2^(l+ε)•N.
+ *
+ * @return A randomly generated BigInteger within the specified range.
+ */
+fun sampleLEpsN(): BigInteger = sampleNeg(random, LPlusEpsilon + BITS_INT_MOD_N)
+
+/**
+ * Samples a random integer in the range ±2^(l+ε)•2N, where N is the size of a Paillier modulus.
+ *
+ * The sampled integer is uniformly distributed in the range [-2^(l+ε)•2N, 2^(l+ε)•2N].
+ *
+ * @return A randomly generated BigInteger in the range ±2^(l+ε)•2N.
+ */
+fun sampleLEpsN2(): BigInteger = sampleNeg(random, LPlusEpsilon + (2* BITS_INT_MOD_N))
+
+/**
+ * Samples a random integer in the range ±2^(l+ε)•√N, where N is the size of a Paillier modulus.
+ *
+ * The sampled integer is uniformly distributed in the range [-2^(l+ε)•√N, 2^(l+ε)•√N].
+ *
+ * @return A randomly generated BigInteger in the range ±2^(l+ε)•√N.
+ */
+fun sampleLEpsRootN() : BigInteger = sampleNeg(random, LPlusEpsilon + (BITS_INT_MOD_N/2))
+
+/**
  * A secure random input stream that reads bytes from a SecureRandom source.
  *
  * @param secureRandom The SecureRandom instance used for generating random bytes.
  */
-class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
+internal class SecureRandomInputStream(private val secureRandom: SecureRandom) : InputStream() {
 
     /**
      * Reads a single byte from the input stream.

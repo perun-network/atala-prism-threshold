@@ -9,8 +9,7 @@ import java.math.BigInteger
  * @param ints The integers to check.
  * @return `true` if all integers are in the valid range and co-prime to N; `false` otherwise.
  */
-
-fun isValidModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
+internal fun isValidModN(N: BigInteger, vararg ints: BigInteger?): Boolean {
     val one = BigInteger.ONE
     for (i in ints) {
         if (i == null) {
@@ -48,4 +47,15 @@ fun isInIntervalLEps(n: BigInteger): Boolean {
  */
 fun isInIntervalLPrimeEps(n: BigInteger): Boolean {
     return n.bitLength() <= LPrimePlusEpsilon
+}
+
+/**
+ * Checks if n ∈ [-2^(1+L+E+√N), ..., 2^(1+L+E+√N)], for a Paillier modulus N.
+ *
+ * @param n The integer to check.
+ * @return True if n is within the interval, false otherwise.
+ */
+fun isInIntervalLEpsPlus1RootN(n: BigInteger?): Boolean {
+    if (n == null) return false
+    return n.bitLength() <= 1 + LPlusEpsilon + (BITS_INT_MOD_N / 2)
 }

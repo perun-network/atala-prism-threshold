@@ -60,19 +60,6 @@ class Signature (
         return sig
     }
 
-    /**
-     * Normalizes the `S` value of the signature if it is greater than the curve order divided by 2.
-     * This ensures uniqueness by forcing `S` to be low.
-     *
-     * @return A normalized `Signature` with a potentially updated `S` value.
-     */
-    fun normalize(): Signature {
-        var s = Scalar.scalarFromByteArray(S)
-        if (s.isHigh()) {
-            s = s.normalize()
-        }
-        return Signature(R, s.toByteArray())
-    }
 
     /**
      * Verifies the signature using the secp256k1 elliptic curve with the provided message hash and public key.
@@ -86,7 +73,6 @@ class Signature (
         val secpSignature = this.toSecp256k1Signature()
         return Secp256k1.verify(secpSignature, hash, secpPublic)
     }
-
 
     /**
      * Verifies the signature using elliptic curve arithmetic based on the provided message hash and public point.

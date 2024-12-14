@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.logstar
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.ecdsa.*
 import perun_network.ecdsa_threshold.math.*
@@ -70,7 +70,7 @@ class LogStarProof(
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: LogStarPublic): Boolean {
+    private fun isValid(public: LogStarPublic): Boolean {
         if (!public.n0.validateCiphertexts(commitment.A)) return false
         if (commitment.Y.isIdentity()) return false
         if (!isValidModN(public.n0.n, z2)) return false
@@ -90,7 +90,7 @@ class LogStarProof(
             val n = public.n0.n
 
             val alpha = sampleLEps()
-            val r = sampleUnitModN(n)
+            val r = sampleModNStar(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 
@@ -120,7 +120,7 @@ class LogStarProof(
          * @param commitment The commitment associated with the proof.
          * @return The generated challenge value.
          */
-        fun challenge(id: Int, public: LogStarPublic, commitment: LogStarCommitment): BigInteger {
+        private fun challenge(id: Int, public: LogStarPublic, commitment: LogStarCommitment): BigInteger {
             // Collect relevant parts to form the challenge
             val inputs = listOf<BigInteger>(
                 public.aux.n,

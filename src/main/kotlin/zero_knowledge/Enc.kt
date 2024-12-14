@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.enc
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.ecdsa.secp256k1Order
 import perun_network.ecdsa_threshold.math.*
@@ -8,9 +8,11 @@ import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 
 /**
- * Represents the public parameters for the encryption zero-knowledge proof.
+ * Represents the public parameters for the Π_enc (Paillier Encryption in Range ZK) zero-knowledge proof.
+ * The following relation verifies that the plaintext value of Paillier
+ * ciphertext C is in a desired range I = ±2^l
  *
- * @property K The ciphertext related to the public key.
+ * @property K The public ciphertext related to the public key.
  * @property n0 The Paillier public key used for encryption.
  * @property aux The Pedersen parameters used for commitment.
  */
@@ -21,7 +23,7 @@ data class EncPublic(
 )
 
 /**
- * Represents the private parameters for the encryption zero-knowledge proof.
+ * Represents the private parameters for the Π_enc (Paillier Encryption in Range ZK) zero-knowledge proof.
  *
  * @property k The private key component, calculated as k ∈ 2ˡ = Dec₀(K).
  * @property rho The random value ρ used in the proof.
@@ -32,7 +34,7 @@ data class EncPrivate(
 )
 
 /**
- * Represents the commitment values used in the encryption zero-knowledge proof.
+ * Represents the commitment values used in the Π_enc (Paillier Encryption in Range ZK) zero-knowledge proof.
  *
  * @property S The value calculated as S = sᵏtᵘ.
  * @property A The ciphertext calculated from the first private parameter.
@@ -45,7 +47,7 @@ data class EncCommitment(
 )
 
 /**
- * Represents the proof in the encryption zero-knowledge protocol.
+ * Represents the proof in the Π_enc (Paillier Encryption in Range ZK) protocol.
  *
  * @property commitment The commitment associated with this proof.
  * @property z1 The value calculated as z₁ = α + e⋅k.
@@ -64,7 +66,7 @@ data class EncProof(
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: EncPublic): Boolean {
+    private fun isValid(public: EncPublic): Boolean {
         return public.n0.validateCiphertexts(commitment.A) &&
                 isValidModN(public.n0.n, z2)
     }
@@ -82,7 +84,7 @@ data class EncProof(
             val n = public.n0.n
 
             val alpha = sampleLEps()
-            val r = sampleUnitModN(n)
+            val r = sampleModNStar(n)
             val mu = sampleLN()
             val gamma = sampleLEpsN()
 

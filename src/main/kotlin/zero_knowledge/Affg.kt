@@ -1,4 +1,4 @@
-package perun_network.ecdsa_threshold.zkproof.affg
+package perun_network.ecdsa_threshold.zero_knowledge
 
 import com.ionspin.kotlin.bignum.integer.Quadruple
 import perun_network.ecdsa_threshold.ecdsa.Point
@@ -13,7 +13,7 @@ import perun_network.ecdsa_threshold.tuple.Quintuple
 import java.math.BigInteger
 
 /**
- * Represents the public parameters for the Aff-g zero-knowledge proof.
+ * Represents the public parameters for the Aff-g (Paillier Affine Operation with Group Commitment in Range ZK) zero-knowledge proof.
  *
  * @property C The ciphertext related to a certain commitment.
  * @property D Another ciphertext used in the proof.
@@ -34,7 +34,7 @@ data class AffgPublic (
 )
 
 /**
- * Represents the private parameters for the Aff-g zero-knowledge proof.
+ * Represents the private parameters for the Aff-g (Paillier Affine Operation with Group Commitment in Range ZK) zero-knowledge proof.
  *
  * @property x The private value used in the proof.
  * @property y Another private value used in the proof.
@@ -70,7 +70,7 @@ data class AffgCommitment(
 )
 
 /**
- * Represents the proof in the Aff-g zero-knowledge protocol.
+ * Represents the proof in the Aff-g (Paillier Affine Operation with Group Commitment in Range ZK) zero-knowledge protocol.
  *
  * @property commitment The commitment associated with this proof.
  * @property z1 The value z1 calculated from α and e·x.
@@ -95,7 +95,7 @@ class AffgProof(
      * @param public The public parameters against which to validate the proof.
      * @return True if the proof is valid, false otherwise.
      */
-    fun isValid(public: AffgPublic): Boolean {
+    private fun isValid(public: AffgPublic): Boolean {
         if (!public.n1.validateCiphertexts(commitment.A)) return false
         if (!public.n0.validateCiphertexts(commitment.By)) return false
         if (!isValidModN(public.n1.n, wY)) return false
@@ -151,7 +151,6 @@ class AffgProof(
             return false
         }
 
-
         val lhsEnc = n1.encryptWithNonce(z2, wY)
         val rhsEnc = (public.Y.modPowNSquared(n1, e)).modMulNSquared(n1, commitment.By)
 
@@ -171,7 +170,7 @@ class AffgProof(
          * @param commitment The commitment associated with the proof.
          * @return The generated challenge value.
          */
-        fun challenge(id: Int, public: AffgPublic, commitment: AffgCommitment): BigInteger {
+        private fun challenge(id: Int, public: AffgPublic, commitment: AffgCommitment): BigInteger {
             // Collect relevant parts to form the challenge
             val inputs = listOf<BigInteger>(
                 public.aux.n,
@@ -214,8 +213,8 @@ class AffgProof(
             val beta = sampleLPrimeEps() // β ← ±2^(l'+ε)
 
             // r ← Z∗N0 , ry ← Z∗N1
-            val r = sampleUnitModN(n0)
-            val ry = sampleUnitModN(n1)
+            val r = sampleModNStar(n0)
+            val ry = sampleModNStar(n1)
 
             // γ ← ±2^l+ε· N, m ˆ ← ±2^l· N
             val gamma = sampleLEpsN()
@@ -268,7 +267,7 @@ class AffgProof(
  * @param receiver The receiver's Paillier public key.
  * @return A quintuple containing computed values necessary for the proof.
  */
-fun computeZKMaterials(
+private fun computeZKMaterials(
     senderSecretShare: BigInteger,
     receiverEncryptedShare: PaillierCipherText,
     sender: PaillierSecret,
@@ -332,7 +331,7 @@ fun produceAffGMaterials(
             x = senderSecretShare,
             y = y,
             rho = rho,
-            rhoY= rhoY
+            rhoY = rhoY
         )
     )
     val beta = y.negate()

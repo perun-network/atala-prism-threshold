@@ -9,7 +9,7 @@ import java.security.SecureRandom
  * @param n The number to check for primality.
  * @return `true` if n is probably prime; `false` otherwise.
  */
-fun isPrime(n: BigInteger): Boolean {
+private fun isPrime(n: BigInteger): Boolean {
     return n.isProbablePrime(100) // 100 is the certainty level for the primality test
 }
 
@@ -38,7 +38,6 @@ fun generateSafeBlumPrime(bits: Int): BigInteger {
     } while (true)
     return prime
 }
-
 
 /**
  * Generates the necessary integers for a Paillier key pair.
