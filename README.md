@@ -47,7 +47,7 @@ The project is structured into several packages:
 
 ## Requirements
 
-- Kotlin 1.5 or higher
+- Kotlin 2.0 or higher
 - Java Development Kit (JDK) 11 or higher
 - Dependencies for cryptographic operations (included in the project)
 
