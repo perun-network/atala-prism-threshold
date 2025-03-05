@@ -2,10 +2,11 @@ plugins {
     kotlin("jvm") version "2.0.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20-RC2"
     id("jacoco")
+    id("maven-publish")
 }
 
 group = "perun_network.ecdsa_threshold"
-version = "1.0-SNAPSHOT"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -60,3 +61,15 @@ tasks.jacocoTestReport {
         }
     }))
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            from(components["java"])
+            groupId = "com.github.perun-network"
+            artifactId = "atala-prism-threshold"
+            version = "0.1.0"
+        }
+    }
+}
+
