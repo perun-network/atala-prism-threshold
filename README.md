@@ -81,6 +81,32 @@ The main entry point for the threshold signing process is located in the `main` 
 
 The application will output the execution time and confirm if the ECDSA signature was generated and verified successfully.
 
+### Usage in another project
+
+You can integrate this library into other Kotlin-based projects by adding the following to your `build.gradle.kts` using JitPack:
+
+```kotlin
+repositories {
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    implementation("com.github.perun-network:atala-prism-threshold:v0.1.1")
+}
+```
+
+### Example: Using Threshold ECDSA Signing in Another Project
+
+```kotlin
+import perun_network.ecdsa_threshold.sign.Signer
+
+class BackendSigner (
+    val name: String,
+    val thresholdSigner : Signer,
+)
+```
+
+
 ## Test
 This section describes the testing strategy and tools used to maintain code quality and reliability.
 

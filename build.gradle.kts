@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "perun_network.ecdsa_threshold"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     mavenCentral()
@@ -30,7 +30,7 @@ dependencies {
     implementation("com.ionspin.kotlin:bignum:0.3.8")
     // Add Kotlin Logging
     implementation("io.github.microutils:kotlin-logging:3.0.5")
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation("ch.qos.logback:logback-classic:1.4.12")
 
 }
 

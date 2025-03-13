@@ -1,19 +1,40 @@
 package perun_network.ecdsa_threshold.ecdsa
 
 import fr.acinq.secp256k1.Secp256k1
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.ByteArraySerializer
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encoding.*
+import kotlinx.serialization.descriptors.*
 
-/**
- * Represents a partial signature in the ECDSA threshold scheme.
- *
- * @property ssid The session identifier.
- * @property id The ID of the participant.
- * @property sigmaShare The scalar share of the signature.
- */
-class PartialSignature (
-    val ssid : ByteArray,
-    val id : Int,
-    val sigmaShare: Scalar,
-)
+@Serializable
+class PartialSignature(
+    val ssid: ByteArray,
+    val id: Int,
+    @Serializable(with = ScalarSerializer::class) val sigmaShare: Scalar
+) {
+    @OptIn(ExperimentalSerializationApi::class)
+    fun toByteArray(): ByteArray = Cbor.encodeToByteArray(this)
+
+    companion object {
+        @OptIn(ExperimentalSerializationApi::class)
+        fun fromByteArray(data: ByteArray): PartialSignature = Cbor.decodeFromByteArray(data)
+    }
+}
+
+// Serializer for Secp256k1Scalar
+object ScalarSerializer : KSerializer<Scalar> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Secp256k1Scalar", PrimitiveKind.BYTE)
+
+    override fun serialize(encoder: Encoder, value: Scalar) {
+        encoder.encodeSerializableValue(ByteArraySerializer(), value.toByteArray())
+    }
+
+    override fun deserialize(decoder: Decoder): Scalar {
+        val bytes = decoder.decodeSerializableValue(ByteArraySerializer())
+        return Scalar.scalarFromByteArray(bytes)
+    }
+}
 
 /**
  * Represents an ECDSA private key.
