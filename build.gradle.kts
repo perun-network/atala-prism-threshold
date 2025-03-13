@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "perun_network.ecdsa_threshold"
-version = "0.1.1"
+version = "0.1.2"
 
 repositories {
     mavenCentral()

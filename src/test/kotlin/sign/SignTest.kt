@@ -74,6 +74,7 @@ class SignTest {
             val partialSig = preSignature.signPartial(hash)
             assertEquals(partialSig.ssid, hash)
             assertEquals(partialSig.id, 0)
+            assertEquals(partialSig, PartialSignature.fromByteArray(partialSig.toByteArray()))
             sigmaShares[id] =partialSig
         }
         for ((_, preSignature) in presigs) {

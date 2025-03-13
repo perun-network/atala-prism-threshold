@@ -91,7 +91,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.perun-network:atala-prism-threshold:v0.1.1")
+    implementation("com.github.perun-network:atala-prism-threshold:v0.1.2")
 }
 ```
 

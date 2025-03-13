@@ -100,6 +100,29 @@ data class Point(
         return xBytes + yBytes
     }
 
+    companion object {
+        /**
+         * Reconstructs a Point from a byte array.
+         *
+         * The supplied byte array must be 64 bytes long, consisting of a 32-byte
+         * representation of the x-coordinate followed by a 32-byte representation
+         * of the y-coordinate.
+         *
+         * @param data the byte array to reconstruct the point from
+         * @return a new Point constructed from the byte array
+         * @throws IllegalArgumentException if the byte array length is not 64
+         */
+        fun fromByteArray(data: ByteArray): Point {
+            require(data.size == 64) { "Byte array must be exactly 64 bytes in length" }
+            val xBytes = data.sliceArray(0 until 32)
+            val yBytes = data.sliceArray(32 until 64)
+            // When converting bytes to BigInteger, use the signum 1 to ensure a non-negative number.
+            val x = BigInteger(1, xBytes)
+            val y = BigInteger(1, yBytes)
+            return Point(x, y)
+        }
+    }
+
     /**
      * Adds this point to another point on the curve.
      *

@@ -20,6 +20,24 @@ class PartialSignature(
         @OptIn(ExperimentalSerializationApi::class)
         fun fromByteArray(data: ByteArray): PartialSignature = Cbor.decodeFromByteArray(data)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PartialSignature) return false
+
+        if (!ssid.contentEquals(other.ssid)) return false
+        if (id != other.id) return false
+        if (sigmaShare != other.sigmaShare) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = ssid.contentHashCode()
+        result = 31 * result + id
+        result = 31 * result + sigmaShare.hashCode()
+        return result
+    }
 }
 
 // Serializer for Secp256k1Scalar

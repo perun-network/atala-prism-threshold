@@ -3,6 +3,7 @@ package ecdsa
 import org.junit.jupiter.api.Assertions.assertTrue
 import perun_network.ecdsa_threshold.ecdsa.Point
 import perun_network.ecdsa_threshold.ecdsa.bigIntegerToByteArray
+import perun_network.ecdsa_threshold.ecdsa.newPoint
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -89,5 +90,13 @@ class PointTest {
         val edgeCasePoint = Point(G.x, BigInteger.ZERO)
         val result = edgeCasePoint.double()
         assertTrue(result.isIdentity(), "Doubling a point with y=0 should return the identity element")
+    }
+
+    @Test
+    fun testEncodeDecode() {
+        val newPoint = newPoint()
+        val bytes = newPoint.toByteArray()
+        val reconstructedPoint = Point.fromByteArray(bytes)
+        assertEquals(newPoint, reconstructedPoint)
     }
 }
