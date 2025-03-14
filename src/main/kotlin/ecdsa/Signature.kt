@@ -99,4 +99,16 @@ class Signature (
         val xRPrime = RPrime.xScalar()
         return xRPrime == r
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Signature) return false
+        return R.contentEquals(other.R) && S.contentEquals(other.S)
+    }
+
+    override fun hashCode(): Int {
+        var result = R.contentHashCode()
+        result = 31 * result + S.contentHashCode()
+        return result
+    }
 }

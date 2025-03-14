@@ -26,8 +26,8 @@ private val logger = KotlinLogging.logger {}
  */
 @OptIn(ExperimentalStdlibApi::class)
 fun main() {
-    val n = 5 // Number of total parties.
-    val t = 3 // Threshold of minimum required signers.
+    val n = 3 // Number of total parties.
+    val t = 2 // Threshold of minimum required signers.
 
     val startTime = System.currentTimeMillis() // capture the start time
 
@@ -50,13 +50,13 @@ fun main() {
     val publicPrecomps = auxInfo(parties)
     logger.info { "Finished auxiliary info protocol for parties: ${parties.keys} "}
 
-    // Calculate the public key.
-    val publicKey = publicKeyFromShares(parties.keys.toList(), publicPrecomps)
-
     // Determine signerIds
     val signers = randomSigners(parties, t)
     val signerIds = signers.keys.toList()
     logger.info {"Randomly chosen signers: $signerIds" }
+
+    // Calculate the public key.
+    val publicKey = publicKeyFromShares(signerIds, publicPrecomps)
 
     // Scale Secret/Public Precomputations
     val (publicPoint, _) =  scalePrecomputation(signers)

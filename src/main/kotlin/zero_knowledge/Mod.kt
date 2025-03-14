@@ -15,7 +15,7 @@ data class ModPublic (
 )
 
 /**
- * Data structure representing the private input of the prover for the Paillier-Blum Modulus Proof (Πmod)..
+ * Data structure representing the private input of the prover for the Paillier-Blum Modulus Proof (Πmod).
  * @property p Prime factor of N
  * @property q Prime factor of N
  * @property phi Euler's totient φ(N) = (p-1)(q-1)

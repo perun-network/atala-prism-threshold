@@ -2,7 +2,6 @@ package ecdsa
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import perun_network.ecdsa_threshold.ecdsa.Point
-import perun_network.ecdsa_threshold.ecdsa.bigIntegerToByteArray
 import perun_network.ecdsa_threshold.ecdsa.newPoint
 import java.math.BigInteger
 import kotlin.test.Test

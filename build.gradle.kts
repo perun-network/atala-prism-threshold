@@ -68,7 +68,7 @@ publishing {
             from(components["java"])
             groupId = "com.github.perun-network"
             artifactId = "atala-prism-threshold"
-            version = "0.1.0"
+            version = "0.1.3"
         }
     }
 }

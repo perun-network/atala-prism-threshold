@@ -2,7 +2,6 @@ package perun_network.ecdsa_threshold.zero_knowledge
 
 import perun_network.ecdsa_threshold.math.isValidModN
 import perun_network.ecdsa_threshold.math.sampleModN
-import perun_network.ecdsa_threshold.math.sampleModNStar
 import perun_network.ecdsa_threshold.pedersen.PedersenParameters
 import java.math.BigInteger
 import java.security.MessageDigest
